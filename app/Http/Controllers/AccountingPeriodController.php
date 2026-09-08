@@ -15,7 +15,7 @@ class AccountingPeriodController extends Controller
 {
     public function index()
     {
-        $periods = DB::table('lebihtersitem.accounting_periods')
+        $periods = DB::table('lebihtersistem.accounting_periods')
             ->orderByDesc('year')
             ->get();
 
