@@ -605,7 +605,9 @@ public function ledger(Request $request)
     [$ledger] = $this->getLedgerData($startDate, $endDate);
 
     return view('journals.ledger', compact(
-        'ledger', 'startDate', 'endDate'
+        'ledger',
+        'startDate',
+        'endDate'
     ));
 }
 
@@ -619,21 +621,29 @@ private function getLedgerData($startDate, $endDate)
     });
 
     $details = $query
-        ->join('accounting_accounts', 'accounting_accounts.id', '=', 'accounting_journal_details.account_id')
+        ->join(
+            'lebihtersistem.accounting_accounts as accounts',
+            'accounts.id',
+            '=',
+            'lebihtersistem.accounting_journal_details.account_id'
+        )
         ->orderByRaw("
-            SPLIT_PART(accounting_accounts.account_code, '-', 1)::INT,
-            SPLIT_PART(accounting_accounts.account_code, '-', 2)::INT,
-            SPLIT_PART(accounting_accounts.account_code, '-', 3)::INT
+            SPLIT_PART(accounts.account_code, '-', 1)::INT,
+            SPLIT_PART(accounts.account_code, '-', 2)::INT,
+            SPLIT_PART(accounts.account_code, '-', 3)::INT
         ")
         ->orderBy(
             AccountingJournal::select('transaction_date')
-                ->whereColumn('id', 'accounting_journal_details.journal_id')
+                ->whereColumn(
+                    'id',
+                    'lebihtersistem.accounting_journal_details.journal_id'
+                )
         )
-        ->select('accounting_journal_details.*')
+        ->select('lebihtersistem.accounting_journal_details.*')
         ->get();
 
-    // 🔹 Kelompokkan per akun
     $ledger = [];
+
     foreach ($details->groupBy('account_id') as $accountId => $items) {
         $balance = 0;
         $rows = [];
