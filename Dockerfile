@@ -10,14 +10,15 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libzip-dev \
     libpq-dev \
- && docker-php-ext-configure gd --with-freetype --with-jpeg \
- && docker-php-ext-install \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install \
         pdo \
         pdo_mysql \
         pdo_pgsql \
         gd \
         zip \
-        opcache
+        opcache \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -32,30 +33,39 @@ RUN composer install \
     --no-interaction \
     --no-scripts
 
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
- && apt-get install -y nodejs
+# Install Node.js + npm
+RUN apt-get update \
+    && apt-get install -y nodejs npm \
+    && node --version \
+    && npm --version \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
 RUN composer dump-autoload --optimize
 
 RUN npm run build \
- && rm -rf node_modules
+    && echo "=== HASIL VITE BUILD ===" \
+    && ls -lah public \
+    && ls -lah public/build \
+    && ls -lah public/build/assets \
+    && rm -rf node_modules
 
 RUN chown -R www-data:www-data storage bootstrap/cache \
- && chmod -R 775 storage bootstrap/cache
+    && chmod -R 775 storage bootstrap/cache
 
-COPY docker/php.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 8080
 
-CMD sh -c "\
-php artisan permission:cache-reset || true && \
-php artisan optimize || true && \
-php artisan storage:link || true && \
-php artisan migrate --path=database/migrations/migrasi --force || true && \
-php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
