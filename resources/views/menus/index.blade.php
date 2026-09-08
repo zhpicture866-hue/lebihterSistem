@@ -49,9 +49,9 @@
                                     <th>Title</th>
                                     <th>URL / Route Name</th>
                                     <th>Parent</th>
-                                    <th>Urutan</th>
-                                    <th>Status Aktif?</th>
+                                    <th>Urutan</th>        
                                     <th>Permission</th>
+                                    <th>Ikon</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -108,8 +108,8 @@
                     { data: 'url' },
                     { data: 'parent_name' },
                     { data: 'order' },
-                    { data: 'active_badge', orderable:false, searchable:false },
                     { data: 'permission_name' },
+                    { data: 'icon', orderable:false, searchable:false },
                     { data: 'actions', orderable:false, searchable:false },
                 ],
                 language: {

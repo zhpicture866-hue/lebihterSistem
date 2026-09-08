@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Role;
 use App\Models\Permission;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Validation\Rule;
 
 class MenuController extends Controller
 {
@@ -71,7 +72,10 @@ public function index(Request $request)
         'url' => 'nullable|string|max:255',
         'type' => 'in:route,url,label',
         'key' => 'nullable|string|max:255',
-        'parent_id' => 'nullable|exists:menus,id',
+        'parent_id' => [
+            'nullable',
+            Rule::exists(Menu::class, 'id'),
+        ],
         'order' => 'integer',
         'icon' => 'nullable|string|max:255',
         'is_active' => 'boolean',
@@ -107,21 +111,26 @@ public function edit(Menu $menu)
     return view('menus.edit', compact('menu', 'parents', 'permissions'));
 }
 
-    public function update(Request $request, $id)
+public function update(Request $request, $id)
 {
     $validated = $request->validate([
         'text' => 'required|string|max:255',
         'url' => 'nullable|string|max:255',
         'type' => 'required|string|max:50',
-        'parent_id' => 'nullable|exists:menus,id',
+
+        'parent_id' => [
+            'nullable',
+            Rule::exists(Menu::class, 'id'),
+        ],
+
         'order' => 'integer',
         'icon' => 'nullable|string|max:255',
         'is_active' => 'boolean',
-        'permission_name'   => 'nullable|array',
+        'permission_name' => 'nullable|array',
         'permission_name.*' => 'string|max:255',
     ]);
 
-    // ✅ Gabungkan menjadi string "a|b|c"
+    // Gabungkan permission menjadi string "a|b|c"
     if ($request->filled('permission_name')) {
         $validated['permission_name'] = implode('|', $request->permission_name);
     } else {
@@ -135,9 +144,6 @@ public function edit(Menu $menu)
         ->route('menus.index')
         ->with('success', 'Menu berhasil diubah.');
 }
-
-
-
     public function destroy(Menu $menu) 
     {
     

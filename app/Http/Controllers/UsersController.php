@@ -125,19 +125,33 @@ class UsersController extends Controller
         'gender' => 'nullable|in:1,2',
         'birth_place' => 'nullable',
         'birth_date' => 'nullable|date_format:Y-m-d',
-        'email' => 'required|email|unique:users,email',
+        'email' => [
+            'required',
+            'email',
+            Rule::unique(User::class, 'email'),
+        ],
         'password' => 'required|min:8',
         // 'role' => 'required|array',
         // 'role.*' => 'string|exists:roles,name',
-        'religion_id' => 'nullable|exists:religions,id',
-        'identity_number' => 'nullable|regex:/^[0-9]{16}$/|unique:users,identity_number',
+        'religion_id' => [
+            'nullable',
+            Rule::exists(Religion::class, 'id'),
+        ],
+        'province_id' => [
+            'nullable',
+            Rule::exists(Province::class, 'id'),
+        ],
+        'identity_number' => [
+            'nullable',
+            'regex:/^[0-9]{16}$/',
+            Rule::unique(User::class, 'identity_number'),
+        ],
         'npwp' => 'nullable|string|max:30',
         'address' => 'nullable',
-        'province_id' => 'nullable|exists:provinces,id',
-        'city_id' => 'nullable|exists:cities,id',
-        'district_id' => 'nullable|exists:districts,id',
-        'sub_district_id' => 'nullable|exists:sub_districts,id',
-        'postal_code_id' => 'nullable|exists:postal_codes,id',
+        'city_id' => ['nullable', Rule::exists(City::class, 'id')],
+        'district_id' => ['nullable', Rule::exists(District::class, 'id')],
+        'sub_district_id' => ['nullable', Rule::exists(SubDistrict::class, 'id')],
+        'postal_code_id' => ['nullable', Rule::exists(PostalCode::class, 'id')],
         'phone' => 'nullable',
         'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
@@ -203,7 +217,7 @@ public function show(User $user)
        return view('users.edit', compact('user', 'religions', 'roles', 'selectedRoles', 'provinces', 'cities', 'districts', 'subDistricts', 'postalCodes'));
     }
 
-    public function update(Request $request, User $user)
+public function update(Request $request, User $user)
 {
     $validated = $request->validate([
         'fullname' => 'required',
@@ -211,74 +225,116 @@ public function show(User $user)
         'gender' => 'nullable|in:1,2',
         'birth_place' => 'nullable',
         'birth_date' => 'nullable|date_format:Y-m-d',
-        'email' => 'required|email|unique:users,email,' . $user->id, // <- tidak bentrok dgn email miliknya sendiri
-        'password' => 'nullable|min:8', // <- hanya isi jika ingin diubah
+
+        'email' => [
+            'required',
+            'email',
+            Rule::unique(User::class, 'email')
+                ->ignore($user->id, 'id'),
+        ],
+
+        'password' => 'nullable|min:8',
+
         // 'role' => 'required|array',
         // 'role.*' => 'string|exists:roles,name',
-        'religion_id' => 'nullable|exists:religions,id',
+
+        'religion_id' => [
+            'nullable',
+            Rule::exists(Religion::class, 'id'),
+        ],
+
+        'province_id' => [
+            'nullable',
+            Rule::exists(Province::class, 'id'),
+        ],
+
         'identity_number' => [
             'nullable',
             'regex:/^[0-9]{16}$/',
-            Rule::unique('users', 'identity_number')->ignore($user->id, 'id'),
+            Rule::unique(User::class, 'identity_number')
+                ->ignore($user->id, 'id'),
         ],
+
+        'npwp' => 'nullable|string|max:30',
         'address' => 'nullable',
-        'province_id' => 'nullable|exists:provinces,id',
-        'city_id' => 'nullable|exists:cities,id',
-        'district_id' => 'nullable|exists:districts,id',
-        'sub_district_id' => 'nullable|exists:sub_districts,id',
-        'postal_code_id' => 'nullable|exists:postal_codes,id',
+
+        'city_id' => [
+            'nullable',
+            Rule::exists(City::class, 'id'),
+        ],
+
+        'district_id' => [
+            'nullable',
+            Rule::exists(District::class, 'id'),
+        ],
+
+        'sub_district_id' => [
+            'nullable',
+            Rule::exists(SubDistrict::class, 'id'),
+        ],
+
+        'postal_code_id' => [
+            'nullable',
+            Rule::exists(PostalCode::class, 'id'),
+        ],
+
         'phone' => 'nullable|regex:/^[0-9]+$/',
+
         'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
     DB::beginTransaction();
 
+    $newPhotoPath = null;
+    $oldPhotoPath = $user->photo;
+
     try {
-        // Upload foto baru jika ada
         if ($request->hasFile('photo')) {
             $newPhotoPath = $request->file('photo')->storeAs(
                 'photos',
-                Str::uuid() . '.' . $request->file('photo')->getClientOriginalExtension(),
+                Str::uuid() . '.' .
+                $request->file('photo')->getClientOriginalExtension(),
                 'public'
             );
 
-            // Hapus foto lama jika ada
-            if ($user->photo && Storage::disk('public')->exists($user->photo)) {
-                Storage::disk('public')->delete($user->photo);
-            }
-
             $validated['photo'] = $newPhotoPath;
         }
-
-        // Update password hanya jika diisi
         if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
-            unset($validated['password']); // biar tidak menimpa dengan null
+            unset($validated['password']);
         }
-
-        // Update data user
         $user->update($validated);
 
-        // Update role (hapus role lama dan tambahkan role baru)
-        // $user->syncRoles([$validated['role']]);
-
         DB::commit();
+
+        if (
+            $newPhotoPath &&
+            $oldPhotoPath &&
+            $oldPhotoPath !== $newPhotoPath &&
+            Storage::disk('public')->exists($oldPhotoPath)
+        ) {
+            Storage::disk('public')->delete($oldPhotoPath);
+        }
 
         return redirect()
             ->route('users.show', $user->id)
             ->with('success', 'Data pengguna berhasil diperbarui.');
 
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         DB::rollBack();
 
-        // Jika foto baru sudah diupload tapi DB gagal, hapus fotonya
-        if (isset($newPhotoPath)) {
+        if (
+            $newPhotoPath &&
+            Storage::disk('public')->exists($newPhotoPath)
+        ) {
             Storage::disk('public')->delete($newPhotoPath);
         }
 
         return back()
-            ->withErrors(['error' => 'Gagal memperbarui pengguna: ' . $e->getMessage()])
+            ->withErrors([
+                'error' => 'Gagal memperbarui pengguna: ' . $e->getMessage()
+            ])
             ->withInput();
     }
 }
