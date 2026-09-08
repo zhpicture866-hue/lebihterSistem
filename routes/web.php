@@ -70,9 +70,6 @@ Route::middleware(['auth', 'role:Super-Admin'])->group(function () {
 Route::get('/customer/profile', [DashboardController::class, 'edit'])->name('customer.profile');
 Route::put('/customer/profile', [DashboardController::class, 'update'])->name('customer.update');
 Route::get('/affiliators/profile', [DashboardController::class, 'edit'])->name('affiliators.profile');
-Route::put('/affiliators/profile', [DashboardController::class, 'update'])->name('affiliators.update');
-
-
 
 Route::middleware(['auth', 'permission:lihat daftar karyawan|lihat data karyawan'])->group(function () {
     Route::resource('/employees', EmployeeController::class)->whereUuid('employee');

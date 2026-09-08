@@ -63,22 +63,6 @@
                                 </div>
                                 <div class="row mb-4">
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">Saldo Awal</label>
-                                        <input type="number" step="0.01" name="initial_balance" value="{{ $account->initial_balance }}" class="form-control">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">User</label>
-                                        <select name="person_type" class="form-select select2" value="{{ old('person_type') }}">
-                                            <option value="">-- Pilih --</option>
-                                            <option value="employee" {{ old('person_type', $account->person_type) == 'employee' ? 'selected' : '' }}>Karyawan</option>
-                                            <option value="customer" {{ old('person_type', $account->person_type) == 'customer' ? 'selected' : '' }}>Customer</option>
-                                            <option value="worker" {{ old('person_type', $account->person_type) == 'worker' ? 'selected' : '' }}>Tukang</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-4">
-                                    <div class="col-md-6 mb-3">
                                         <label class="form-label">Apakah Akun Induk?</label>
                                         <select name="is_parent" class="form-select select2">
                                             <option value="1" {{ $account->is_parent ? 'selected' : '' }}>
@@ -103,6 +87,22 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Saldo Awal</label>
+                                        <input type="number" step="0.01" name="initial_balance" value="{{ $account->initial_balance }}" class="form-control">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">User</label>
+                                        <select name="person_type" class="form-select select2" value="{{ old('person_type') }}">
+                                            <option value="">-- Pilih --</option>
+                                            <option value="employee" {{ old('person_type', $account->person_type) == 'employee' ? 'selected' : '' }}>Karyawan</option>
+                                            <option value="customer" {{ old('person_type', $account->person_type) == 'customer' ? 'selected' : '' }}>Customer</option>
+                                            <option value="worker" {{ old('person_type', $account->person_type) == 'worker' ? 'selected' : '' }}>Tukang</option>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div class="text-end mt-5">
                                             <button type="submit" class="btn btn-dark px-4">
                                                 <i class="ti ti-device-floppy me-1"></i>Simpan Perubahan
@@ -124,35 +124,25 @@ $(document).ready(function () {
         width: '100%'
     });
 
-    const selectIsParent = document.querySelector('[name="is_parent"]');
-    const parentField = document.getElementById('parent-field');
-
-    function toggleParent() {
-        if (!selectIsParent || !parentField) return;
-
-        if (selectIsParent.value === "1") {
-            parentField.style.display = 'none';
-        } else {
-            parentField.style.display = 'block';
-        }
-    }
-
-    toggleParent();
-
-    $(selectIsParent).on('change', toggleParent);
+    const selectIsParent = $('[name="is_parent"]');
 
     const subCategories = @json($subCategories);
+
     const selectedSub = @json($account->sub_category);
 
     function loadSub(category) {
 
-        let options = '<option value="">-- Pilih Sub kategori --</option>';
+        let options =
+            '<option value="">-- Pilih Sub kategori --</option>';
 
         if (subCategories[category]) {
 
             subCategories[category].forEach(function (item) {
 
-                let selected = item == selectedSub ? 'selected' : '';
+                let selected =
+                    item === selectedSub
+                        ? 'selected'
+                        : '';
 
                 options += `
                     <option value="${item}" ${selected}>
@@ -168,42 +158,97 @@ $(document).ready(function () {
             .trigger('change');
     }
 
+
     let category = $('[name="category"]').val();
 
     if (category) {
         loadSub(category);
     }
 
+
     $('[name="category"]').on('change', function () {
+
         loadSub($(this).val());
+
+        // Setelah kategori berubah,
+        // generate ulang kode
+        generateCode();
     });
 
-});
-</script>
-<script>
-$(document).ready(function(){
 
-    function generateCode(){
-        let category = $('[name="category"]').val()
-        let parentId = $('[name="parent_id"]').val()
+    /*
+    |--------------------------------------------------------------------------
+    | GENERATE ACCOUNT CODE
+    |--------------------------------------------------------------------------
+    */
 
-        if(!category){
-            $('#account_code_preview').val('')
-            return
+    function generateCode() {
+
+        let category = $('[name="category"]').val();
+
+        let parentId = $('[name="parent_id"]').val();
+
+        let isParent = $('[name="is_parent"]').val();
+
+
+        if (!category) {
+
+            $('#account_code_preview').val('');
+            $('#account_code').val('');
+
+            return;
         }
 
-        $('#account_code_preview').val('Generating...')
+        $('#account_code_preview').val('Generating...');
 
-        fetch(`/accounting/generate-code?category=${encodeURIComponent(category)}&parent_id=${encodeURIComponent(parentId ?? '')}`)
+        const params = new URLSearchParams({
+            category: category || '',
+            parent_id: parentId || '',
+            is_parent: isParent || '',
+            exclude_id: @json($account->id)
+
+        });
+
+        fetch(`/accounting/generate-code?${params.toString()}`)
+
             .then(res => res.json())
+
             .then(data => {
-                $('#account_code_preview').val(data.code)
+
+                $('#account_code_preview')
+                    .val(data.code);
+
+                $('#account_code')
+                    .val(data.code);
+
             })
+
+            .catch(error => {
+
+                console.error(error);
+
+                $('#account_code_preview').val('');
+
+                $('#account_code').val('');
+
+            });
     }
 
-    $('[name="category"]').on('change', generateCode)
-    $('[name="parent_id"]').on('change', generateCode)
+    $('[name="category"]').on(
+        'change',
+        generateCode
+    );
 
-})
+    $('[name="parent_id"]').on(
+        'change',
+        generateCode
+    );
+
+    $('[name="is_parent"]').on(
+        'change',
+        generateCode
+    );
+
+});
 </script>
 @endpush
