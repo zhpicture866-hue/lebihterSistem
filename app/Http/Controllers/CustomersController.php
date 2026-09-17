@@ -138,24 +138,38 @@ class CustomersController extends Controller
     public function store(Request $request)
 {
     $validated = $request->validate([
-        'user_id' => 'nullable|exists:users,id',
+        'user_id' => ['nullable','uuid', Rule::exists(User::class,'id')],
         'fullname' => 'required|string|max:255',
         'nickname' => 'nullable|string|max:100',
         'gender' => 'nullable|in:1,2',
-        'email' => 'required|email|unique:users,email',
+        'email' => [
+            'required',
+            'email',
+            Rule::unique(User::class, 'email'),
+        ],
         'birth_place' => 'nullable|string|max:100',
         'birth_date' => 'nullable|date_format:Y-m-d',
-        'identity_number' => 'nullable|regex:/^[0-9]{16}$/|unique:users,identity_number',
-        'religion_id' => 'nullable|exists:religions,id',
+        'identity_number' => [
+            'nullable',
+            'regex:/^[0-9]{16}$/',
+            Rule::unique(User::class, 'identity_number'),
+        ],
+        'religion_id' => [
+            'nullable',
+            Rule::exists(Religion::class, 'id'),
+        ],
         'npwp' => 'nullable|string|max:30',
         'phone' => 'required|string|max:20',
         'address' => 'nullable|string|max:255',
-        'user_province_id' => 'nullable|exists:provinces,id',
-        'user_city_id' => 'nullable|exists:cities,id',
-        'user_district_id' => 'nullable|exists:districts,id',
-        'user_sub_district_id' => 'nullable|exists:sub_districts,id',
-        'user_postal_code_id' => 'nullable|exists:postal_codes,id',
-        'bank_id' => 'nullable|uuid|exists:banks,id',
+        'user_province_id' => [
+            'nullable',
+            Rule::exists(Province::class, 'id'),
+        ],
+        'user_city_id' => ['nullable', Rule::exists(City::class, 'id')],
+        'user_district_id' => ['nullable', Rule::exists(District::class, 'id')],
+        'user_sub_district_id' => ['nullable', Rule::exists(SubDistrict::class, 'id')],
+        'user_postal_code_id' => ['nullable', Rule::exists(PostalCode::class, 'id')],
+        'bank_id' => ['nullable','uuid', Rule::exists(Bank::class,'id')],
         'account_number' => 'nullable|string|max:50',
         'account_holder' => 'nullable|string|max:50',
         'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -165,11 +179,14 @@ class CustomersController extends Controller
         'shipping_name' => 'nullable|string|max:255',
         'shipping_phone' => 'nullable|string|max:20',
         'shipping_address' => 'nullable|string|max:255',
-        'province_id' => 'nullable|exists:provinces,id',
-        'city_id' => 'nullable|exists:cities,id',
-        'district_id' => 'nullable|exists:districts,id',
-        'sub_district_id' => 'nullable|exists:sub_districts,id',
-        'postal_code_id' => 'nullable|exists:postal_codes,id',
+        'province_id' => [
+            'nullable',
+            Rule::exists(Province::class, 'id'),
+        ],
+        'city_id' => ['nullable', Rule::exists(City::class, 'id')],
+        'district_id' => ['nullable', Rule::exists(District::class, 'id')],
+        'sub_district_id' => ['nullable', Rule::exists(SubDistrict::class, 'id')],
+        'postal_code_id' => ['nullable', Rule::exists(PostalCode::class, 'id')],
         'role' => 'nullable|array',
         'role.*' => 'string|exists:roles,name',
         'category' => 'nullable|in:1,2,3,4',
@@ -338,7 +355,7 @@ public function update(Request $request, Customer $customer)
         'fullname' => 'required|string|max:255',
         'nickname' => 'nullable|string|max:100',
         'gender' => 'nullable|in:1,2',
-        'email' => 'required|email|unique:users,email,' . $customer->user_id,
+        'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($customer->user_id)],
         'birth_place' => 'nullable|string|max:100',
         'birth_date' => 'nullable|date_format:Y-m-d',
         'identity_number' => [
@@ -346,16 +363,37 @@ public function update(Request $request, Customer $customer)
             'regex:/^[0-9]{16}$/',
             Rule::unique('users', 'identity_number')->ignore($customer->user_id),
         ],
-        'religion_id' => 'nullable|exists:religions,id',
+        'religion_id' => [
+            'nullable',
+            Rule::exists(Religion::class, 'id'),
+        ],
         'npwp' => 'nullable|string|max:30',
         'phone' => 'nullable|string|max:20',
         'address' => 'nullable|string|max:255',
-        'user_province_id' => 'nullable|exists:provinces,id',
-        'user_city_id' => 'nullable|exists:cities,id',
-        'user_district_id' => 'nullable|exists:districts,id',
-        'user_sub_district_id' => 'nullable|exists:sub_districts,id',
-        'user_postal_code_id' => 'nullable|exists:postal_codes,id',
-        'bank_id' => 'nullable|uuid|exists:banks,id',
+        'user_province_id' => [
+            'nullable',
+            Rule::exists(Province::class, 'id'),
+        ],
+        'user_city_id' => [
+            'nullable',
+            Rule::exists(City::class, 'id'),
+        ],
+
+        'user_district_id' => [
+            'nullable',
+            Rule::exists(District::class, 'id'),
+        ],
+
+        'user_sub_district_id' => [
+            'nullable',
+            Rule::exists(SubDistrict::class, 'id'),
+        ],
+
+        'user_postal_code_id' => [
+            'nullable',
+            Rule::exists(PostalCode::class, 'id'),
+        ],
+        'bank_id' => ['nullable','uuid', Rule::exists(Bank::class,'id')],
         'account_number' => 'nullable|string|max:50',
         'account_holder' => 'nullable|string|max:50',
         'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -364,11 +402,29 @@ public function update(Request $request, Customer $customer)
         'shipping_name' => 'nullable|string|max:255',
         'shipping_phone' => 'nullable|string|max:20',
         'shipping_address' => 'nullable|string|max:255',
-        'province_id' => 'nullable|exists:provinces,id',
-        'city_id' => 'nullable|exists:cities,id',
-        'district_id' => 'nullable|exists:districts,id',
-        'sub_district_id' => 'nullable|exists:sub_districts,id',
-        'postal_code_id' => 'nullable|exists:postal_codes,id',
+        'province_id' => [
+            'nullable',
+            Rule::exists(Province::class, 'id'),
+        ],
+        'city_id' => [
+            'nullable',
+            Rule::exists(City::class, 'id'),
+        ],
+
+        'district_id' => [
+            'nullable',
+            Rule::exists(District::class, 'id'),
+        ],
+
+        'sub_district_id' => [
+            'nullable',
+            Rule::exists(SubDistrict::class, 'id'),
+        ],
+
+        'postal_code_id' => [
+            'nullable',
+            Rule::exists(PostalCode::class, 'id'),
+        ],
         'category' => 'nullable|in:1,2,3,4',
         'loyalty_level' => 'nullable|in:1,2,3,4,5',
         'role' => 'nullable|array',

@@ -14,6 +14,7 @@ use App\Models\PostalCode;
 use Illuminate\Support\Carbon;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Bank;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -118,25 +119,38 @@ class EmployeeController extends Controller
 {
 
     $validated = $request->validate([
-        // --- data user (optional user_id)
-        'user_id' => 'nullable|exists:users,id',
+        'user_id' => ['nullable','uuid', Rule::exists(User::class,'id')],
         'fullname' => 'required|string|max:255',
         'nickname' => 'nullable|string|max:100',
         'gender' => 'nullable|in:1,2',
-        'email' => 'required|email|unique:users,email',
+        'email' => [
+            'required',
+            'email',
+            Rule::unique(User::class, 'email'),
+        ],
         'birth_place' => 'nullable|string|max:100',
         'birth_date' => 'nullable|date_format:Y-m-d',
-        'identity_number' => 'nullable|regex:/^[0-9]{16}$/|unique:users,identity_number',
-        'religion_id' => 'nullable|exists:religions,id',
+        'identity_number' => [
+            'nullable',
+            'regex:/^[0-9]{16}$/',
+            Rule::unique(User::class, 'identity_number'),
+        ],
+        'religion_id' => [
+            'nullable',
+            Rule::exists(Religion::class, 'id'),
+        ],
         'npwp' => 'nullable|string|max:30',
         'phone' => 'required|string|max:20',
         'address' => 'nullable|string|max:255',
-        'province_id' => 'nullable|exists:provinces,id',
-        'city_id' => 'nullable|exists:cities,id',
-        'district_id' => 'nullable|exists:districts,id',
-        'sub_district_id' => 'nullable|exists:sub_districts,id',
-        'postal_code_id' => 'nullable|exists:postal_codes,id',
-        'bank_id' => 'nullable|uuid|exists:banks,id',
+        'province_id' => [
+            'nullable',
+            Rule::exists(Province::class, 'id'),
+        ],
+        'city_id' => ['nullable', Rule::exists(City::class, 'id')],
+        'district_id' => ['nullable', Rule::exists(District::class, 'id')],
+        'sub_district_id' => ['nullable', Rule::exists(SubDistrict::class, 'id')],
+        'postal_code_id' => ['nullable', Rule::exists(PostalCode::class, 'id')],
+        'bank_id' => ['nullable','uuid', Rule::exists(Bank::class,'id')],
         'account_number' => 'nullable|string|max:50',
         'account_holder' => 'nullable|max:50',
         'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
@@ -348,20 +362,39 @@ public function show(Employee $employee)
         'phone' => 'nullable|string|max:20',
         'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($employee->user_id)],
         'address' => 'nullable|string',
-        'province_id' => 'required|exists:provinces,id',
-        'city_id' => 'required|exists:cities,id',
         'identity_number' => [
-            'required',
+            'nullable',
             'regex:/^[0-9]{16}$/',
             Rule::unique('users', 'identity_number')->ignore($employee->user_id)
         ],
-        'religion_id' => 'required|exists:religions,id',
-        'province_id' => 'required|exists:provinces,id',
-        'city_id' => 'required|exists:cities,id',
-        'district_id' => 'required|exists:districts,id',
-        'sub_district_id' => 'required|exists:sub_districts,id',
-        'postal_code_id' => 'required|exists:postal_codes,id',
-        'bank_id' => 'nullable|uuid|exists:banks,id',
+        'religion_id' => [
+            'nullable',
+            Rule::exists(Religion::class, 'id'),
+        ],
+        'province_id' => [
+            'nullable',
+            Rule::exists(Province::class, 'id'),
+        ],
+        'city_id' => [
+            'nullable',
+            Rule::exists(City::class, 'id'),
+        ],
+
+        'district_id' => [
+            'nullable',
+            Rule::exists(District::class, 'id'),
+        ],
+
+        'sub_district_id' => [
+            'nullable',
+            Rule::exists(SubDistrict::class, 'id'),
+        ],
+
+        'postal_code_id' => [
+            'nullable',
+            Rule::exists(PostalCode::class, 'id'),
+        ],
+        'bank_id' => ['nullable','uuid', Rule::exists(Bank::class,'id')],
         'account_number' => 'nullable|string|max:50',
         'account_holder' => 'nullable|string|max:100',
         'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
