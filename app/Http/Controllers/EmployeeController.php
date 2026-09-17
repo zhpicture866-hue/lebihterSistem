@@ -360,12 +360,20 @@ public function show(Employee $employee)
         'birth_date' => 'nullable|date',
         'gender' => 'nullable|in:1,2',
         'phone' => 'nullable|string|max:20',
-        'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($employee->user_id)],
+        
+        'email' => [
+            'required',
+            'email',
+            Rule::unique(User::class, 'email')
+                ->ignore($employee->user_id),
+        ],
+
         'address' => 'nullable|string',
         'identity_number' => [
             'nullable',
             'regex:/^[0-9]{16}$/',
-            Rule::unique('users', 'identity_number')->ignore($employee->user_id)
+            Rule::unique(User::class, 'identity_number')
+                ->ignore($employee->user_id),
         ],
         'religion_id' => [
             'nullable',
@@ -403,9 +411,9 @@ public function show(Employee $employee)
         'role' => 'required|array',
         'role.*' => 'string|exists:roles,name',
         'marital_status' => 'nullable|in:1,2,3,4',
-        'employment_status' => 'required',
+        'employment_status' => 'nullable|in:Tetap,Kontrak,Harian,Honorer',
         'start_date' => ['nullable', 'date_format:Y-m-d'],
-        'basic_salary' => ['required', 'numeric', 'min:0'],
+        'basic_salary' => ['nullable', 'numeric', 'min:0'],
         'allowance' => ['nullable', 'numeric', 'min:0'],
         'deduction' => ['nullable', 'numeric', 'min:0'],
         'bonus' => ['nullable', 'numeric', 'min:0'],

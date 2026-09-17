@@ -354,14 +354,20 @@ public function update(Request $request, Customer $customer)
         // --- data user ---
         'fullname' => 'required|string|max:255',
         'nickname' => 'nullable|string|max:100',
-        'gender' => 'nullable|in:1,2',
-        'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($customer->user_id)],
+        'gender' => 'nullable|in:1,2',        
+        'email' => [
+            'required',
+            'email',
+            Rule::unique(User::class, 'email')
+                ->ignore($customer->user_id),
+        ],
         'birth_place' => 'nullable|string|max:100',
         'birth_date' => 'nullable|date_format:Y-m-d',
         'identity_number' => [
             'nullable',
             'regex:/^[0-9]{16}$/',
-            Rule::unique('users', 'identity_number')->ignore($customer->user_id),
+            Rule::unique(User::class, 'identity_number')
+                ->ignore($customer->user_id),
         ],
         'religion_id' => [
             'nullable',

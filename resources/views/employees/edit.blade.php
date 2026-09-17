@@ -278,7 +278,7 @@
 
                             <div class="col-md-4">
                                 <label class="required">Status Karyawan</label>
-                                <select name="employment_status" class="form-select" value="{{ old('employment_status', $employee->employment_status) }}" required>
+                                <select name="employment_status" class="form-select select2" value="{{ old('employment_status', $employee->employment_status) }}" required>
                                     <option value="">-- Pilih Status --</option>
                                     <option value="Tetap" {{ $employee->employment_status == "Tetap" ? 'selected' : '' }}>Tetap</option>
                                     <option value="Kontrak" {{ $employee->employment_status == "Kontrak" ? 'selected' : '' }}>Kontrak</option>
@@ -422,7 +422,6 @@
                                         <script>
                                             $(document).ready(function() {
                                                 $('.select2').select2({
-                                                    placeholder: "-- Pilih --",
                                                     width: '100%'
                                                 });
                                             });
