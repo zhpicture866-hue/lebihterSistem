@@ -172,7 +172,7 @@ class UsersController extends Controller
         // Hash password
         $validated['password'] = Hash::make($validated['password']);
 
-        // Simpan user
+        $validated['email_verified_at'] = now();
         $user = User::create($validated);
 
         // Assign role

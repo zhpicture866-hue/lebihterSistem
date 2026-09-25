@@ -252,6 +252,7 @@ if ($request->hasFile('training_certificate')) {
                 'sub_district_id' => $validated['sub_district_id'],
                 'postal_code_id' => $validated['postal_code_id'],
                 'email' => $validated['email'],
+                'email_verified_at' => now(),
                 'password' => Hash::make($password),
                 'phone' => $validated['phone'] ?? null,
                 'gender' => $validated['gender'] ?? null,
