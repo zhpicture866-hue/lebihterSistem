@@ -16,7 +16,7 @@
     {{-- <h4 class="fw-bold mb-3">Informasi Pembuatan Rab</h4> --}}
     <div class="row mb-3">
         <div class="col-md-4">
-            <label>Nomor Penawaran</label>
+            <label class="form-label fw-semibold">Nomor Penawaran</label>
             <input type="text" name="offer_number" class="form-control" value="{{ old('offer_number') ?? '' }}" placeholder="Auto Generate" readonly>
 
         </div>
@@ -42,7 +42,7 @@
 
         </div>
         <div class="col-md-4">
-            <label>Nama Customer</label>
+            <label class="form-label fw-semibold">Nama Customer</label>
             <input type="text" value="{{ $project->customer->user->fullname }}" class="form-control" readonly>
         </div>
     </div>

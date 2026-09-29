@@ -271,18 +271,12 @@ Route::middleware(['auth', 'permission:lihat daftar proyek|lihat data proyek'])-
     ->name('projects.continue');
 
     Route::resource('/projects', ProjectController::class)->except(['edit, update, show']);
-    Route::get('prjects/{project}/pdf', [ProjectController::class, 'pdf'])
+    Route::get('projects/{project}/pdf', [ProjectController::class, 'pdf'])
     ->name('projects.pdf');
 });
 Route::middleware(['auth', 'permission:kelola sistem'])->group(function () {
 
-    Route::get('/systems/{system}/continue', 
-    [ProjectController::class, 'continue'])
-    ->name('projects.continue');
-
     Route::resource('/systems', SystemController::class)->except(['edit, update, show']);
-    Route::get('prjects/{project}/pdf', [ProjectController::class, 'pdf'])
-    ->name('projects.pdf');
 });
 Route::resource('design-packages', DesignPackageController::class)
     ->except(['show']);
