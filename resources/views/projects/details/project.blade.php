@@ -1,8 +1,10 @@
 @php
     $type = [
-        '1'     => 'Desain',
-        '2'     => 'RAB',
-        '3'     => 'Build',
+        '1'     => 'Jasa Konstruksi',
+        '2'     => 'Klinik',
+        '3'     => 'Toko',
+        '4'     => 'Event',
+        '5'     => 'Company Profile',
     ];
     $status = [
         '1'     => 'Proses',

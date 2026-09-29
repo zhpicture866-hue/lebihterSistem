@@ -11,7 +11,7 @@ class ProjectLevel  extends Model
 {
     use HasFactory;
 
-
+    protected $table = 'lebihtersistem.project_levels';
     public $timestamps = false;
 
     protected $fillable = [

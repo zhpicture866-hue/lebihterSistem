@@ -34,6 +34,10 @@
     <link rel="stylesheet" href="{{ asset('fonts/tabler-icons.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <link
+        href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css"
+        rel="stylesheet"
+    >
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 

@@ -9,13 +9,19 @@ class InvoiceBuild extends Model
 {
     use HasUuid;
 
-    const TYPE_BUILD = 'build';
-    const TYPE_JUSTEK = 'justek';
-
+    const TYPE_WEDDING = 'wedding';
+    const TYPE_EVENT = 'event';
+    const STATUS_DRAFT    = 'draft';
+    const STATUS_WAITING  = 'waiting_approval';
+    const STATUS_APPROVED = 'approved';
+    const STATUS_REJECTED = 'rejected';
+    const STATUS_PAID     = 'paid';
+    protected $table = 'zhpicture.invoice_builds';
     protected $casts = [
         'invoice_date' => 'date',
         'approved_at'  => 'datetime',
         'rejected_at'  => 'datetime',
+        'bukti_pembayaran_uploaded_at' => 'datetime',
     ];
 
     protected $fillable = [
@@ -40,11 +46,21 @@ class InvoiceBuild extends Model
         'payment_percentage',
         'paid_at',
         'note',
-        'nominal'
+        'nominal',
+        'bukti_pembayaran',
+        'bukti_pembayaran_uploaded_at',
+        'kwitansi_number',
+        'kwitansi_path',
+        'kwitansi_generated_at'
     ];
 
         public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+        public function scopeOrderByTermin($query)
+    {
+        return $query->orderBy('termin');
     }
 }

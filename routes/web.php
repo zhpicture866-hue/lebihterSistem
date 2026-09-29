@@ -16,7 +16,7 @@ use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\AffiliatorController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectLevelController;
-use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SystemController;
 use App\Http\Controllers\ContractorController;
 use App\Http\Controllers\WorkerController;
 use App\Http\Controllers\EmployeeController;
@@ -25,8 +25,7 @@ use App\Http\Controllers\ArchitectController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\Sso\SsoController;
-use App\Http\Controllers\ProductBrandController;
-use App\Http\Controllers\ProductTypeController;
+use App\Http\Controllers\ProjectTypeController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\SupplierCatalogController;
 use App\Http\Controllers\ProductCatalogController;
@@ -238,7 +237,7 @@ Route::post('/switch-role', [RoleSwitchController::class, 'switch'])
 route::resource('/product_colors', ProductColorController::class);
 route::resource('/product_brands', ProductBrandController::class);
 route::resource('/product_categories', ProductCategoryController::class);
-route::resource('/product_types', ProductTypeController::class);
+route::resource('/project_types', ProjectTypeController::class);
 
 
 
@@ -275,19 +274,16 @@ Route::middleware(['auth', 'permission:lihat daftar proyek|lihat data proyek'])-
     Route::get('prjects/{project}/pdf', [ProjectController::class, 'pdf'])
     ->name('projects.pdf');
 });
+Route::middleware(['auth', 'permission:kelola sistem'])->group(function () {
 
-Route::middleware(['auth', 'permission:lihat data tenaga'])->group(function () {
-    Route::post('/labor_costs/{id}/duplicate', [\App\Http\Controllers\LaborCostController::class, 'duplicate'])
-        ->name('labor_costs.duplicate');
-    Route::resource('/labor_costs', \App\Http\Controllers\LaborCostController::class);
+    Route::get('/systems/{system}/continue', 
+    [ProjectController::class, 'continue'])
+    ->name('projects.continue');
+
+    Route::resource('/systems', SystemController::class)->except(['edit, update, show']);
+    Route::get('prjects/{project}/pdf', [ProjectController::class, 'pdf'])
+    ->name('projects.pdf');
 });
-
-Route::middleware(['auth', 'permission:lihat data alat'])->group(function () {
-    Route::post('/tools/{id}/duplicate', [\App\Http\Controllers\EquipmentCostController::class, 'duplicate'])
-        ->name('tools.duplicate');
-    Route::resource('/equipment_costs', \App\Http\Controllers\EquipmentCostController::class);
-});
-
 Route::resource('design-packages', DesignPackageController::class)
     ->except(['show']);
 

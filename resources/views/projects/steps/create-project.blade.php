@@ -30,44 +30,48 @@
             
             <div class="col-md-2">
                 <label class="form-label required">Jenis Proyek</label>
-                <select name="project_type" 
-                        class="form-select select2 @error('project_type') is-invalid @enderror" 
+                <select name="project_type"
+                        class="form-select select2 @error('project_type') is-invalid @enderror"
                         required>
                     <option value="">-- Pilih --</option>
-                    <option value="1" {{ old('project_type') == '1' ? 'selected' : '' }}>Desain</option>
-                    <option value="2" {{ old('project_type') == '2' ? 'selected' : '' }}>RAB</option>
-                    <option value="3" {{ old('project_type') == '3' ? 'selected' : '' }}>Build</option>
+                    @foreach($projectTypes as $type)
+                        <option value="{{ $type->id }}"
+                            {{ old('project_type', $project->project_type ?? '') == $type->id ? 'selected' : '' }}>
+                            {{ $type->name }}
+                        </option>
+                    @endforeach
                 </select>
                 @error('project_type')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
-            <div class="col-md-3">
-                <label class="form-label required">Tanggal Mulai Proyek</label>
-                            <input type="date" name="start_date" class="form-control" required
-                                value="{{ old('start_date') }}"
-                                pattern="\d{4}-\d{2}-\d{2}" placeholder="YYYY-MM-DD">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Tanggal Akhir Proyek (Estimasi)</label>
-                            <input type="date" name="end_date" class="form-control"
-                                value="{{ old('end_date') }}"
-                                pattern="\d{4}-\d{2}-\d{2}" placeholder="YYYY-MM-DD">
-                            {{-- <input type="text" id="tanggal" name="end_date" class="form-control" 
-                            placeholder="dd/mm/YYYY" value="{{ old('end_date') }}" required> --}}
-            </div>
-            {{-- <div class="col-md-2">
-                <label class="form-label">Status Proyek</label>
-                <select name="project_status" class="form-select">
-                    <option value="">-- Pilih Status --</option>
-                    @foreach($projectStatus as $key => $label)
-                    <option value="{{ $key }}" {{ old('project_status') == $key ? 'selected' : '' }}>
-                        {{ $label }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>  --}}
+<div class="col-md-3">
+    <label class="form-label required">Tanggal Mulai Proyek</label>
+
+    <input
+        type="text"
+        name="start_date"
+        id="start_date"
+        class="form-control"
+        required
+        value="{{ old('start_date') }}"
+        placeholder="DD-MM-YYYY"
+    >
+</div>
+
+<div class="col-md-3">
+    <label class="form-label">Tanggal Akhir Proyek (Estimasi)</label>
+
+    <input
+        type="text"
+        name="end_date"
+        id="end_date"
+        class="form-control"
+        value="{{ old('end_date') }}"
+        placeholder="DD-MM-YYYY"
+    >
+</div>
 
             <div class="col-md-4">
                 <label class="form-label required">Customer</label>
@@ -121,6 +125,21 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
+            <div class="col-12">
+                <label class="form-label">Base URL</label>
+                                                <input
+                                    type="url"
+                                    name="base_url"
+                                    id="base_url"
+                                    class="form-control @error('base_url') is-invalid @enderror"
+                                    value="{{ old('base_url') }}"
+                                    placeholder="https://example.com"
+                                    maxlength="255"
+                                >
+                @error('project_location')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
         </div>         
     </div>
 
@@ -128,8 +147,8 @@
         <h3 class="fw-semibold mb-3 border-bottom pb-2">Lokasi Proyek</h3>
         <div class="row g-4">
             <div class="col-12">
-                <label class="form-label required">Alamat Lengkap</label>
-                <textarea name="project_location" rows="3" class="form-control @error('project_location') is-invalid @enderror" required>{{ old('project_location') }} </textarea>
+                <label class="form-label">Alamat Lengkap</label>
+                <textarea name="project_location" rows="3" class="form-control @error('project_location') is-invalid @enderror">{{ old('project_location') }} </textarea>
                 @error('project_location')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -137,9 +156,9 @@
         </div>
         <div class="row g-4 mt-2">
             <div class="col-md-6">
-                <label class="form-label required">Provinsi</label>
+                <label class="form-label">Provinsi</label>
                 <select name="province_id" id="province" 
-                        class="form-select select2 @error('province_id') is-invalid @enderror" required>
+                        class="form-select select2 @error('province_id') is-invalid @enderror">
                     <option value="">-- Pilih Provinsi --</option>
                     @foreach($provinces as $province)
                         <option value="{{ $province->id }}" {{ old('province_id') == $province->id ? 'selected' : '' }}>
@@ -153,9 +172,9 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label required">Kabupaten/Kota</label>
+                <label class="form-label">Kabupaten/Kota</label>
                 <select name="city_id" id="city" 
-                        class="form-select select2 @error('city_id') is-invalid @enderror" required>
+                        class="form-select select2 @error('city_id') is-invalid @enderror">
                     <option value="">-- Pilih Kota --</option>
                 </select>
                 @error('city_id')
@@ -164,9 +183,9 @@
             </div>
 
             <div class="col-md-5">
-                <label class="form-label required">Kecamatan</label>
+                <label class="form-label">Kecamatan</label>
                 <select name="district_id" id="district" 
-                        class="form-select select2 @error('district_id') is-invalid @enderror" required>
+                        class="form-select select2 @error('district_id') is-invalid @enderror">
                     <option value="">-- Pilih Kecamatan --</option>
                 </select>
                 @error('district_id')
@@ -175,9 +194,9 @@
             </div>
 
             <div class="col-md-5">
-                <label class="form-label required">Kelurahan</label>
+                <label class="form-label">Kelurahan</label>
                 <select name="sub_district_id" id="sub_district" 
-                        class="form-select select2 @error('sub_district_id') is-invalid @enderror" required>
+                        class="form-select select2 @error('sub_district_id') is-invalid @enderror">
                     <option value="">-- Pilih Kelurahan --</option>
                 </select>
                 @error('sub_district_id')
@@ -186,24 +205,15 @@
             </div>
 
             <div class="col-md-2">
-                <label class="form-label required">Kode Pos</label>
+                <label class="form-label">Kode Pos</label>
                 <select name="postal_code_id" id="postal_code" 
-                        class="form-select select2 @error('postal_code_id') is-invalid @enderror" required>
+                        class="form-select select2 @error('postal_code_id') is-invalid @enderror">
                     <option value="">-- Pilih Kode Pos --</option>
                 </select>
                 @error('postal_code_id')
                     <small class="text-danger">{{ $message }}</small>
                 @enderror
             </div>
-        </div>
-    </div>
-    <div class="row g-4">
-        <div class="col-12">
-            <label class="form-label">Ringkasan Kegiatan</label>
-            <textarea name="description" rows="3" class="form-control @error('description') is-invalid @enderror" required>{{ old('description') }} </textarea>
-            @error('description')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
         </div>
     </div>
     <div class="text-end mt-5">
@@ -215,7 +225,25 @@
 @endcan
 
 @push('js')
-    <script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    flatpickr('#start_date', {
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd-m-Y',
+    });
+
+    flatpickr('#end_date', {
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd-m-Y',
+    });
+
+});
+</script>
+<script>
 $(function () {
     initLocationCascade({
         prefix: '',
