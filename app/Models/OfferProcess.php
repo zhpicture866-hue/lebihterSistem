@@ -42,17 +42,6 @@ class OfferProcess extends Model
         return $this->hasMany(OfferProcessItem::class, 'offer_process_id');
     }
 
-    // public function categories()
-    // {
-    //     return $this->hasMany(RabProcessCategory::class)
-    //         ->orderBy('order_no');
-    // }
-
-    //     public function uraians()
-    // {
-    //     return $this->hasMany(RabProcessUraian::class);
-    // }
-
         public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

@@ -381,7 +381,7 @@ Route::middleware(['auth'])->group(function () {
     ->name('projects.offers.rab.pdf');
     Route::get('/projects/{project}/build/pdf', [\App\Http\Controllers\OfferBuildController::class, 'printPdf'])
     ->name('projects.offers.build.pdf');
-    Route::get('/projects/{project}/rab/pdf', [\App\Http\Controllers\RabProcessController::class, 'exportPdf'])
+    Route::get('/projects/{project}/rab/pdf', [\App\Http\Controllers\OfferProcessController::class, 'exportPdf'])
     ->name('projects.rab.pdf');
     Route::get('/tasks/files/{file}', [\App\Http\Controllers\ProjectTaskController::class, 'viewFile'])
     ->name('tasks.files.view');
@@ -511,13 +511,10 @@ Route::post('/offer/{offer}/approve', [\App\Http\Controllers\OfferRABController:
 Route::post('/offer/{offer}/reject', [\App\Http\Controllers\OfferRABController::class, 'reject'])
     ->name('offer.reject');
 
-Route::post('projects/rab', [\App\Http\Controllers\RabProcessController::class, 'store'])
+Route::post('projects/rab', [\App\Http\Controllers\OfferProcessController::class, 'store'])
     ->name('projects.rab.store');
-Route::put('/projects/{project}/rab/{rab}', [\App\Http\Controllers\RabProcessController::class, 'update'])
+Route::put('/projects/{project}/rab/{rab}', [\App\Http\Controllers\OfferProcessController::class, 'update'])
     ->name('projects.rab.update');
-
-Route::post('/projects/rab/{rab}/refresh-from-master', [\App\Http\Controllers\RabProcessController::class, 'refreshFromMaster'])
-    ->name('rab.refreshFromMaster');
 
 Route::get('/rab-process/{id}/items',
     [\App\Http\Controllers\RabProcessController::class, 'items'])
@@ -528,10 +525,8 @@ Route::get(
     '/rab/uraian-images/{uraianId}',
     [\App\Http\Controllers\RabProcessController::class, 'uraianImages']
 )->name('rab.uraian-images');
-Route::get('/rab/{id}/structure', [\App\Http\Controllers\RabProcessController::class,'structure']);
-// Route::post('/rab/autosave/{rab}', [\App\Http\Controllers\RabProcessController::class, 'autosave']);
-// Route::post('/rab/reorder/{rab}', [\App\Http\Controllers\RabProcessController::class, 'reorder']);
-// Route::get('/rab/autosave/{rab}', [\App\Http\Controllers\RabProcessController::class, 'loadDraft']);
+Route::get('/rab/{id}/structure', [\App\Http\Controllers\OfferProcessController::class,'structure']);
+
 Route::post('projects/offerbuild', [\App\Http\Controllers\OfferBuildController::class, 'store'])
     ->name('projects.offerbuild.store');
     
@@ -591,7 +586,14 @@ Route::middleware(['auth', 'permission:lihat daftar user'])->group(function () {
     route::resource('/users', UsersController::class);
 });
 });
-
+Route::post(
+    '/projects/{project}/build-termin',
+    [\App\Http\Controllers\BuildTerminController::class, 'store']
+)->name('projects.build-termin.store');
+Route::put(
+    '/projects/{project}/build-termin',
+    [\App\Http\Controllers\BuildTerminController::class, 'update']
+)->name('projects.build-termin.update');
 Route::prefix('projects/{project}')
     ->middleware(['auth'])
     ->group(function () {

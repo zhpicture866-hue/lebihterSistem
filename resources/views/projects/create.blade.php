@@ -144,7 +144,7 @@
                                     <x-slot:actions>
                                         @can('ubah data proyek')
                                             <button type="button"
-                                                    class="btn btn-sm btn-dark btn-toggle-view-edit"
+                                                    class="btn btn-sm btn-dark me-2 btn-toggle-view-edit"
                                                     data-view="{{ $slug }}-view"
                                                     data-edit="{{ $slug }}-edit"
                                                     title="Edit Data">

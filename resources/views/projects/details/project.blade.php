@@ -58,7 +58,10 @@
                 <label class="fw-semibold">Karyawan</label>
                 <input type="text" class="form-control" value="{{ $project->employee_name }}" readonly>
             </div>
-
+            <div class="col-md-4">
+                <label class="fw-semibold">Base URL</label>
+                <input type="text" class="form-control" value="{{ $project->base_url }}" readonly>
+            </div>
             <div class="col-12 mt-3">
                 <label class="fw-semibold">Alamat Lokasi</label>
                 <textarea id="project_location" class="form-control" rows="3" readonly>{{ $project->project_location }}</textarea>

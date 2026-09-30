@@ -1,20 +1,7 @@
 @php
-$rab = $project->rab()->with([
-    'categories.uraians.items',
-    'categories.uraians.images.image'
-])->first();
-function numberToLetters($num) {
-    $letters = '';
-    $num = $num + 1;
-
-    while ($num > 0) {
-        $rem = ($num - 1) % 26;
-        $letters = chr(65 + $rem) . $letters;
-        $num = intdiv(($num - 1), 26);
-    }
-
-    return $letters;
-}
+$rab = $project->rab()->with('items')->first();
+    $canEdit = auth()->user()->can('lihat daftar proyek');
+    $ReadOnly = !$canEdit;
 @endphp
 
 @can('lihat data proyek')
@@ -25,172 +12,128 @@ function numberToLetters($num) {
 
         <div class="row g-4">
             <div class="col-md-4">
+                <label class="fw-semibold">Nomor Penawaran</label>
+                <input type="text" class="form-control" readonly
+                       value="{{ $rab->offer_number }}">
+            </div>
+            <div class="col-md-4">
+                <label class="fw-semibold">Tanggal Penawaran</label>
+                <input type="text" class="form-control" readonly
+                    value="{{ $rab->offer_date?->format('d/m/Y') ?? '-' }}">
+            </div>
+            <div class="col-md-4">
                 <label class="fw-semibold">Nama Customer</label>
                 <input type="text" class="form-control" readonly
                        value="{{ $rab->contact_name }}">
             </div>
-            <div class="col-md-4">
-                <label class="fw-semibold">Lokasi Pekerjaan</label>
-                <input type="text" class="form-control" readonly
-                       value="{{ $rab->job_location }}">
-            </div>
-            <div class="col-md-4">
-                <label class="fw-semibold">Durasi Pekerjaan</label>
-                <input type="text" class="form-control" readonly
-                       value="{{ $rab->job_duration }}">
-            </div>
         </div>
 
         <h5 class="fw-bold mt-5 mb-3">Rincian Pekerjaan</h5>
-        <div class="table-responsive">
-            <table class="table table-bordered align-middle">
-                <thead>
-                    <tr>
-                        <th width="50">NO</th>
-                        <th>URAIAN PEKERJAAN</th>
-                        <th>SAT</th>
-                        <th>VOL</th>
-                        <th>HARGA SATUAN</th>
-                        <th>JUMLAH HARGA</th>
-                    </tr>
-                </thead>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th width="5%" style="text-align: center;">NO</th>
+                            <th width="45%" style="text-align: center;">NAMA PRODUK</th>
+                            <th width="10%" style="text-align: center;">PERIODE</th>
+                            <th width="5%" style="text-align: center;">QTY</th>
+                            <th width="17.5%" style="text-align: center;">HARGA</th>
+                            <th width="17.5%" style="text-align: center;">JUMLAH</th>
+                        </tr>
+                    </thead>
 
-                <tbody>
-
-                    @foreach($rab->categories as $category)
+                    <tbody>
 
                         @php
-                            $categoryLetter = numberToLetters($loop->index);
-                            $uraianNo = 1;
-
-                            $categoryTotal = $category->uraians
-                                ->flatMap->items
-                                ->sum('total');
+                            $items = $rab->items->sortBy('order_no')->values();
                         @endphp
 
-                            <tr class="table-secondary">
-                                <th>{{ $categoryLetter }}</th>
-                                <th colspan="4">{{ strtoupper($category->name) }}</th>
-                                <th class="text-end">
-                                    Rp {{ number_format($categoryTotal,2,',','.') }}
-                                </th>
-                            </tr>
-
-                        @foreach($category->uraians as $uraian)
-
-                            <tr class="fw-bold">
-                                <td>{{ $uraianNo }}</td>
-
-                                <td colspan="5">
-                                    <div class="d-flex align-items-center gap-2">
-
-                                        {{ ucwords($uraian->name) }}
-
-                                        <button type="button"
-                                            class="btn btn-sm btn-gambar"
-                                            onclick="bukagaleri(
-                                                '{{ route('rab.uraian-images', $uraian->id) }}',
-                                                '{{ $uraian->name }}'
-                                            )">
-
-                                            <i class="ti ti-photo"></i>
-
-                                        </button>
-
-                                    </div>
-                                </td>
-
-                            </tr>
-
-                            @php $itemNo = 1; @endphp
-
-                            @foreach($uraian->items as $item)
+                        @foreach($items as $item)
 
                             <tr>
-
-                                <td>{{ $uraianNo.'.'.$itemNo }}</td>
-
-                                <td>{{ $item->job_name }}</td>
-
-                                <td>{{ $item->satuan }}</td>
-
-                                <td>{{ rtrim(rtrim(number_format($item->volume, 2, '.', ''), '0'), '.') }}</td>
-
+                                <td class="text-center">
+                                    {{ $loop->iteration }}
+                                </td>
                                 <td>
-                                    Rp {{ number_format($item->price,2,',','.') }}
+                                    {!! function_exists('clean')
+                                        ? clean($item->description)
+                                        : strip_tags((string) $item->description, '<p><br><strong><em><u><ol><ul><li>') !!}
                                 </td>
-
+                                <td class="text-center">
+                                    {{ $item->billing_period_label }}
+                                </td>
+                                <td class="text-center">
+                                    {{ rtrim(rtrim(number_format($item->volume, 5, '.', ''), '0'), '.') }}
+                                </td>
                                 <td class="text-end">
-                                    Rp {{ number_format($item->total,2,',','.') }}
+                                    Rp {{ number_format($item->price, 2, ',', '.') }}
                                 </td>
-
+                                <td class="text-end">
+                                    Rp {{ number_format($item->total, 2, ',', '.') }}
+                                </td>
                             </tr>
-
-                            @php $itemNo++; @endphp
-
-                            @endforeach
-
-                            @php $uraianNo++; @endphp
 
                         @endforeach
 
-                    @endforeach
+                    </tbody>
 
-                </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="5" class="text-end">SUBTOTAL</th>
+                            <th class="text-end">Rp {{ number_format($rab->subtotal, 2, ',', '.') }}</th>
+                        </tr>
 
-                <tfoot>
-                    <tr>
-                        <th colspan="5" class="text-end">SUBTOTAL</th>
-                        <th>Rp {{ number_format($rab->subtotal,3,',','.') }}</th>
-                    </tr>
-    
-                    <tr>
-                        <th colspan="5" class="text-end">DISCOUNT</th>
-                        <th>Rp {{ number_format($rab->discount,3,',','.') }}</th>
-                        
-                    </tr>
+                        <tr>
+                            <th colspan="5" class="text-end">DISCOUNT</th>
+                            <th class="text-end">Rp {{ number_format($rab->discount, 2, ',', '.') }}</th>
+                        </tr>
 
-                    <tr>
-                        <th colspan="5" class="text-end">SUBTOTAL AFTER DISCOUNT</th>
-                        <th>Rp {{ number_format($rab->subtotal_after_discount,3,',','.') }}</th>
-                    </tr>
+                        <tr>
+                            <th colspan="5" class="text-end">SUBTOTAL AFTER DISCOUNT</th>
+                            <th class="text-end">Rp {{ number_format($rab->subtotal_after_discount, 2, ',', '.') }}</th>
+                        </tr>
 
-                    <tr>
-                        <th colspan="5" class="text-end">TAX RATE</th>
-                        <th>{{ $rab->tax_rate }}%</th>
-                    </tr>
+                        <tr>
+                            <th colspan="5" class="text-end">TAX RATE</th>
+                            <th class="text-end">{{ $rab->tax_rate }}%</th>
+                        </tr>
 
-                    <tr>
-                        <th colspan="5" class="text-end">TOTAL TAX</th>
-                        <th>Rp {{ number_format($rab->tax_total,2,',','.') }}</th>
-                        
-                    </tr>
+                        <tr>
+                            <th colspan="5" class="text-end">TOTAL TAX</th>
+                            <th class="text-end">Rp {{ number_format($rab->tax_total, 2, ',', '.') }}</th>
+                        </tr>
 
-                    <tr>
-                        <th colspan="5" class="text-end">SHIPPING / HANDLING</th>
-                        <th>Rp {{ number_format($rab->shipping,2,',','.') }}</th>
-                        
-                    </tr>
+                        <tr>
+                            <th colspan="5" class="text-end">SHIPPING / HANDLING</th>
+                            <th class="text-end">Rp {{ number_format($rab->shipping, 2, ',', '.') }}</th>
+                        </tr>
 
-                    <tr>
-                        <th colspan="5" class="text-end fw-bold">GRAND TOTAL</th>
-                        <th class="fw-bold">
-                            Rp {{ number_format($rab->grand_total,3,',','.') }}
-                        </th>
-                        
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
+                        <tr>
+                            <th colspan="5" class="text-end fw-bold">GRAND TOTAL</th>
+                            <th class="text-end fw-bold">
+                                Rp {{ number_format($rab->grand_total, 2, ',', '.') }}
+                            </th>
+                        </tr>
+                        @if($rab->grand_total >= 100000)
+                        <tr>
+                            <th colspan="5" class="text-end fw-bold">DIBULATKAN</th>
+                            <th class="text-end fw-bold">
+                                Rp {{ number_format(floor($rab->grand_total / 100000) * 100000, 0, ',', '.') }}
+                            </th>
+                        </tr>
+                        @endif
+                    </tfoot>
+                </table>
+            </div>
 
         @if($rab->notes)
             <div class="mt-4">
                 <h5 class="fw-bold">Keterangan</h5>
-                <div class="border p-3">{{ $rab->notes }}</div>
+                <div class="border p-3" style="white-space: pre-line;">{{ $rab->notes }}</div>
             </div>
         @endif
         <div class="d-flex align-items-center gap-2 mt-4">
-            @if($project->rab?->id)
+            @if($rab->id)
                 
             <a href="{{ route('projects.rab.pdf', $project->id) }}"
                 class="btn btn-dark"
@@ -213,209 +156,5 @@ function numberToLetters($num) {
         @endif
     </div>
 </div>
-    <div class="modal fade" id="uraianGalleryModall">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-
-            <div class="modal-content">
-
-                <div class="modal-header">
-                    <h5 id="uraianGalleryTitle"></h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-
-                    <div id="uraianGalleryContainer"
-                        class="d-flex flex-wrap gap-2">
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
-    <div id="imageViewer" class="image-viewer d-none">
-
-        <div class="viewer-toolbar">
-            <button onclick="zoomOut()">-</button>
-            <button onclick="zoomIn()">+</button>
-            <button onclick="closeViewer()">✕</button>
-        </div>
-
-        <button class="viewer-prev" onclick="prevImage()">‹</button>
-
-        <div class="viewer-stage">
-            <img id="viewerImage">
-        </div>
-
-        <button class="viewer-next" onclick="nextImage()">›</button>
-
-    </div>
 @endif
 @endcan
-@push('js')
-<script>
-
-let viewerImages = []
-let currentIndex = 0
-let scale = 1
-
-function bukagaleri(url, uraianName){
-
-    const modal = new bootstrap.Modal(
-        document.getElementById('uraianGalleryModall')
-    )
-
-    const title = document.getElementById('uraianGalleryTitle')
-    const container = document.getElementById('uraianGalleryContainer')
-
-    title.innerText = uraianName
-    container.innerHTML = '<div class="text-muted">Loading...</div>'
-
-    fetch(url)
-
-    .then(async res => {
-
-        if(!res.ok){
-
-            const text = await res.text()
-
-            console.error(text)
-
-            throw new Error('Gagal load gambar')
-        }
-
-        return res.json()
-    })
-
-    .then(data => {
-
-        container.innerHTML = ''
-
-        if(data.length === 0){
-
-            container.innerHTML =
-                '<div class="text-muted">Belum ada gambar</div>'
-
-            return
-        }
-
-        viewerImages = data.map(i => i.url)
-
-        data.forEach((img,index)=>{
-
-            container.insertAdjacentHTML('beforeend',`
-
-                <img src="${img.url}"
-                    class="rab-gallery-img"
-                    data-index="${index}">
-
-            `)
-
-        })
-
-    })
-
-    .catch(err => {
-
-        console.error(err)
-
-        container.innerHTML = `
-            <div class="text-danger">
-                Gagal memuat gambar
-            </div>
-        `
-    })
-
-    modal.show()
-}
-
-document.addEventListener("click",function(e){
-
-    if(e.target.classList.contains('rab-gallery-img')){
-
-        const index = e.target.dataset.index
-        openViewer(viewerImages,index)
-
-    }
-
-})
-
-function openViewer(images,index=0){
-
-    viewerImages = images
-    currentIndex = parseInt(index)
-    scale = 1
-
-    document.getElementById("viewerImage").src = images[currentIndex]
-
-    document
-    .getElementById("imageViewer")
-    .classList.remove("d-none")
-
-}
-
-function closeViewer(){
-
-    document
-    .getElementById("imageViewer")
-    .classList.add("d-none")
-
-}
-
-function nextImage(){
-
-    currentIndex++
-
-    if(currentIndex >= viewerImages.length){
-        currentIndex = 0
-    }
-
-    document.getElementById("viewerImage").src = viewerImages[currentIndex]
-
-}
-
-function prevImage(){
-
-    currentIndex--
-
-    if(currentIndex < 0){
-        currentIndex = viewerImages.length - 1
-    }
-
-    document.getElementById("viewerImage").src = viewerImages[currentIndex]
-
-}
-
-function zoomIn(){
-    scale += 0.2
-    updateZoom()
-}
-
-function zoomOut(){
-    scale -= 0.2
-    if(scale < 1) scale = 1
-    updateZoom()
-}
-
-function updateZoom(){
-
-    document
-    .getElementById("viewerImage")
-    .style.transform = `scale(${scale})`
-
-}
-
-document.addEventListener("keydown",function(e){
-
-    if(document.getElementById("imageViewer").classList.contains("d-none"))
-        return
-
-    if(e.key === "ArrowRight") nextImage()
-    if(e.key === "ArrowLeft") prevImage()
-    if(e.key === "Escape") closeViewer()
-
-})
-
-</script>
-@endpush

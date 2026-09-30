@@ -138,6 +138,8 @@ public function create(AccountingAccount $account)
 
 public function store(Request $request)
 {
+    $licenseId = config('app.license_id');
+    
     $request->validate([
         'account_name' => 'required|string|max:255',
         'category' => 'required|string|max:255',

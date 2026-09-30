@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class UpdateAccountingJournalRequest extends FormRequest
 {
@@ -42,7 +43,20 @@ class UpdateAccountingJournalRequest extends FormRequest
             'transaction_date' => 'required|date',
             'description' => 'nullable|string',
             'details' => 'required|array',
-            'details.*.account_id' => 'required|uuid|exists:accounting_accounts,id',
+            'details.*.account_id' => [
+                'required',
+                'uuid',
+                function ($attribute, $value, $fail) {
+                    $exists = DB::connection('pgsql')
+                        ->table('zhpicture.accounting_accounts')
+                        ->where('id', $value)
+                        ->exists();
+
+                    if (! $exists) {
+                        $fail('Akun yang dipilih tidak valid.');
+                    }
+                },
+            ],
             'details.*.debit' => 'nullable|numeric',
             'details.*.credit' => 'nullable|numeric',
             'details.*.person' => 'nullable|string',

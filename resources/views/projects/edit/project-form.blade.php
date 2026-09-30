@@ -1,4 +1,4 @@
-<div class="card shadow-sm border-0 mb-4">
+<div class=n"card shadow-sm border-0 mb-4">
     <div class="card-body px-5 py-4">
     <h3 class="mb-4 fw-bold">Edit Data Proyek</h3>
         <form id="project-edit-form"
@@ -11,20 +11,33 @@
             <div class="row g-4">
 
                 <div class="col-md-4">
-                    <label class="fw-semibold">Nama Proyek</label>
+                    <label class="form-label">Nama Proyek</label>
                     <input type="text" name="project_name" class="form-control"
                         value="{{ $project->project_name }}">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label required">Jenis Proyek</label>
-                    <select name="project_type" 
-                            class="form-select select2 @error('project_type') is-invalid @enderror" 
+                    @php
+                        // Sudah punya level = sudah pernah generateLevels() -> tipe tidak boleh diubah lagi
+                        $isLocked = $project && $project->levels->isNotEmpty();
+                    @endphp
+                    <select name="project_type"
+                            class="form-select select2 @error('project_type') is-invalid @enderror"
+                            @disabled($isLocked)
                             required>
                         <option value="">-- Pilih --</option>
-                        <option value="1" {{ old('project_type', $project->project_type) == '1' ? 'selected' : '' }}>Desain</option>
-                        <option value="2" {{ old('project_type', $project->project_type) == '2' ? 'selected' : '' }}>RAB</option>
-                        <option value="3" {{ old('project_type', $project->project_type) == '3' ? 'selected' : '' }}>Build</option>
+                        @foreach($projectTypes as $type)
+                            <option value="{{ $type->id }}"
+                                {{ old('project_type', $project?->project_type ?? '') == $type->id ? 'selected' : '' }}>
+                                {{ $type->name }}
+                            </option>
+                        @endforeach
                     </select>
+                    @if($isLocked)
+                        {{-- disabled select tidak ikut ter-submit, jadi kirim value asli lewat hidden input --}}
+                        <input type="hidden" name="project_type" value="{{ $project->project_type }}">
+                        {{-- <small class="text-muted">Jenis proyek tidak bisa diubah setelah proyek dibuat.</small> --}}
+                    @endif
                     @error('project_type')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -32,35 +45,63 @@
 
                 <div class="col-md-3">
                     <label class="form-label required">Tanggal Mulai Proyek</label>
-                                <input type="date" name="start_date" class="form-control" required
-                                    value="{{ old('start_date', $project->start_date) }}"
-                                    pattern="\d{4}-\d{2}-\d{2}" placeholder="YYYY-MM-DD">
+
+                    <input
+                        type="text"
+                        name="start_date"
+                        id="start_date_edit"
+                        class="form-control"
+                        required
+                        value="{{ old('start_date', $project->start_date) }}"
+                        placeholder="DD-MM-YYYY"
+                    >
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label">Tanggal Akhir Proyek (Estimasi)</label>
-                                <input type="date" name="end_date" class="form-control"
-                                    value="{{ old('end_date', $project->end_date) }}"
-                                    pattern="\d{4}-\d{2}-\d{2}" placeholder="YYYY-MM-DD">
+
+                    <input
+                        type="text"
+                        name="end_date"
+                        id="end_date_edit"
+                        class="form-control"
+                        value="{{ old('end_date', $project->end_date) }}"
+                        placeholder="DD-MM-YYYY"
+                    >
                 </div>
 
                 <div class="col-md-4">
-                    <label class="fw-semibold">Customer</label>
+                    <label class="form-label">Customer</label>
                     <input type="text" class="form-control"
                         value="{{ $project->customer->display_name }}" readonly>
                 </div>
 
                 <div class="col-md-4">
-                    <label class="fw-semibold">Karyawan</label>
+                    <label class="form-label">Karyawan</label>
                     <input type="text" class="form-control"
                         value="{{ $project->employee->display_name }}" readonly>
                 </div>
-
+                <div class="col-12">
+                    <label class="form-label">Base URL</label>
+                    <input
+                        type="url"
+                        name="base_url"
+                        id="base_url"
+                        class="form-control @error('base_url') is-invalid @enderror"
+                        value="{{ old('base_url', $project->base_url) }}"
+                        placeholder="https://example.com"
+                        maxlength="255"
+                    >
+                    @error('project_location')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
                 <div class="col-12 mt-3">
-                    <label class="fw-semibold">Alamat Lokasi</label>
+                    <label class="form-label">Alamat Lokasi</label>
                     <textarea name="project_location" class="form-control" rows="3">{{ $project->project_location }}</textarea>
                 </div>
 
-                <div class="row mb-3">
+                <div class="row mb-3 mt-3">
                     <div class="col-md-6">
                         <label class="form-label required">Provinsi</label>
                         <select id="edit_province" name="province_id" class="form-select select2">
@@ -81,7 +122,7 @@
                     </div>
                 </div>
 
-                <div class="row mb-3">
+                <div class="row mb-3 mt-2">
                     <div class="col-md-5">
                         <label class="form-label required">Kecamatan</label>
                             <select id="edit_district" name="district_id" class="form-select select2">
@@ -99,26 +140,29 @@
                     </div>
                 </div>
                 
-                    <div class="col-12">
-                        <label class="form-label">Ringkasan Kegiatan</label>
-                        <textarea name="description" rows="3" class="form-control @error('description') is-invalid @enderror" required>{{ old('description') }} </textarea>
-                        @error('description')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                
             </div>
-
-            <div class="mt-4">
-                <button class="btn btn-dark">Simpan</button>
-                <button type="button" id="btn-cancel-project" class="btn btn-light btn-sm">Batal</button>
-            </div>
-
         </form>
     </div>
 </div>
 
 @push('js')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        flatpickr('#start_date_edit', {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd-m-Y',
+        });
+
+        flatpickr('#end_date_edit', {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd-m-Y',
+        });
+
+    });
+</script>
 <script>
 $(document).ready(function () {
     @if(isset($project))
@@ -228,4 +272,3 @@ $(document).ready(function () {
 });
 </script>
 @endpush
-

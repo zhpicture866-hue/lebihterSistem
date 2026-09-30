@@ -46,32 +46,32 @@
                 @enderror
             </div>
 
-<div class="col-md-3">
-    <label class="form-label required">Tanggal Mulai Proyek</label>
+            <div class="col-md-3">
+                <label class="form-label required">Tanggal Mulai Proyek</label>
 
-    <input
-        type="text"
-        name="start_date"
-        id="start_date"
-        class="form-control"
-        required
-        value="{{ old('start_date') }}"
-        placeholder="DD-MM-YYYY"
-    >
-</div>
+                <input
+                    type="text"
+                    name="start_date"
+                    id="start_date"
+                    class="form-control"
+                    required
+                    value="{{ old('start_date') }}"
+                    placeholder="DD-MM-YYYY"
+                >
+            </div>
 
-<div class="col-md-3">
-    <label class="form-label">Tanggal Akhir Proyek (Estimasi)</label>
+            <div class="col-md-3">
+                <label class="form-label">Tanggal Akhir Proyek (Estimasi)</label>
 
-    <input
-        type="text"
-        name="end_date"
-        id="end_date"
-        class="form-control"
-        value="{{ old('end_date') }}"
-        placeholder="DD-MM-YYYY"
-    >
-</div>
+                <input
+                    type="text"
+                    name="end_date"
+                    id="end_date"
+                    class="form-control"
+                    value="{{ old('end_date') }}"
+                    placeholder="DD-MM-YYYY"
+                >
+            </div>
 
             <div class="col-md-4">
                 <label class="form-label required">Customer</label>

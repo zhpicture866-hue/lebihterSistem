@@ -53,7 +53,7 @@
                                         <th>Karyawan</th>
                                         {{-- <th>Affiliator</th> --}}
                                         <th>Tanggal</th>
-                                        <th>Lokasi</th>
+                                        {{-- <th>Lokasi</th> --}}
                                         {{-- <th>Provinsi</th>
                                         <th>Kabupaten/Kota</th>
                                         <th>Kecamatan</th>
@@ -119,7 +119,7 @@
                     { data: 'employee', name: 'employee.user.fullname' },
                     // { data: 'affiliator', name: 'affiliator.user.fullname' },
                     { data: 'start_date', name: 'start_date' },
-                    { data: 'project_location', name: 'project_location' },
+                    // { data: 'project_location', name: 'project_location' },
                     // { data: 'province_name', name: 'province.name' },
                     // { data: 'city_name', name: 'city.name'},
                     // { data: 'district_name', name: 'district.name' },

@@ -85,6 +85,7 @@
                 <colgroup>
                     <col style="width: 60px">
                     <col style="width: 180px">
+                    <col style="width: 130px">
                     <col style="width: 60px">
                     <col style="width: 130px">
                     <col style="width: 180px">
@@ -95,6 +96,7 @@
                     <tr>
                         <th class="text-center">NO</th>
                         <th class="text-center">Nama Produk</th>
+                        <th class="text-center">Periode</th>
                         <th class="text-center">Qty</th>
                         <th class="text-center">Harga</th>
                         <th class="text-center">JUMLAH</th>
@@ -106,7 +108,7 @@
 
                 <tfoot>
                     <tr>
-                        <th colspan="4" class="text-end">
+                        <th colspan="5" class="text-end">
                             SUBTOTAL
                         </th>
 
@@ -117,7 +119,7 @@
                     </tr>
 
                     <tr>
-                        <th colspan="4" class="text-end">
+                        <th colspan="5" class="text-end">
                             DISCOUNT
                         </th>
 
@@ -134,7 +136,7 @@
                     </tr>
 
                     <tr>
-                        <th colspan="4" class="text-end">
+                        <th colspan="5" class="text-end">
                             SUBTOTAL AFTER DISCOUNT
                         </th>
 
@@ -145,7 +147,7 @@
                     </tr>
 
                     <tr>
-                        <th colspan="4" class="text-end">
+                        <th colspan="5" class="text-end">
                             TAX RATE (%)
                         </th>
 
@@ -161,7 +163,7 @@
                     </tr>
 
                     <tr>
-                        <th colspan="4" class="text-end">
+                        <th colspan="5" class="text-end">
                             TOTAL TAX
                         </th>
 
@@ -172,7 +174,7 @@
                     </tr>
 
                     <tr>
-                        <th colspan="4" class="text-end">
+                        <th colspan="5" class="text-end">
                             SHIPPING / HANDLING
                         </th>
 
@@ -189,7 +191,7 @@
                     </tr>
 
                     <tr>
-                        <th colspan="4" class="text-end">
+                        <th colspan="5" class="text-end">
                             GRAND TOTAL
                         </th>
 
@@ -251,7 +253,22 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label required fw-semibold">
+                                Periode Berlangganan
+                            </label>
+
+                            <select id="rab_item_billing_period"
+                                    class="form-select">
+                                <option value="monthly">Bulanan (Monthly)</option>
+                                <option value="annual">Tahunan (Annual)</option>
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label required fw-semibold">
                                 Qty
+                                <small class="text-muted fw-normal" id="rab_item_qty_hint">(jumlah bulan)</small>
                             </label>
 
                             <input type="text"
@@ -262,10 +279,11 @@
 
                         </div>
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
 
                             <label class="form-label required fw-semibold">
                                 Harga
+                                <small class="text-muted fw-normal" id="rab_item_price_hint">(per bulan)</small>
                             </label>
 
                             <input type="text"
@@ -327,6 +345,30 @@
 
     let rabDescriptionEditor = null;
 
+    const BILLING_PERIODS = {
+        monthly: { label: 'Bulanan', unit: 'bulan' },
+        annual:  { label: 'Tahunan', unit: 'tahun' }
+    };
+
+    function normalizeBillingPeriod(value) {
+        return BILLING_PERIODS[value] ? value : 'monthly';
+    }
+
+    function updateBillingPeriodHints() {
+
+        const select = document.getElementById('rab_item_billing_period');
+
+        if (!select) return;
+
+        const unit = BILLING_PERIODS[normalizeBillingPeriod(select.value)].unit;
+
+        const qtyHint = document.getElementById('rab_item_qty_hint');
+        const priceHint = document.getElementById('rab_item_price_hint');
+
+        if (qtyHint) qtyHint.textContent = `(jumlah ${unit})`;
+        if (priceHint) priceHint.textContent = `(per ${unit})`;
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
 
         rabDescriptionEditor = new Quill('#description-editor', {
@@ -368,221 +410,6 @@
 
     }
     });
-
-    async function handleRabExcelFile(event) {
-
-        const file = event.target.files[0];
-
-        if (!file) {
-            return;
-        }
-
-        const errorElement = document.getElementById('rabImportError');
-
-        // const previewElement = document.getElementById('rabImportPreview');
-
-        const confirmButton = document.getElementById('btnConfirmImportRab');
-
-        // if (!previewElement) {
-        //     console.error(
-        //         '#rabImportPreview tidak ditemukan.'
-        //     );
-        //     return;
-        // }
-
-        if (errorElement) {
-            errorElement.classList.add('d-none');
-            errorElement.innerHTML = '';
-        }
-
-        if (confirmButton) {
-            confirmButton.disabled = true;
-        }
-
-        // previewElement.innerHTML = `
-        //     <div class="text-muted">
-        //         Membaca file Excel...
-        //     </div>
-        // `;
-
-        try {
-
-            const buffer = await file.arrayBuffer();
-
-            const workbook =
-                XLSX.read(buffer, {
-                    type: 'array'
-                });
-
-            if (!workbook.SheetNames.length) {
-
-                throw new Error(
-                    'File Excel tidak memiliki sheet.'
-                );
-
-            }
-
-            const firstSheetName =
-                workbook.SheetNames.find(
-                    name => normalizeExcelHeader(name) === 'rab'
-                ) ||
-                workbook.SheetNames[1] ||
-                workbook.SheetNames[0];
-
-            const worksheet = workbook.Sheets[firstSheetName];
-
-            console.log('Sheet yang dipakai:', firstSheetName);
-
-            importedRabItems = validateRabExcelWorksheet(worksheet);
-
-            // renderRabImportPreview(
-            //     importedRabItems
-            // );
-
-            if (confirmButton) {
-
-                confirmButton.disabled =
-                    importedRabItems.length === 0;
-            }
-
-        } catch (error) {
-            console.error(
-                'Error import Excel:',
-                error
-            );
-
-            importedRabItems = [];
-
-            if (errorElement) {
-
-                errorElement.innerHTML =
-                    escapeHtml(
-                        error.message ||
-                        'Terjadi kesalahan saat membaca file Excel.'
-                    );
-
-                errorElement.classList.remove(
-                    'd-none'
-                );
-
-            }
-
-            // previewElement.innerHTML = `
-            //     <div class="alert alert-danger mb-0">
-            //         ${escapeHtml(
-            //             error.message ||
-            //             'Terjadi kesalahan saat membaca file Excel.'
-            //         )}
-            //     </div>
-            // `;
-
-            if (confirmButton) {
-                confirmButton.disabled = true;
-            }
-
-        }
-    }
-
-    function resolveMergedCellValue(worksheet, colLetter, rowNumber) {
-
-        if (!colLetter) {
-            return undefined;
-        }
-
-        const directCell =
-            worksheet[`${colLetter}${rowNumber}`];
-
-        if (directCell && directCell.v !== undefined && directCell.v !== '') {
-            return directCell.v;
-        }
-
-        const merges = worksheet['!merges'] || [];
-
-        const colIndex =
-            XLSX.utils.decode_col(colLetter);
-
-        const rowIndex =
-            rowNumber - 1;
-
-        for (const merge of merges) {
-
-            const withinRow =
-                rowIndex >= merge.s.r &&
-                rowIndex <= merge.e.r;
-
-            const withinCol =
-                colIndex >= merge.s.c &&
-                colIndex <= merge.e.c;
-
-            if (withinRow && withinCol) {
-
-                const anchorCol =
-                    XLSX.utils.encode_col(merge.s.c);
-
-                const anchorRow =
-                    merge.s.r + 1;
-
-                const anchorCell =
-                    worksheet[`${anchorCol}${anchorRow}`];
-
-                return anchorCell?.v;
-            }
-        }
-
-        return directCell?.v;
-    }
-
-    function getUraianCellValue(worksheet, excelRow, columns) {
-
-        const startColIndex =
-            XLSX.utils.decode_col(columns.uraian);
-
-        const boundaryColIndexes = [];
-
-        if (columns.satuan) {
-            boundaryColIndexes.push(
-                XLSX.utils.decode_col(columns.satuan)
-            );
-        }
-
-        if (columns.volume) {
-            boundaryColIndexes.push(
-                XLSX.utils.decode_col(columns.volume)
-            );
-        }
-
-        const endColIndex =
-            boundaryColIndexes.length
-                ? Math.min(...boundaryColIndexes) - 1
-                : startColIndex + 5;
-
-        for (
-            let colIndex = startColIndex;
-            colIndex <= endColIndex;
-            colIndex++
-        ) {
-
-            const colLetter =
-                XLSX.utils.encode_col(colIndex);
-
-            const value =
-                resolveMergedCellValue(
-                    worksheet,
-                    colLetter,
-                    excelRow
-                );
-
-            if (
-                value !== undefined &&
-                value !== null &&
-                String(value).trim() !== ''
-            ) {
-                return value;
-            }
-        }
-
-        return '';
-    }
 
     function normalizeExcelHeader(value) {
 
@@ -1084,111 +911,6 @@
             : 0;
     }
 
-// function renderRabImportPreview(items) {
-
-//     const container =
-//         document.getElementById('rabImportPreview');
-
-//     if (!items.length) {
-//         container.innerHTML =
-//             '<div class="alert alert-warning">' +
-//             'Tidak ada item yang dapat diimport.' +
-//             '</div>';
-
-//         return;
-//     }
-
-//     let html = `
-//         <div class="mb-2">
-//             <strong>${items.length}</strong>
-//             item siap diimport.
-//         </div>
-
-//         <table class="table table-sm table-bordered align-middle">
-
-//             <thead>
-//                 <tr>
-//                     <th>No</th>
-//                     <th>Lantai</th>
-//                     <th>Kategori</th>
-//                     <th>Tipe Pekerjaan</th>
-//                     <th>Pekerjaan</th>
-//                     <th>Volume</th>
-//                     <th>Satuan</th>
-//                     <th class="text-end">
-//                         Harga Satuan
-//                     </th>
-//                 </tr>
-//             </thead>
-
-//             <tbody>
-//     `;
-
-//     items.forEach((item, index) => {
-
-//         html += `
-//             <tr>
-//                 <td>${index + 1}</td>
-//                 <td>${escapeHtml(item.floor_name)}</td>
-//                 <td>${escapeHtml(item.category_name)}</td>
-//                 <td>${escapeHtml(item.description || '-')}</td>
-//                 <td>${escapeHtml(item.job_name)}</td>
-//                 <td>${item.volume}</td>
-//                 <td>${escapeHtml(item.satuan)}</td>
-//                 <td class="text-end">
-//                     ${formatRupiah(item.base_price)}
-//                 </td>
-//             </tr>
-//         `;
-
-//     });
-
-//     html += `
-//             </tbody>
-
-//         </table>
-//     `;
-
-//     container.innerHTML = html;
-// }
-
-    function importRabFromExcel() {
-
-        if (!importedRabItems.length) {
-            alert('Tidak ada data yang dapat diimport.');
-            return;
-        }
-
-        rabItems.push(
-            ...importedRabItems
-        );
-
-        // Rapikan nomor urut
-        rabItems.forEach((item, index) => {
-            item.order_no = index + 1;
-        });
-
-        renderRabItems();
-
-        renderFloorOptions();
-
-        renderCategoryOptions();
-
-        calculateSummary();
-
-        const modalElement =
-            document.getElementById('importRabItemModal');
-
-        const modal =
-            bootstrap.Modal.getInstance(modalElement);
-
-        if (modal) {
-            modal.hide();
-        }
-
-        importedRabItems = [];
-    }
-
     function parseRupiah(value) {
         if (value === null || value === undefined || value === '') {
             return 0;
@@ -1511,6 +1233,8 @@
 
         document.getElementById('rab_item_description').value = '';
         document.getElementById('rab_item_volume').value = '';
+        document.getElementById('rab_item_billing_period').value = 'monthly';
+        updateBillingPeriodHints();
 
         const price = document.getElementById('rab_item_price_display');
 
@@ -1562,9 +1286,14 @@
         const total = volume * price;
 
 
+        const billingPeriod = normalizeBillingPeriod(
+            document.getElementById('rab_item_billing_period').value
+        );
+
         rabItems.push({
             temp_id: 'item_' + (++itemCounter),
             description: description,
+            billing_period: billingPeriod,
             volume: volume,
             base_price: basePrice,
             price: price,
@@ -1644,7 +1373,7 @@ function renderRabItems() {
 
         tbody.innerHTML = `
             <tr class="empty-rab-row">
-                <td colspan="6"
+                <td colspan="7"
                     class="text-center text-muted py-5">
 
                     Belum ada item RAB.
@@ -1682,6 +1411,25 @@ function renderRabItems() {
                         }
 
                     </div>
+
+                </td>
+
+                <td>
+
+                    <select class="form-select"
+                            onchange="updateItemBillingPeriod(
+                                '${item.temp_id}',
+                                this.value
+                            )">
+                        <option value="monthly"
+                            ${normalizeBillingPeriod(item.billing_period) === 'monthly' ? 'selected' : ''}>
+                            Bulanan
+                        </option>
+                        <option value="annual"
+                            ${normalizeBillingPeriod(item.billing_period) === 'annual' ? 'selected' : ''}>
+                            Tahunan
+                        </option>
+                    </select>
 
                 </td>
 
@@ -1740,6 +1488,20 @@ function renderRabItems() {
 
     });
     updateSortable();
+}
+
+function updateItemBillingPeriod(id, value) {
+
+    const item = rabItems.find(
+        item => item.temp_id === id
+    );
+
+    if (!item) return;
+
+    item.billing_period = normalizeBillingPeriod(value);
+
+    renderRabItems();
+    calculateSummary();
 }
 
 function updateItemVolume(id, value) {
@@ -2186,6 +1948,7 @@ function updateItemVolume(id, value) {
             (item, index) => {
                 const fields = {
                     description: item.description || '',
+                    billing_period: normalizeBillingPeriod(item.billing_period),
                     volume: item.volume,
                     base_price: item.base_price,
                     price: item.price,
@@ -2350,6 +2113,12 @@ if (form) {
             );
 
         }
+        const billingPeriodSelect = document.getElementById('rab_item_billing_period');
+
+        if (billingPeriodSelect) {
+            billingPeriodSelect.addEventListener('change', updateBillingPeriodHints);
+        }
+
         renderRabItems();
 
     });
