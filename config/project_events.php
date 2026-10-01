@@ -6,7 +6,7 @@ return [
         'message' => [
             'created_self' => 'Selamat, Anda berhasil membuat project',
             'assigned'     => 'Anda ditugaskan ke proyek baru',
-            'customer'     => 'Data proyek Anda berhasil disimpan dan sekarang sedang masuk tahap konsultasi',
+            'customer'     => 'Data proyek Anda berhasil disimpan dan sekarang sedang masuk tahap penawaran harga',
             'director'     => 'Ada proyek baru yang perlu ditinjau',
         ],
     ],
@@ -145,12 +145,11 @@ return [
     ],
 ],
 
-'task_approved' => [
-    'title' => 'Task Disetujui',
+'invoice_build_approved' => [
+    'title' => 'Invoice Tahap :termin Disetujui',
     'message' => [
-        'assigned' => 'Task Anda telah disetujui.',
-        'admin'    => 'Task telah disetujui.',
-        'customer' => 'Task :task telah disetujui.',
+        'Super-Admin' => 'Invoice pembayaran event tahap :termin senilai :amount telah disetujui.',
+        'customer'    => 'Pembayaran tahap :termin senilai :amount berhasil dikonfirmasi. Terima kasih!',
     ],
 ],
 
@@ -164,10 +163,10 @@ return [
 ],
 
 'invoice_build_created' => [
-    'title' => 'Invoice Pembangunan Tahap :termin Dibuat',
+    'title' => 'Invoice Event Tahap :termin Dibuat',
     'message' => [
-        'Super-Admin' => 'Invoice pembangunan tahap :termin (:progress_start%–:progress_end%) senilai :amount telah dibuat.',
-        'customer'    => 'Invoice pembayaran pembangunan tahap :termin senilai :amount telah tersedia. Silakan lakukan pembayaran.',
+        'Super-Admin' => 'Invoice event tahap :termin (:progress_start%–:progress_end%) senilai :amount telah dibuat.',
+        'customer'    => 'Invoice pembayaran event tahap :termin senilai :amount telah tersedia. Silakan lakukan pembayaran.',
     ],
 ],
 

@@ -16,7 +16,7 @@ class InvoiceBuild extends Model
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
     const STATUS_PAID     = 'paid';
-    protected $table = 'zhpicture.invoice_builds';
+    protected $table = 'lebihtersistem.invoice_builds';
     protected $casts = [
         'invoice_date' => 'date',
         'approved_at'  => 'datetime',

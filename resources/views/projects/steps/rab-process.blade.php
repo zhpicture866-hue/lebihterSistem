@@ -218,11 +218,11 @@
 
                     <div>
                         <h5 class="modal-title fw-bold">
-                            Tambah Item RAB
+                            Tambah Item Penawaran
                         </h5>
 
                         <small class="text-muted">
-                            Masukkan produk yang akan ditambahkan ke RAB
+                            Masukkan produk yang akan ditambahkan ke item Penawaran
                         </small>
                     </div>
 
@@ -1376,7 +1376,7 @@ function renderRabItems() {
                 <td colspan="7"
                     class="text-center text-muted py-5">
 
-                    Belum ada item RAB.
+                    Belum ada item Penawaran.
 
                 </td>
             </tr>

@@ -588,33 +588,26 @@ Route::middleware(['auth', 'permission:lihat daftar user'])->group(function () {
 });
 Route::prefix('projects/{project}')->name('projects.')->middleware(['auth'])->group(function () {
     Route::post('build-termin', [TerminSubscriptionController::class, 'store'])->name('build-termin.store');
-    Route::post('build-termin', [TerminSubscriptionController::class, 'update'])->name('build-termin.update');
+    Route::put('build-termin', [TerminSubscriptionController::class, 'update'])->name('build-termin.update');
     Route::post('termins/{termin}/continue', [TerminSubscriptionController::class, 'continueSubscription'])->name('termins.continue');
     Route::post('termins/{termin}/stop', [TerminSubscriptionController::class, 'stopSubscription'])->name('termins.stop');
     Route::get('termins/{termin}/receipt', [TerminSubscriptionController::class, 'receipt'])->name('termins.receipt');
 });
+
 Route::prefix('projects/{project}')
     ->middleware(['auth'])
     ->group(function () {
-
-        // Download invoice build per termin
         Route::get(
             '/invoice/build/termin/{termin}',
             [InvoiceBuildController::class, 'invoiceBuild']
         )->name('projects.invoice.build');
 
-        Route::get(
-'/invoice-build-justek',
-[InvoiceBuildController::class,'invoiceJustek']
-)->name('projects.invoice.build.justek');
-        // Approve invoice build
-        Route::post('/invoice-build-justek-auto',
-    [InvoiceBuildController::class,'autoJustek']
-)->name('projects.invoice.justek.auto');
         Route::post(
             '/invoice/build/{invoice}/approve',
             [InvoiceBuildController::class, 'approve']
         )->name('projects.invoice.build.approve');
+        Route::post('/invoice/{invoicebuild}/bukti-pembayaran', [InvoiceBuildController::class, 'uploadBuktiPembayaran'])->name('projects.invoice.build.bukti-pembayaran');
+         Route::get('/invoice/{invoice}/kwitansi', [InvoiceBuildController::class, 'downloadKwitansi'])->name('projects.invoice.build.kwitansi');
     });
 
 Route::middleware(['auth'])

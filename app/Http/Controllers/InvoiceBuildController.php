@@ -274,7 +274,6 @@ public function approve(Project $project, InvoiceBuild $invoice)
                 ->where('is_completed', false)
                 ->update([
                     'is_completed' => true,
-                    'completed_at' => now(),
                 ]);
         }
     });
