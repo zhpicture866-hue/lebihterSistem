@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasSubscriptionTermin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class BuildTermin extends Model
 {
-    use HasUuids;
+    use HasUuids, HasSubscriptionTermin;
 
-    protected $table = 'zhpicture.build_termins';
+    protected $table = 'lebihtersistem.build_termins';
     protected $keyType = 'string';
     public $incrementing = false;
 
@@ -21,12 +22,13 @@ class BuildTermin extends Model
         'amount',
         'description',
         'billing_date',
+        'billing_period', 'period_start', 'period_end',
+        'renewal_decision', 'decided_at', 'decided_by'
     ];
 
     protected $casts = [
         'percentage' => 'decimal:2',
         'amount' => 'decimal:2',
-        'billing_date' => 'date',
     ];
 
     public function project(): BelongsTo

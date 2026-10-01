@@ -1,29 +1,23 @@
 @php
-    $offerTotal = (float) ($project->rab?->grand_total ?? 0);
- 
-    // Data lama (setelah validasi gagal) supaya baris termin tidak hilang.
-    $oldPercentages  = (array) old('percentage', ['']);
-    $oldAmounts      = (array) old('amount', []);
-    $oldDescriptions = (array) old('termin_description', []);
-    $oldBillingDates = (array) old('billing_date', []);
- 
-    $initialRows = [];
- 
-    foreach ($oldPercentages as $i => $percentage) {
-        $initialRows[] = [
-            'percentage'   => $percentage,
-            'amount'       => $oldAmounts[$i] ?? '',
-            'description'  => $oldDescriptions[$i] ?? '',
-            'billing_date' => $oldBillingDates[$i] ?? '',
-        ];
-    }
+    $rab = $project->rab;
+    $offerTotal = (float) ($rab?->grand_total ?? 0);
+
+    // Periode default: ikuti penawaran jika semua item memakai periode yang sama
+    $itemPeriods = $rab ? $rab->items->pluck('billing_period')->filter()->unique()->values() : collect();
+    $defaultPeriod = $itemPeriods->count() === 1 ? $itemPeriods->first() : 'monthly';
+
+    // Saran nominal: jumlah harga item untuk 1 periode (hanya jika periodenya seragam)
+    $suggestedAmount = ($rab && $itemPeriods->count() === 1)
+        ? (float) $rab->items->sum('price')
+        : null;
+
+    $oldAmount = (int) old('amount', 0);
 @endphp
-@can('lihat daftar proyek')
+
 <form
     action="{{ route('projects.build-termin.store', $project->id) }}"
     method="POST"
     id="build-termin-form"
-    enctype="multipart/form-data"
 >
     @csrf
 
@@ -39,8 +33,8 @@
 
     @if ($offerTotal <= 0)
         <div class="alert alert-warning">
-            Total penawaran harga belum tersedia. Lengkapi RAB terlebih dahulu
-            sebelum mengatur termin.
+            Total penawaran harga belum tersedia. Lengkapi penawaran terlebih dahulu
+            sebelum membuat termin.
         </div>
     @endif
 
@@ -56,9 +50,13 @@
                         Rp {{ number_format($offerTotal, 0, ',', '.') }}
                     </div>
 
-                    <div class="text-muted small mt-1">
-                        Nilai ini menjadi dasar perhitungan setiap termin.
-                    </div>
+                    @if ($suggestedAmount)
+                        <div class="text-muted small mt-1">
+                            Harga untuk 1 periode ({{ $defaultPeriod === 'annual' ? 'tahunan' : 'bulanan' }}):
+                            <strong>Rp {{ number_format($suggestedAmount, 0, ',', '.') }}</strong>
+                            (belum termasuk diskon dan pajak)
+                        </div>
+                    @endif
                 </div>
 
                 <div class="avatar avatar-lg bg-white shadow-sm">
@@ -68,180 +66,109 @@
         </div>
     </div>
 
-    <input
-        type="hidden"
-        id="build-offer-total"
-        value="{{ $offerTotal }}"
-    >
+    <div class="mb-3">
+        <h3 class="mb-1 fw-bold">
+            Buat Termin Pertama
+        </h3>
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <div>
-            <h3 class="mb-1 fw-bold">
-                Setting Termin Pembayaran
-            </h3>
-
-            <div class="text-muted">
-                Atur pembagian pembayaran berdasarkan persentase termin.
-            </div>
+        <div class="text-muted">
+            Setiap termin adalah satu periode langganan. Setelah termin dibayar dan
+            customer memilih lanjut, termin berikutnya dibuat otomatis dengan nominal
+            dan periode yang sama.
         </div>
-
-        <button
-            type="button"
-            id="btn-add-termin"
-            class="btn btn-dark"
-            title="Tambah Termin"
-        >
-            <i class="ti ti-plus me-1"></i>
-        </button>
     </div>
 
-    {{-- Baris termin dirender oleh JavaScript dari template di bawah --}}
-    <div id="termin-container"></div>
-
-    <template id="termin-row-template">
-        <div class="card border-0 shadow-sm mb-3 termin-card termin-row">
-            <div class="card-body p-3">
-                <div class="row g-3 align-items-end">
-
-                    {{-- NOMOR --}}
-                    <div class="col-md-1">
-                        <label class="form-label text-muted small">Termin</label>
-                        <div class="termin-number">
-                            <span class="termin-no">1</span>
-                        </div>
-                    </div>
-
-                    {{-- PERSENTASE --}}
-                    <div class="col-md-2">
-                        <label class="form-label small fw-semibold">Persentase</label>
-                        <div class="input-group">
-                            <input type="number" name="percentage[]" class="form-control termin-percentage"
-                                min="0" max="100" step="0.01" placeholder="30" required>
-                            <span class="input-group-text">%</span>
-                        </div>
-                    </div>
-
-                    {{-- NOMINAL --}}
-                    <div class="col-md-3">
-                        <label class="form-label small fw-semibold">Nominal Pembayaran</label>
-                        <input type="text" class="form-control termin-amount fw-bold" placeholder="Rp 0"
-                            inputmode="numeric" autocomplete="off">
-                        <input type="hidden" name="amount[]" class="termin-amount-value" value="">
-                    </div>
-
-                    {{-- KETERANGAN --}}
-                    <div class="col-md-3">
-                        <label class="form-label small fw-semibold">Keterangan</label>
-                        <input type="text" name="termin_description[]" class="form-control termin-description"
-                            placeholder="Contoh: DP / Tahap 1 / Pelunasan">
-                    </div>
-
-                    {{-- TANGGAL PENAGIHAN --}}
-                    <div class="col-md-2">
-                        <label class="form-label small fw-semibold">Tanggal Penagihan</label>
-                        <input type="date" name="billing_date[]" class="form-control termin-billing-date">
-                    </div>
-
-                    {{-- HAPUS --}}
-                    <div class="col-md-1">
-                        <button type="button" class="btn btn-dark btn-icon btn-remove-termin" title="Hapus Termin">
-                            <i class="ti ti-trash"></i>
-                        </button>
-                    </div>
-
-                </div>
-
-                {{-- BARIS BARU: BUKTI PEMBAYARAN --}}
-                {{-- <div class="row g-3 align-items-end mt-1">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">
-                            Bukti Pembayaran
-                        </label>
-                        <input
-                            type="file"
-                            name="bukti_pembayaran[]"
-                            class="form-control termin-bukti-pembayaran"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                        >
-                        <div class="form-hint mt-1 small text-muted">
-                            Format: PDF, JPG, PNG. Maks. 5MB.
-                        </div>
-                    </div>
-                </div> --}}
-
-            </div>
-        </div>
-    </template>
-
-    {{-- RINGKASAN --}}
-    <div class="card border-0 shadow-sm mt-4">
+    <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
+            <div class="row g-3">
 
-            <div class="row g-4">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">
+                        Nominal Tagihan <span class="text-danger">*</span>
+                    </label>
 
-                <div class="col-md-6">
-                    <div class="summary-item">
-                        <div class="summary-icon">
-                            <i class="ti ti-percentage"></i>
-                        </div>
+                    {{-- Tampilan berformat Rp, tanpa name --}}
+                    <input
+                        type="text"
+                        id="termin-amount-display"
+                        class="form-control fw-bold"
+                        placeholder="Rp 0"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        value="{{ $oldAmount > 0 ? 'Rp ' . number_format($oldAmount, 0, ',', '.') : '' }}"
+                    >
 
-                        <div>
-                            <div class="text-muted small">
-                                Total Persentase
-                            </div>
+                    {{-- Angka murni yang dikirim ke server --}}
+                    <input
+                        type="hidden"
+                        name="amount"
+                        id="termin-amount"
+                        value="{{ $oldAmount > 0 ? $oldAmount : '' }}"
+                    >
 
-                            <div
-                                id="total-termin-percentage"
-                                class="fs-3 fw-bold"
-                            >
-                                0%
-                            </div>
-                        </div>
-                    </div>
+                    @if ($suggestedAmount)
+                        <button
+                            type="button"
+                            id="btn-use-offer-amount"
+                            class="btn btn-link btn-sm p-0 mt-1"
+                            data-amount="{{ round($suggestedAmount) }}"
+                        >
+                            Gunakan harga per periode dari penawaran
+                        </button>
+                    @endif
                 </div>
 
-                <div class="col-md-6">
-                    <div class="summary-item">
-                        <div class="summary-icon">
-                            <i class="ti ti-cash"></i>
-                        </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        Periode Berlangganan <span class="text-danger">*</span>
+                    </label>
 
-                        <div>
-                            <div class="text-muted small">
-                                Total Nominal
-                            </div>
+                    <select name="billing_period" class="form-select" required>
+                        <option value="monthly" {{ old('billing_period', $defaultPeriod) === 'monthly' ? 'selected' : '' }}>
+                            Bulanan (Monthly)
+                        </option>
+                        <option value="annual" {{ old('billing_period', $defaultPeriod) === 'annual' ? 'selected' : '' }}>
+                            Tahunan (Annual)
+                        </option>
+                    </select>
+                </div>
 
-                            <div
-                                id="total-termin-amount"
-                                class="fs-3 fw-bold"
-                            >
-                                Rp 0
-                            </div>
-                        </div>
-                    </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        Keterangan
+                    </label>
+
+                    <input
+                        type="text"
+                        name="termin_description"
+                        class="form-control"
+                        maxlength="255"
+                        placeholder="Contoh: Langganan Sistem"
+                        value="{{ old('termin_description') }}"
+                    >
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        Tanggal Penagihan <span class="text-danger">*</span>
+                    </label>
+
+                    <input
+                        type="date"
+                        name="billing_date"
+                        class="form-control"
+                        required
+                        value="{{ old('billing_date', now()->format('Y-m-d')) }}"
+                    >
                 </div>
 
             </div>
 
-            <div
-                id="termin-warning"
-                class="alert alert-warning mt-4 mb-0 d-none"
-            >
-                <div class="d-flex align-items-center">
-                    <i class="ti ti-alert-triangle me-2 fs-2"></i>
-
-                    <div>
-                        <div class="fw-bold">
-                            Persentase belum lengkap
-                        </div>
-
-                        <div class="small">
-                            Total persentase termin harus tepat 100%.
-                        </div>
-                    </div>
-                </div>
+            <div class="alert alert-info mt-4 mb-0">
+                <i class="ti ti-info-circle me-1"></i>
+                Masa layanan termin ke-1 dimulai dari tanggal penagihan. Termin berikutnya
+                mengikuti periode yang dipilih (bulan atau tahun berikutnya).
             </div>
-
         </div>
     </div>
 
@@ -250,226 +177,60 @@
             type="submit"
             class="btn btn-dark px-4"
             id="btn-save-termin"
+            {{ $offerTotal <= 0 ? 'disabled' : '' }}
         >
             <i class="ti ti-device-floppy me-1"></i>
-            Simpan Setting Termin
+            Buat Termin
         </button>
     </div>
 
 </form>
-@endcan
+
 @push('js')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     const form = document.getElementById('build-termin-form');
-    const container = document.getElementById('termin-container');
-    const template = document.getElementById('termin-row-template');
+    const display = document.getElementById('termin-amount-display');
+    const hidden = document.getElementById('termin-amount');
+    const useOfferButton = document.getElementById('btn-use-offer-amount');
 
-    if (!form || !container || !template) {
+    if (!form || !display || !hidden) {
         return;
     }
-
-    const addButton = document.getElementById('btn-add-termin');
-    const saveButton = document.getElementById('btn-save-termin');
-    const warningElement = document.getElementById('termin-warning');
-    const totalPercentageElement = document.getElementById('total-termin-percentage');
-    const totalAmountElement = document.getElementById('total-termin-amount');
-
-    const offerTotal = parseFloat(
-        document.getElementById('build-offer-total')?.value || 0
-    ) || 0;
-
-    const initialRows = @json($initialRows);
-
-    /* ---------- Helper ---------- */
 
     function formatRupiah(value) {
         return 'Rp ' + new Intl.NumberFormat('id-ID', {
             maximumFractionDigits: 0
-        }).format(Math.round(Number(value) || 0));
+        }).format(Number(value) || 0);
     }
 
-    function parseDigits(value) {
-        return Number(String(value || '').replace(/\D/g, '')) || 0;
+    function setAmount(value) {
+        const digits = String(value).replace(/\D/g, '');
+
+        hidden.value = digits;
+        display.value = digits ? formatRupiah(digits) : '';
     }
 
-    function getRows() {
-        return container.querySelectorAll('.termin-row');
-    }
-
-    function fields(row) {
-        return {
-            percentage: row.querySelector('.termin-percentage'),
-            amountDisplay: row.querySelector('.termin-amount'),
-            amountValue: row.querySelector('.termin-amount-value'),
-            description: row.querySelector('.termin-description'),
-            billingDate: row.querySelector('.termin-billing-date'),
-        };
-    }
-
-    /* ---------- Sinkronisasi persentase <-> nominal ---------- */
-
-    function clearAmount(row) {
-        const f = fields(row);
-        f.amountDisplay.value = '';
-        f.amountValue.value = '';
-    }
-
-    function setAmount(row, amount) {
-        const f = fields(row);
-        f.amountDisplay.value = formatRupiah(amount);
-        f.amountValue.value = String(Math.round(amount));
-    }
-
-    // Persentase diubah -> hitung nominal.
-    function syncAmountFromPercentage(row) {
-        const f = fields(row);
-
-        if (f.percentage.value === '') {
-            clearAmount(row);
-            return;
-        }
-
-        const percentage = parseFloat(f.percentage.value) || 0;
-
-        setAmount(row, offerTotal * (percentage / 100));
-    }
-
-    // Nominal diubah -> hitung persentase. Nominal yang diketik user
-    // tidak dihitung ulang, hanya diformat.
-    function syncPercentageFromAmount(row) {
-        const f = fields(row);
-        const digits = String(f.amountDisplay.value).replace(/\D/g, '');
-
-        if (digits === '') {
-            clearAmount(row);
-            f.percentage.value = '';
-            return;
-        }
-
-        const amount = Number(digits);
-
-        f.amountDisplay.value = formatRupiah(amount);
-        f.amountValue.value = String(amount);
-
-        f.percentage.value = offerTotal > 0
-            ? ((amount / offerTotal) * 100).toFixed(2)
-            : '';
-    }
-
-    /* ---------- Ringkasan & validasi ---------- */
-
-    function updateTerminNumbers() {
-        getRows().forEach(function (row, index) {
-            const numberElement = row.querySelector('.termin-no');
-
-            if (numberElement) {
-                numberElement.textContent = index + 1;
-            }
-        });
-    }
-
-    function refreshSummary() {
-        let totalPercentage = 0;
-        let totalAmount = 0;
-
-        getRows().forEach(function (row) {
-            const f = fields(row);
-
-            totalPercentage += parseFloat(f.percentage.value) || 0;
-            totalAmount += Number(f.amountValue.value) || 0;
-        });
-
-        totalPercentageElement.textContent = totalPercentage.toFixed(2) + '%';
-        totalAmountElement.textContent = formatRupiah(totalAmount);
-
-        // Dibandingkan dalam satuan 0,01% agar bebas error floating point.
-        const percentageComplete = Math.round(totalPercentage * 100) === 10000;
-
-        warningElement.classList.toggle('d-none', percentageComplete);
-        saveButton.disabled = !percentageComplete || offerTotal <= 0;
-
-        return percentageComplete;
-    }
-
-    /* ---------- Tambah / hapus baris ---------- */
-
-    function addRow(data) {
-        data = data || {};
-
-        const row = template.content
-            .cloneNode(true)
-            .querySelector('.termin-row');
-
-        const f = fields(row);
-
-        f.percentage.value = data.percentage ?? '';
-        f.description.value = data.description ?? '';
-        f.billingDate.value = data.billing_date ?? '';
-
-        if (f.percentage.value !== '') {
-            syncAmountFromPercentage(row);
-        } else if (parseDigits(data.amount) > 0) {
-            f.amountDisplay.value = String(data.amount);
-            syncPercentageFromAmount(row);
-        }
-
-        container.appendChild(row);
-
-        updateTerminNumbers();
-        refreshSummary();
-    }
-
-    if (addButton) {
-        addButton.addEventListener('click', function () {
-            addRow();
-        });
-    }
-
-    container.addEventListener('click', function (event) {
-        const removeButton = event.target.closest('.btn-remove-termin');
-
-        if (!removeButton || getRows().length <= 1) {
-            return;
-        }
-
-        removeButton.closest('.termin-row')?.remove();
-
-        updateTerminNumbers();
-        refreshSummary();
+    display.addEventListener('input', function () {
+        setAmount(display.value);
     });
 
-    container.addEventListener('input', function (event) {
-        const row = event.target.closest('.termin-row');
-
-        if (!row) {
-            return;
-        }
-
-        if (event.target.classList.contains('termin-percentage')) {
-            syncAmountFromPercentage(row);
-            refreshSummary();
-            return;
-        }
-
-        if (event.target.classList.contains('termin-amount')) {
-            syncPercentageFromAmount(row);
-            refreshSummary();
-        }
-    });
+    if (useOfferButton) {
+        useOfferButton.addEventListener('click', function () {
+            setAmount(useOfferButton.dataset.amount);
+            display.focus();
+        });
+    }
 
     form.addEventListener('submit', function (event) {
-        if (!refreshSummary()) {
+        if (!hidden.value || Number(hidden.value) <= 0) {
             event.preventDefault();
 
-            alert('Total persentase termin harus tepat 100%.');
+            alert('Nominal tagihan wajib diisi.');
+            display.focus();
         }
     });
-
-    /* ---------- Inisialisasi ---------- */
-
-    (initialRows.length ? initialRows : [{}]).forEach(addRow);
 });
 </script>
 @endpush

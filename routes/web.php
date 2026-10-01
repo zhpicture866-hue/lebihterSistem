@@ -16,7 +16,7 @@ use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\AffiliatorController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectLevelController;
-use App\Http\Controllers\SystemController;
+use App\Http\Controllers\TerminSubscriptionController;
 use App\Http\Controllers\ContractorController;
 use App\Http\Controllers\WorkerController;
 use App\Http\Controllers\EmployeeController;
@@ -586,14 +586,13 @@ Route::middleware(['auth', 'permission:lihat daftar user'])->group(function () {
     route::resource('/users', UsersController::class);
 });
 });
-Route::post(
-    '/projects/{project}/build-termin',
-    [\App\Http\Controllers\BuildTerminController::class, 'store']
-)->name('projects.build-termin.store');
-Route::put(
-    '/projects/{project}/build-termin',
-    [\App\Http\Controllers\BuildTerminController::class, 'update']
-)->name('projects.build-termin.update');
+Route::prefix('projects/{project}')->name('projects.')->middleware(['auth'])->group(function () {
+    Route::post('build-termin', [TerminSubscriptionController::class, 'store'])->name('build-termin.store');
+    Route::post('build-termin', [TerminSubscriptionController::class, 'update'])->name('build-termin.update');
+    Route::post('termins/{termin}/continue', [TerminSubscriptionController::class, 'continueSubscription'])->name('termins.continue');
+    Route::post('termins/{termin}/stop', [TerminSubscriptionController::class, 'stopSubscription'])->name('termins.stop');
+    Route::get('termins/{termin}/receipt', [TerminSubscriptionController::class, 'receipt'])->name('termins.receipt');
+});
 Route::prefix('projects/{project}')
     ->middleware(['auth'])
     ->group(function () {

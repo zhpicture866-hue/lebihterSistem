@@ -226,5 +226,13 @@ protected $casts = [
     'start_date' => 'date',
     'end_date'   => 'date',
 ];
+public function getSubscriptionStatusAttribute(): string
+{
+    $termins = $this->buildTermins;
 
+    if ($termins->isEmpty()) return 'not_started';
+    if ($termins->contains('renewal_decision', 'stopped')) return 'stopped';
+
+    return 'active';
+}
 }
