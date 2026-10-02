@@ -137,56 +137,98 @@
                         </div>
 
                         {{-- LAMPIRAN (FULL WIDTH DI BAWAH) --}}
-                        @if ($journal->enclosure)
+                        @if($journal->enclosures->isNotEmpty())
                             <div class="mb-4">
                                 <label class="form-label fw-bold">Lampiran Jurnal</label>
 
-                                <div class="card shadow-sm">
-                                    <div class="card-body text-center">
+                                <div class="row">
+                                    @foreach($journal->enclosures as $enclosure)
 
-                                        @if(in_array($ext, ['jpg','jpeg','png','gif']))
-                                            <img src="{{ asset('storage/' . $journal->enclosure) }}"
-                                                class="img-fluid rounded cursor-pointer"
-                                                style="max-height: 250px; cursor:pointer;"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#previewModal">
+                                        @php
+                                            $ext = strtolower(pathinfo($enclosure->file_name, PATHINFO_EXTENSION));
+                                        @endphp
 
-                                        @elseif($ext === 'pdf')
-                                            <div class="text-center">
-                                                <i class="ti ti-file-type-pdf fs-1 text-danger"></i>
-                                                <p class="mb-2">Preview PDF</p>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card shadow-sm h-100">
+                                                <div class="card-body text-center">
 
-                                                <button class="btn btn-dark btn-sm"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#previewModal">
-                                                    Lihat PDF
-                                                </button>
+                                                    @if(in_array($ext, ['jpg','jpeg','png','gif','webp']))
+                                                    <img src="{{ asset('storage/'.$enclosure->file_name) }}"
+                                                        class="img-fluid rounded"
+                                                        style="max-height:200px;cursor:pointer"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#previewModal"
+                                                        data-type="image"
+                                                        data-file="{{ asset('storage/'.$enclosure->file_name) }}">
+
+                                                    @elseif($ext == 'pdf')
+
+                                                        <i class="ti ti-file-type-pdf text-danger"
+                                                            style="font-size:60px"></i>
+
+                                                        <p class="mt-2 mb-2">
+                                                            {{ basename($enclosure->file_name) }}
+                                                        </p>
+
+                                                        <button class="btn btn-primary btn-sm"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#previewModal"
+                                                            data-type="pdf"
+                                                            data-file="{{ asset('storage/'.$enclosure->file_name) }}">
+                                                        Lihat PDF
+                                                    </button>
+
+                                                    @elseif(in_array($ext,['doc','docx']))
+
+                                                        <i class="ti ti-file-type-doc text-primary"
+                                                            style="font-size:60px"></i>
+
+                                                        <p class="mt-2">
+                                                            {{ basename($enclosure->file_name) }}
+                                                        </p>
+
+                                                        <a href="{{ asset('storage/'.$enclosure->file_name) }}"
+                                                        target="_blank"
+                                                        class="btn btn-primary btn-sm">
+                                                            Download
+                                                        </a>
+
+                                                    @elseif(in_array($ext,['xls','xlsx']))
+
+                                                        <i class="ti ti-file-type-xls text-success"
+                                                            style="font-size:60px"></i>
+
+                                                        <p class="mt-2">
+                                                            {{ basename($enclosure->file_name) }}
+                                                        </p>
+
+                                                        <a href="{{ asset('storage/'.$enclosure->file_name) }}"
+                                                        target="_blank"
+                                                        class="btn btn-primary btn-sm">
+                                                            Download
+                                                        </a>
+
+                                                    @else
+
+                                                        <i class="ti ti-file"
+                                                            style="font-size:60px"></i>
+
+                                                        <p class="mt-2">
+                                                            {{ basename($enclosure->file_name) }}
+                                                        </p>
+
+                                                        <a href="{{ asset('storage/'.$enclosure->file_name) }}"
+                                                        target="_blank"
+                                                        class="btn btn-secondary btn-sm">
+                                                            Download
+                                                        </a>
+
+                                                    @endif
+
+                                                </div>
                                             </div>
-                                        
-                                        {{-- @elseif($ext === 'pdf')
-                                            <embed src="{{ asset('storage/' . $journal->enclosure) }}"
-                                                type="application/pdf"
-                                                width="100%"
-                                                height="500px"
-                                                class="rounded border"/>
-
-                                            <div class="mt-3">
-                                                <a href="{{ asset('storage/' . $journal->enclosure) }}"
-                                                target="_blank"
-                                                class="btn btn-dark btn-sm">
-                                                    Buka PDF
-                                                </a>
-                                            </div> --}}
-
-                                        @else
-                                            <a href="{{ asset('storage/' . $journal->enclosure) }}"
-                                            target="_blank"
-                                            class="btn btn-secondary">
-                                                Download Lampiran
-                                            </a>
-                                        @endif
-
-                                    </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
                         @endif
@@ -211,33 +253,94 @@
         </div>
     </div>
 </div>
-@if ($journal->enclosure)
-<div class="modal fade" id="previewModal" tabindex="-1">
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
 
             <div class="modal-header">
                 <h5 class="modal-title">Preview Lampiran</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
             </div>
 
-            <div class="modal-body text-center">
-
-                @if(in_array($ext, ['jpg','jpeg','png','gif']))
-                    <img src="{{ asset('storage/' . $journal->enclosure) }}"
-                        class="img-fluid rounded">
-
-                @elseif($ext === 'pdf')
-                    <embed src="{{ asset('storage/' . $journal->enclosure) }}"
-                        type="application/pdf"
-                        width="100%"
-                        height="600px">
-                @endif
-
+            <div class="modal-body text-center" id="previewContent">
+                <!-- Konten preview akan dimasukkan lewat JavaScript -->
             </div>
 
         </div>
     </div>
 </div>
-@endif
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const previewModal = document.getElementById('previewModal');
+    const previewContent = document.getElementById('previewContent');
+
+    previewModal.addEventListener('show.bs.modal', function (event) {
+
+        const button = event.relatedTarget;
+
+        const type = button.getAttribute('data-type');
+        const file = button.getAttribute('data-file');
+
+        previewContent.innerHTML = '';
+
+        if (!file) {
+            previewContent.innerHTML = `
+                <div class="alert alert-danger">
+                    File lampiran tidak ditemukan.
+                </div>
+            `;
+            return;
+        }
+
+        if (type === 'image') {
+
+            previewContent.innerHTML = `
+                <img src="${file}"
+                     class="img-fluid rounded"
+                     style="max-height: 75vh;"
+                     alt="Preview Lampiran">
+            `;
+
+        } else if (type === 'pdf') {
+
+            previewContent.innerHTML = `
+                <embed src="${file}"
+                       type="application/pdf"
+                       width="100%"
+                       height="700px">
+            `;
+
+        } else {
+
+            previewContent.innerHTML = `
+                <div class="py-5">
+                    <i class="ti ti-file"
+                       style="font-size: 70px;"></i>
+
+                    <p class="mt-3">
+                        File ini tidak dapat dipreview.
+                    </p>
+
+                    <a href="${file}"
+                       target="_blank"
+                       class="btn btn-primary">
+                        Buka File
+                    </a>
+                </div>
+            `;
+        }
+    });
+
+    previewModal.addEventListener('hidden.bs.modal', function () {
+        previewContent.innerHTML = '';
+    });
+
+});
+</script>
 @endsection

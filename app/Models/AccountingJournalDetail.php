@@ -49,15 +49,15 @@ class AccountingJournalDetail extends Model
     return match ($this->account->person_type) {
 
         'customer' => Str::isUuid($this->person)
-            ? Customer::find($this->person)?->fullname
+            ? Customer::find($this->person)?->displayName
             : $this->person,
 
         'employee' => Str::isUuid($this->person)
-            ? Employee::find($this->person)?->fullname
+            ? Employee::find($this->person)?->displayName
             : $this->person,
 
         'worker' => Str::isUuid($this->person)
-            ? Worker::find($this->person)?->fullname
+            ? Worker::find($this->person)?->displayName
             : $this->person,
 
         'license' => Str::isUuid($this->person)

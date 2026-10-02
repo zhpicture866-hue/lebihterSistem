@@ -66,6 +66,7 @@ $(function () {
         processing: true,
         serverSide: true,
         ajax: '{{ route("journals.index") }}',
+        order: [[2, 'desc']],
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             // { data: 'license_type', name: 'licenses.license_type' },

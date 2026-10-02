@@ -130,7 +130,6 @@
                                             </tr>
                                         </tfoot>
                                     </table>
-
                                     @php
                                         $isBalanced = $journal->details->sum('debit') == $journal->details->sum('credit');
                                     @endphp
@@ -145,15 +144,32 @@
                                 </div>
 
                                 <div class="col-md-4 mb-3">
-                                    <label for="enclosure" class="form-label">Lampiran</label>
-                                    <input type="file" name="enclosure" class="form-control">
+                                    <label class="form-label">Lampiran</label>
+
+                                    <input
+                                        type="file"
+                                        name="enclosure[]"
+                                        id="enclosure"
+                                        class="form-control"
+                                        multiple
+                                        accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx"
+                                    >
+
+                                    <div id="previewContainer" class="row mt-3"></div>
+
                                     @error('enclosure')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
+
+                                    @error('enclosure.*')
+                                        <small class="text-danger d-block">{{ $message }}</small>
+                                    @enderror
                                 </div>
                                 
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-dark text-white">Simpan</button>
+                                <div class="text-end mt-5">
+                                    <button type="submit" class="btn btn-dark px-4">
+                                        <i class="ti ti-device-floppy me-1"></i> Simpan Data
+                                    </button>
                                 </div>
 
                                 {{-- @if(!auth()->user()->hasRole('Super-Admin'))
@@ -363,6 +379,7 @@ $(document).ready(function () {
             String(value).replace(/\./g, '')
         ) || 0;
     }
+
     function calculateSubtotals() {
         let totalDebit = 0;
         let totalCredit = 0;
@@ -382,24 +399,6 @@ $(document).ready(function () {
             .toggleClass('text-success', isBalanced)
             .toggleClass('text-danger', !isBalanced);
     }
-    
-    // function calculateSubtotals() {
-    //     let totalDebit = 0, totalCredit = 0;
-
-    //     $('#detail-rows tr').each(function() {
-    //         totalDebit  += parseRupiah($(this).find('.debit-input').val())
-    //         totalCredit += parseRupiah($(this).find('.credit-input').val())
-    //     });
-
-    //     $('#subtotal-debit').text(totalDebit.toLocaleString('id-ID'));
-    //     $('#subtotal-credit').text(totalCredit.toLocaleString('id-ID'));
-
-    //     if (totalDebit === totalCredit && totalDebit > 0) {
-    //         $('#balance-status').text('✅ Seimbang').css('color', 'green');
-    //     } else {
-    //         $('#balance-status').text('❌ Tidak Seimbang').css('color', 'red');
-    //     }
-    // }
 
     $(document).on('input', '.debit-input, .credit-input', function () {
 
@@ -469,6 +468,102 @@ $('#transaction_date').on('change', function () {
             $('#period-warning').addClass('d-none');
             $('button[type="submit"]').prop('disabled', false);
         }
+
+    });
+
+});
+</script>
+<script>
+document.getElementById('enclosure').addEventListener('change', function(e){
+
+    const container = document.getElementById('previewContainer');
+    container.innerHTML = '';
+
+    [...e.target.files].forEach(file => {
+
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        const col = document.createElement('div');
+        col.className = 'col-md-4 mb-3';
+
+        let html = '';
+
+        // Image
+        if (file.type.startsWith('image/')) {
+
+            html = `
+                <div class="card">
+                    <img src="${URL.createObjectURL(file)}"
+                        class="card-img-top"
+                        style="height:180px;object-fit:cover">
+
+                    <div class="card-body p-2">
+                        <small>${file.name}</small>
+                    </div>
+                </div>
+            `;
+
+        }
+
+        // PDF
+        else if(ext === 'pdf'){
+
+            html = `
+                <div class="card">
+                    <embed
+                        src="${URL.createObjectURL(file)}"
+                        type="application/pdf"
+                        width="100%"
+                        height="180px">
+
+                    <div class="card-body p-2">
+                        <small>${file.name}</small>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Word
+        else if(['doc','docx'].includes(ext)){
+
+            html = `
+                <div class="card text-center p-4">
+                    <i class="ti ti-file-word text-primary"
+                       style="font-size:60px"></i>
+
+                    <small class="mt-2">${file.name}</small>
+                </div>
+            `;
+        }
+
+        // Excel
+        else if(['xls','xlsx'].includes(ext)){
+
+            html = `
+                <div class="card text-center p-4">
+                    <i class="ti ti-file-spreadsheet text-success"
+                       style="font-size:60px"></i>
+
+                    <small class="mt-2">${file.name}</small>
+                </div>
+            `;
+        }
+
+        // lainnya
+        else{
+
+            html = `
+                <div class="card text-center p-4">
+                    <i class="ti ti-file"
+                       style="font-size:60px"></i>
+
+                    <small class="mt-2">${file.name}</small>
+                </div>
+            `;
+        }
+
+        col.innerHTML = html;
+        container.appendChild(col);
 
     });
 

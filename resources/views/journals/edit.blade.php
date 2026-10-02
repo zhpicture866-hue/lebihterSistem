@@ -72,7 +72,7 @@
 
                             <h4>Detail Akun</h4>
                             <div class="table-responsive mb-4">
-                                <table class="table table-bordered">
+                                <table class="table table-bordered jurnal-table">
                                     <thead>
                                         <tr>
                                             <th style="width:20%">Akun</th>
@@ -110,17 +110,19 @@
 
                                                     <td>
                                                         <select name="details[{{ $i }}][person]" 
-                                                                class="form-select select2 user-select" 
+                                                                class="form-select user-select" 
                                                                 data-row="{{ $i }}" 
-                                                                data-selected="{{ $detail->person ?? '' }}">
+                                                                data-selected="{{ $detail->person ?? '' }}"
+                                                                data-selected-label="{{ $detail->person_name ?? '' }}">
                                                             <option value="">-- Pilih User --</option>
+                                                        </select>
                                                             @php
-                                                                if ($detail->person_type === 'employee') {
-                                                                    $users = $employees;
-                                                                } elseif ($detail->person_type === 'customer') {
-                                                                    $users = $customers;
-                                                                } elseif ($detail->person_type === 'worker') {
-                                                                    $users = $workers;
+                                                                if ($detail->person_type === 'team') {
+                                                                    $users = $teams;
+                                                                } elseif ($detail->person_type === 'member') {
+                                                                    $users = $members;
+                                                                } elseif ($detail->person_type === 'mitra') {
+                                                                    $users = $partners;
                                                                 } else {
                                                                     $users = collect();
                                                                 }
@@ -168,7 +170,7 @@
 
                                     <tfoot>
                                         <tr>
-                                            <td colspan="6"><button type="button" id="add-row" class="btn btn-sm btn-dark text-white">Tambah Baris</button></td>
+                                            <td colspan="6"><button type="button" id="add-row" class="btn btn-sm btn-dark text-black">Tambah Baris</button></td>
                                         </tr>
                                         <tr>
                                             <th colspan="3">Subtotal</th>
@@ -194,39 +196,77 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label for="enclosure" class="form-label">Lampiran (PDF / Gambar)</label>
-                                <input type="file" name="enclosure" class="form-control">
-
-                                @if($journal->enclosure)
-                                <div id="enclosure-preview" class="mt-3">
-                                    <div class="position-relative border rounded p-2 d-inline-block">
-
-                                        <button type="button"
-                                                class="btn btn-sm btn-danger position-absolute top-0 end-0"
-                                                id="remove-enclosure"
-                                                title="Hapus lampiran">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-
-                                        @if(Str::endsWith($journal->enclosure, ['.jpg', '.jpeg', '.png']))
-                                            <img src="{{ asset('storage/'.$journal->enclosure) }}"
-                                                alt="Lampiran"
-                                                width="200">
-                                        @elseif(Str::endsWith($journal->enclosure, ['.pdf']))
-                                            <a href="{{ asset('storage/'.$journal->enclosure) }}"
-                                            target="_blank">
-                                                <i class="ti ti-file-type-pdf"></i> Lihat PDF
-                                            </a>
-                                        @endif
-
-                                        <input type="hidden" name="remove_enclosure" id="remove_enclosure" value="0">
-                                    </div>
-                                </div>
-                                @endif
+                                <label class="form-label">Tambah Lampiran</label>
+                                <input type="file" name="enclosure[]" class="form-control" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx">
+                                @error('enclosure.*')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
+                            @if($journal->enclosures->isNotEmpty())
+                                <div class="row mt-3">
+                                    @foreach($journal->enclosures as $enclosure)
+                                        @php
+                                            $ext = strtolower(pathinfo($enclosure->file_name, PATHINFO_EXTENSION));
+                                        @endphp
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card">
+                                                <div class="card-body text-center position-relative">
+                                                        <input
+                                                            type="checkbox"
+                                                            name="remove_enclosures[]"
+                                                            value="{{ $enclosure->id }}"
+                                                            class="remove-checkbox d-none">
 
-                            <div class="text-end">
-                                <button type="submit" class="btn btn-dark text-white">Simpan Perubahan</button>
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-enclosure">
+                                                            <i class="ti ti-x"></i>
+                                                        </button>
+                                                    @if(in_array($ext,['jpg','jpeg','png','gif','webp']))
+                                                        <img
+                                                            src="{{ asset('storage/'.$enclosure->file_name) }}"
+                                                            class="img-fluid rounded"
+                                                            style="height:180px;object-fit:cover">
+                                                    @elseif($ext=='pdf')
+                                                        <i class="ti ti-file-type-pdf text-danger"
+                                                        style="font-size:60px"></i>
+                                                        <p class="mt-2">
+                                                            {{ basename($enclosure->file_name) }}
+                                                        </p>
+                                                    @elseif(in_array($ext,['doc','docx']))
+                                                        <i class="ti ti-file-type-doc text-primary"
+                                                        style="font-size:60px"></i>
+
+                                                        <p class="mt-2">
+                                                            {{ basename($enclosure->file_name) }}
+                                                        </p>
+
+                                                    @elseif(in_array($ext,['xls','xlsx']))
+
+                                                        <i class="ti ti-file-type-xls text-success"
+                                                        style="font-size:60px"></i>
+
+                                                        <p class="mt-2">
+                                                            {{ basename($enclosure->file_name) }}
+                                                        </p>
+
+                                                    @endif
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    @endforeach
+
+                                </div>
+
+                            @endif
+                            <div class="text-end mt-5">
+                                <button type="submit" class="btn btn-dark px-4">
+                                    <i class="ti ti-device-floppy me-1"></i> Simpan Perubahan
+                                </button>
                             </div>
                             
                             {{-- @if(!auth()->user()->hasRole('Super-Admin'))
@@ -241,7 +281,6 @@
     </div>
 </div>   
 @endsection
-
 
 @push('js')
 
@@ -314,10 +353,13 @@ $(document).ready(function () {
             .attr('title', selectedText);
     }
 
-    function renderUserOptions($select, personType, selected = null) {
-        $select.empty().append('<option value="">-- Pilih User --</option>');
+    function renderUserOptions($select, personType, selected = null, selectedLabel = null) {
 
-        if (!personType) return;
+        if ($select.hasClass("select2-hidden-accessible")) {
+            $select.select2('destroy');
+        }
+
+        $select.empty().append('<option value="">-- Pilih User --</option>');
 
         let urlMap = {
             employee: '/get-employees',
@@ -326,16 +368,33 @@ $(document).ready(function () {
             license: '/get-licenses'
         };
 
-        if (!urlMap[personType]) return;
-
-        $.get(urlMap[personType], function (data) {
+        const finishInit = (data = []) => {
             $.each(data, function (_, user) {
                 $select.append(
-                    `<option value="${user.id}" ${selected == user.id ? 'selected' : ''}>
-                        ${user.name}
-                     </option>`
+                    `<option value="${user.id}" ${selected == user.id ? 'selected' : ''}>${user.name}</option>`
                 );
             });
+
+            const label = selectedLabel || selected;
+
+            if (selected && !data.some(u => u.id == selected)) {
+                $select.append(`<option value="${selected}" selected>${label}</option>`);
+            }
+
+            $select.select2({
+                placeholder: "-- Input manual jika tidak ada User --",
+                width: '100%',
+                tags: true,
+            });
+        };
+
+        if (!personType || !urlMap[personType]) {
+            finishInit([]);
+            return;
+        }
+
+        $.get(urlMap[personType], function (data) {
+            finishInit(data);
         });
     }
 
@@ -403,9 +462,11 @@ $(document).ready(function () {
         const accountCode = String($(this).find(':selected').data('code') || '');
         const personType  = $(this).find(':selected').data('person-type');
         const $userSelect = $row.find('.user-select');
-        const selectedUser = $userSelect.data('selected');
 
-        renderUserOptions($userSelect, personType, selectedUser);
+        const selectedUser  = $userSelect.data('selected');
+        const selectedLabel = $userSelect.data('selected-label'); // <-- tambahkan ini
+
+        renderUserOptions($userSelect, personType, selectedUser, selectedLabel); // <-- tambah param ke-4
 
         applyDebitCreditRule($row, accountCode);
     });
@@ -440,10 +501,7 @@ $(document).ready(function () {
 
         renderAccountOptions($newRow.find('.account-select'));
 
-        $newRow.find('.user-select').select2({
-            placeholder: "-- Pilih User --",
-            width: '100%'
-        });
+        renderUserOptions($newRow.find('.user-select'), null);
     });
 
     $(document).on('click', '.remove-row', function () {
@@ -544,7 +602,9 @@ $(document).ready(function () {
     });
 
     calculateSubtotals();
-    $(document).on('click', '#remove-enclosure', function () {
+    $(document).on('click', '.remove-enclosure', function () {
+
+        const $card = $(this).closest('.card');
 
         Swal.fire({
             title: 'Hapus lampiran?',
@@ -556,10 +616,11 @@ $(document).ready(function () {
         }).then((result) => {
 
             if (result.isConfirmed) {
-                $('#remove_enclosure').val('1');
 
-                // langsung sembunyikan preview
-                $('#enclosure-preview').hide();
+                $card.find('.remove-checkbox').prop('checked', true);
+
+                $card.fadeOut();
+
             }
 
         });
