@@ -125,7 +125,7 @@
                     Status
                 </th>
 
-                <th class="text-center">
+                <th class="text-center" style="min-width: 200px;">
                     Invoice
                 </th>
 
@@ -151,6 +151,17 @@
 
                     // Bukti sudah diupload, tapi invoice belum di-approve
                     $awaitingApproval = $inv && $inv->bukti_pembayaran && ! $paid;
+
+                    // [warna badge, ikon, keterangan (tooltip)]
+                    if ($paid) {
+                        $statusIcon = ['bg-success', 'ti-check', 'Lunas'];
+                    } elseif ($awaitingApproval) {
+                        $statusIcon = ['bg-info', 'ti-hourglass', 'Menunggu Persetujuan'];
+                    } elseif ($inv) {
+                        $statusIcon = ['bg-warning', 'ti-clock', 'Menunggu Pembayaran'];
+                    } else {
+                        $statusIcon = ['bg-secondary', 'ti-minus', 'Belum Ditagih'];
+                    }
                 @endphp
 
                 <tr>
@@ -181,19 +192,18 @@
                     </td>
 
                     <td class="text-center">
-                        @if($paid)
-                            <span class="badge bg-green-lt">Lunas</span>
-                            @if($inv->approved_at)
-                                <div class="text-muted small mt-1">
-                                    {{ $inv->approved_at->translatedFormat('d M Y') }}
-                                </div>
-                            @endif
-                        @elseif($awaitingApproval)
-                            <span class="badge bg-blue-lt">Menunggu Persetujuan</span>
-                        @elseif($inv)
-                            <span class="badge bg-yellow-lt">Menunggu Pembayaran</span>
-                        @else
-                            <span class="badge bg-secondary-lt">Belum Ditagih</span>
+                        <span class="badge rounded-circle d-inline-flex align-items-center justify-content-center {{ $statusIcon[0] }}"
+                              style="width: 28px; height: 28px;"
+                              data-bs-tooltip="true"
+                              title="{{ $statusIcon[2] }}"
+                              aria-label="{{ $statusIcon[2] }}">
+                            <i class="ti {{ $statusIcon[1] }} text-white"></i>
+                        </span>
+
+                        @if($paid && $inv->approved_at)
+                            <div class="text-muted small mt-1">
+                                {{ $inv->approved_at->translatedFormat('d M Y') }}
+                            </div>
                         @endif
                     </td>
 
@@ -230,23 +240,43 @@
 
                                     <form
                                         method="POST"
+                                        class="decision-form"
                                         action="{{ route('projects.termins.continue', [$project->id, $termin->id]) }}"
-                                        onsubmit="return confirm('Lanjut berlangganan? Termin berikutnya akan dibuat otomatis.')"
+                                        data-title="Lanjut berlangganan?"
+                                        data-text="Termin berikutnya akan dibuat otomatis."
+                                        data-icon="question"
+                                        data-confirm-text="Ya, Lanjutkan"
+                                        data-confirm-color="#212529"
                                     >
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-dark">
-                                            Lanjut Berlangganan
+                                        <button type="submit"
+                                                class="badge rounded-circle d-inline-flex align-items-center justify-content-center bg-success border-0"
+                                                style="width: 28px; height: 28px; cursor: pointer;"
+                                                data-bs-tooltip="true"
+                                                title="Lanjut berlangganan"
+                                                aria-label="Lanjut berlangganan">
+                                            <i class="ti ti-repeat text-white"></i>
                                         </button>
                                     </form>
 
                                     <form
                                         method="POST"
+                                        class="decision-form"
                                         action="{{ route('projects.termins.stop', [$project->id, $termin->id]) }}"
-                                        onsubmit="return confirm('Yakin berhenti berlangganan? Tindakan ini tidak dapat dibatalkan.')"
+                                        data-title="Berhenti berlangganan?"
+                                        data-text="Tindakan ini tidak dapat dibatalkan."
+                                        data-icon="warning"
+                                        data-confirm-text="Ya, Berhenti"
+                                        data-confirm-color="#d63939"
                                     >
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            Stop
+                                        <button type="submit"
+                                                class="badge rounded-circle d-inline-flex align-items-center justify-content-center bg-danger border-0"
+                                                style="width: 28px; height: 28px; cursor: pointer;"
+                                                data-bs-tooltip="true"
+                                                title="Berhenti berlangganan"
+                                                aria-label="Berhenti berlangganan">
+                                            <i class="ti ti-player-stop text-white"></i>
                                         </button>
                                     </form>
 
@@ -257,11 +287,23 @@
 
                         @elseif($termin->renewal_decision === 'continued')
 
-                            <span class="badge bg-green-lt">Lanjut berlangganan</span>
+                            <span class="badge rounded-circle d-inline-flex align-items-center justify-content-center bg-success"
+                                  style="width: 28px; height: 28px;"
+                                  data-bs-tooltip="true"
+                                  title="Lanjut berlangganan"
+                                  aria-label="Lanjut berlangganan">
+                                <i class="ti ti-repeat text-white"></i>
+                            </span>
 
                         @elseif($termin->renewal_decision === 'stopped')
 
-                            <span class="badge bg-red-lt">Berhenti berlangganan</span>
+                            <span class="badge rounded-circle d-inline-flex align-items-center justify-content-center bg-danger"
+                                  style="width: 28px; height: 28px;"
+                                  data-bs-tooltip="true"
+                                  title="Berhenti berlangganan"
+                                  aria-label="Berhenti berlangganan">
+                                <i class="ti ti-player-stop text-white"></i>
+                            </span>
 
                         @endif
 
@@ -482,6 +524,54 @@ document.addEventListener('DOMContentLoaded', function () {
         if (link.dataset.invoiceDownloaded === '1') return;
 
         pollUntilReady(link.dataset.invoiceDownload);
+    });
+
+    // Konfirmasi SweetAlert untuk Lanjut / Stop.
+    // Memakai delegasi event pada root, jadi tetap berfungsi setelah tabel disegarkan.
+    root.addEventListener('submit', function (event) {
+        const form = event.target.closest('form.decision-form');
+
+        if (!form) return;
+
+        // Cadangan jika SweetAlert tidak termuat
+        if (!window.Swal) {
+            if (!confirm(form.dataset.text || 'Lanjutkan?')) {
+                event.preventDefault();
+            }
+
+            return;
+        }
+
+        event.preventDefault();
+
+        // Tutup tooltip tombol supaya tidak "menempel" di belakang dialog
+        const button = form.querySelector('button[type="submit"]');
+
+        if (button && window.bootstrap) {
+            const tooltip = bootstrap.Tooltip.getInstance(button);
+
+            if (tooltip) tooltip.hide();
+        }
+
+        Swal.fire({
+            title: form.dataset.title || 'Apakah Anda yakin?',
+            text: form.dataset.text || '',
+            icon: form.dataset.icon || 'warning',
+            showCancelButton: true,
+            confirmButtonText: form.dataset.confirmText || 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: form.dataset.confirmColor || '#212529',
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+
+            Swal.fire({
+                title: 'Memproses...',
+                allowOutsideClick: false,
+                didOpen: function () { Swal.showLoading(); }
+            });
+
+            form.submit(); // submit() tidak memicu event "submit" lagi, jadi tidak berulang
+        });
     });
 });
 </script>
