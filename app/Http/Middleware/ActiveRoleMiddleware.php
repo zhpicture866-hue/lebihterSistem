@@ -36,8 +36,8 @@ public function handle($request, Closure $next, $roleNames)
     if ($user->hasAnyRole([
         'Super-Admin',
         'Direktur',
-        'Tim',
-        'Tim Finance'
+        'Manager Marketing',
+        'Manager Operasional'
     ])) {
         return $next($request);
     }

@@ -19,7 +19,7 @@
         && ! $inv->approved_at
         && ($index == 0 || optional($prevInv)->approved_at);
 
-    $canSeeApprove = auth()->user()->hasAnyRole(['Super-Admin', 'Tim', 'Tim Finance']);
+    $canSeeApprove = auth()->user()->hasAnyRole(['Super-Admin', 'Direktur', 'Manager Operasional']);
 @endphp
 
 <div class="d-flex flex-column align-items-center gap-1">

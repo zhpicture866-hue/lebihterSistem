@@ -314,7 +314,7 @@ class ProjectController extends Controller
             );
         }
 
-        $directors = User::role('Tim')->get();
+        $directors = User::role('Direktur')->get();
 
         ProjectNotifier::notifyUsers(
             $directors,

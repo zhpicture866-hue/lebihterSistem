@@ -43,7 +43,7 @@
                         <table id="table-project-types" class="table table-bordered w-100">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th class="text-center">No.</th>
                                     <th>Nama</th>
                                     <th>Kode</th>
                                     <th>Status</th>

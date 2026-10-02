@@ -172,7 +172,7 @@ private function notifyInvoiceBuildCreated(Project $project, InvoiceBuild $invoi
     // Kalau proyek belum punya PIC/pembuat yang jelas, jatuhkan ke semua
     // staf dengan role "Tim" (pola yang sama dipakai di store()).
     if ($staffRecipients->isEmpty()) {
-        $staffRecipients = User::role('Tim')->get();
+        $staffRecipients = User::role('Manager Operasional')->get();
     }
 
     ProjectNotifier::notifyUsers(
@@ -394,7 +394,7 @@ public function downloadKwitansi(Project $project, InvoiceBuild $invoice, Reques
     abort_if($invoice->status !== InvoiceBuild::STATUS_APPROVED, 403);
  
     $regenerate = $request->boolean('regenerate')
-        && auth()->user()->hasAnyRole(['Super-Admin', 'Tim Finance']);
+        && auth()->user()->hasAnyRole(['Super-Admin', 'Manager Operasional']);
 
     if (! $regenerate
         && $invoice->kwitansi_path

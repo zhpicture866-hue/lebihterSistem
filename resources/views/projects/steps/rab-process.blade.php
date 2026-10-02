@@ -119,7 +119,7 @@
                     </tr>
 
                     <tr>
-                        <th colspan="4" class="text-end">
+                        <th colspan="5" class="text-end">
                             DISCOUNT
                         </th>
 
