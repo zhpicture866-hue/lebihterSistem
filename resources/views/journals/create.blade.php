@@ -78,58 +78,130 @@
                                     </div>
                         
                                 <h5>Detail Akun</h5>
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th style="width:20%">Akun</th>
-                                                <th style="width:20%">Deskripsi</th>
-                                                <th style="width:20%">User</th>
-                                                <th style="width:10%">Debit</th>
-                                                <th style="width:10%">Kredit</th>
-                                                <th style="width:5%">Aksi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="detail-rows">
-                                            <tr>
-                                                <td>
-                                                    <select name="details[0][account_id]" class="form-select select2 account-select" data-row="0" required>
-                                                        <option value="">-- Pilih Akun --</option>
+                                    <div class="jurnal-table-wrapper">
+
+                                        <table class="table table-bordered jurnal-table">
+
+                                            <thead>
+                                                <tr>
+                                                    <th style="width:22%">Akun</th>
+                                                    <th style="width:22%">Deskripsi</th>
+                                                    <th style="width:18%">User</th>
+                                                    <th style="width:15%">Debit</th>
+                                                    <th style="width:15%">Kredit</th>
+                                                    <th style="width:8%">Aksi</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody id="detail-rows">
+
+                                                <tr class="jurnal-row">
+
+                                                    <td data-label="Akun">
+                                                        <select
+                                                            name="details[0][account_id]"
+                                                            class="form-select select2 account-select"
+                                                            data-row="0"
+                                                            required
+                                                        >
+                                                            <option value="">-- Pilih Akun --</option>
+
                                                             @foreach ($accounts as $account)
-                                                                <option value="{{ $account->id }}"
+                                                                <option
+                                                                    value="{{ $account->id }}"
                                                                     data-code="{{ $account->account_code }}"
                                                                     data-name="{{ $account->account_name }}"
-                                                                    data-person-type="{{ $account->person_type }}">
-                                                                    {{ $account->account_code }} - {{ $account->account_name }}
+                                                                    data-person-type="{{ $account->person_type }}"
+                                                                >
+                                                                    {{ $account->account_code }} -
+                                                                    {{ $account->account_name }}
                                                                 </option>
                                                             @endforeach
-                                                    </select>
-                                                </td>
-                                                <td><input type="text" name="details[0][description]" class="form-control"></td>
-                                                <td>
-                                                    <select name="details[0][person]" class="form-select select2 user-select" data-row="0">
-                                                        <option value="">-- Pilih User --</option>
-                                                    </select>
-                                                </td>
-                                                <td><input type="text" name="details[0][debit]" class="form-control debit-input"></td>
-                                                <td><input type="text" name="details[0][credit]" class="form-control credit-input"></td>
-                                                <td><button type="button" class="btn btn-sm btn-dark remove-row" title="Hapus">
-                                                        <i class="ti ti-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <td colspan="6"><button type="button" id="add-row" class="btn btn-sm btn-dark text-white">Tambah Baris</button></td>
-                                            </tr>
-                                            <tr>
-                                                <th colspan="3">Subtotal</th>
-                                                <th id="subtotal-debit">0</th>
-                                                <th id="subtotal-credit">0</th>
-                                                <th colspan="3"></th>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
+                                                        </select>
+                                                    </td>
+
+                                                    <td data-label="Deskripsi">
+                                                        <input
+                                                            type="text"
+                                                            name="details[0][description]"
+                                                            class="form-control"
+                                                        >
+                                                    </td>
+
+                                                    <td data-label="User">
+                                                        <select
+                                                            name="details[0][person]"
+                                                            class="form-select select2 user-select"
+                                                            data-row="0"
+                                                        >
+                                                            <option value="">-- Pilih User --</option>
+                                                        </select>
+                                                    </td>
+
+                                                    <td data-label="Debit">
+                                                        <input
+                                                            type="text"
+                                                            name="details[0][debit]"
+                                                            class="form-control debit-input"
+                                                        >
+                                                    </td>
+
+                                                    <td data-label="Kredit">
+                                                        <input
+                                                            type="text"
+                                                            name="details[0][credit]"
+                                                            class="form-control credit-input"
+                                                        >
+                                                    </td>
+
+                                                    <td data-label="Aksi" class="action-cell">
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-sm btn-dark remove-row"
+                                                            title="Hapus"
+                                                        >
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </td>
+
+                                                </tr>
+
+                                            </tbody>
+
+                                            <tfoot>
+
+                                                <tr class="jurnal-add-row">
+                                                    <td colspan="6">
+                                                        <button
+                                                            type="button"
+                                                            id="add-row"
+                                                            class="btn btn-sm btn-dark text-white"
+                                                        >
+                                                            <i class="ti ti-plus"></i>
+                                                            Tambah Baris
+                                                        </button>
+                                                    </td>
+                                                </tr>
+
+                                                <tr class="jurnal-subtotal-row">
+                                                    <th colspan="3">Subtotal</th>
+
+                                                    <th id="subtotal-debit">
+                                                        0
+                                                    </th>
+
+                                                    <th id="subtotal-credit">
+                                                        0
+                                                    </th>
+
+                                                    <th></th>
+                                                </tr>
+
+                                            </tfoot>
+
+                                        </table>
+
+                                    </div>
                                     @php
                                         $isBalanced = $journal->details->sum('debit') == $journal->details->sum('credit');
                                     @endphp
@@ -292,33 +364,75 @@ $(document).ready(function () {
     loadAccounts();
 
     $('#add-row').click(function () {
+
         const rowCount = $('#detail-rows tr').length;
 
         const newRow = `
-            <tr>
-                <td>
-                    <select name="details[${rowCount}][account_id]" 
-                            class="form-select account-select" required></select>
+            <tr class="jurnal-row">
+
+                <td data-label="Akun">
+                    <select
+                        name="details[${rowCount}][account_id]"
+                        class="form-select account-select"
+                        required
+                    ></select>
                 </td>
-                <td><input type="text" name="details[${rowCount}][description]" class="form-control"></td>
-                <td>
-                    <select name="details[${rowCount}][person]" 
-                            class="form-select user-select"></select>
+
+                <td data-label="Deskripsi">
+                    <input
+                        type="text"
+                        name="details[${rowCount}][description]"
+                        class="form-control"
+                    >
                 </td>
-                <td><input type="text" name="details[${rowCount}][debit]" class="form-control debit-input"></td>
-                <td><input type="text" name="details[${rowCount}][credit]" class="form-control credit-input"></td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-dark remove-row">
+
+                <td data-label="User">
+                    <select
+                        name="details[${rowCount}][person]"
+                        class="form-select user-select"
+                    ></select>
+                </td>
+
+                <td data-label="Debit">
+                    <input
+                        type="text"
+                        name="details[${rowCount}][debit]"
+                        class="form-control debit-input"
+                    >
+                </td>
+
+                <td data-label="Kredit">
+                    <input
+                        type="text"
+                        name="details[${rowCount}][credit]"
+                        class="form-control credit-input"
+                    >
+                </td>
+
+                <td data-label="Aksi" class="action-cell">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-dark remove-row"
+                        title="Hapus"
+                    >
                         <i class="ti ti-trash"></i>
                     </button>
                 </td>
+
             </tr>
         `;
 
         $('#detail-rows').append(newRow);
 
-        renderAccountOptions($('#detail-rows tr:last .account-select'));
-        initSelect2WithCreate($('#detail-rows tr:last .user-select'));
+        const $lastRow = $('#detail-rows tr:last');
+
+        renderAccountOptions(
+            $lastRow.find('.account-select')
+        );
+
+        initSelect2WithCreate(
+            $lastRow.find('.user-select')
+        );
     });
 
     $(document).on('click', '.remove-row', function () {

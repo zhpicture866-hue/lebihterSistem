@@ -178,7 +178,7 @@
         </tr>
         <tr>
             <td class="lbl">DISCOUNT</td>
-            <td class="text-right">{{ $rp($offer->discount) }}</td>
+            <td class="text-right">- {{ $rp($offer->discount) }}</td>
         </tr>
         <tr>
             <td class="lbl">SUBTOTAL AFTER DISCOUNT</td>

@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Invoice Pembayaran Tahap {{ $invoice->termin }}</title>
+<title>Kwitansi Pembayaran Tahap {{ $invoice->termin }}</title>
 
 <style>
 @page {
@@ -15,7 +15,7 @@ body {
     line-height: 1.5;
 }
 
-/* HEADER & FOOTER */
+/* HEADER */
 .header {
     position: fixed;
     top: -100px;
@@ -49,12 +49,22 @@ p {
     margin: 0 0 6px 0;
 }
 
+.lunas-stamp {
+    display: inline-block;
+    border: 3px solid #2fb344;
+    color: #2fb344;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 4px 14px;
+    transform: rotate(-8deg);
+    margin-left: 10px;
+}
 </style>
 </head>
 
 <body>
 
-{{-- HEADER --}}
+{{-- HEADER (sama seperti invoice) --}}
 <div class="header">
     <img src="{{ public_path('images/header-penawaran.png') }}" style="width:100%;">
 </div>
@@ -75,63 +85,36 @@ p {
     <td width="40%" valign="top" align="right">
         <table class="no-border" align="right">
             <tr>
-                <td style="padding-right:10px;">Invoice No</td>
-                <td><strong>{{ $invoice->invoice_number  }}</strong></td>
+                <td style="padding-right:10px;">No. Kwitansi</td>
+                <td><strong>{{ $number }}</strong></td>
             </tr>
             <tr>
                 <td>Tanggal</td>
-                <td>{{ $invoice->invoice_date->format('d F Y') }}</td>
+                <td>{{ optional($invoice->approved_at)->format('d F Y') }}</td>
             </tr>
         </table>
     </td>
 </tr>
 </table>
 
-
-
 <table width="100%" class="no-border" style="margin-top:15px;">
 <tr>
     <!-- KIRI -->
-    <td width="50%" valign="top">
-        <p class="bold">Tagihan Kepada</p>
+    <td width="100%" valign="top">
+        <p class="bold">
+            Diterima Dari
+            @if($isFinalPayment)
+                <span class="lunas-stamp">LUNAS</span>
+            @endif
+        </p>
         <p>
             <strong>{{ optional($project->customer->user)->readable_title }} {{ $offer->contact_name }}</strong><br>
             {{ optional($project->customer->user)->address }}<br>
             Telp: {{ optional($project->customer->user)->phone }}
         </p>
-
-    </td>
-
-    <!-- KANAN -->
-    <td width="50%" valign="top">
-        <p class="bold">Informasi Pembayaran</p>
-        <table class="no-border">
-            <tr>
-                <td width="45%">Metode pembayaran</td>
-                <td>: Cash / Transfer</td>
-            </tr>
-            <tr>
-                <td>Nama Bank</td>
-                <td>: Bank Mandiri</td>
-            </tr>
-            <tr>
-                <td>No. Rekening</td>
-                <td>: 141 001 378 428 5</td>
-            </tr>
-            <tr>
-                <td>Atas Nama</td>
-                <td>: Achmad Zulkifli Nur Rochim</td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <em>Harap mengirimkan bukti pembayaran</em>
-                </td>
-            </tr>
-        </table>
     </td>
 </tr>
 </table>
-
 
 <br>
 
@@ -142,24 +125,20 @@ p {
     <th>Deskripsi</th>
     <th>%</th>
     <th>Total Harga Proyek (Rp)</th>
-    <th>Total Yang Harus Dibayar (Rp)</th>
+    <th>Total Diterima (Rp)</th>
 </tr>
 </thead>
-
 @php
     $buildTermin = $project->buildTermins->firstWhere('termin_no', $invoice->termin);
     $terminLabel = $buildTermin->description ?? ('Pembayaran Termin ' . $invoice->termin);
 @endphp
-
 <tbody>
 <tr>
-   
-        <td>
+    <td>
 Pembayaran {{ $terminLabel }}
-Proyek {{ $project->project_name }} 
-        </td>
+Proyek {{ $project->project_name }}
+    </td>
 
-    
     <td class="text-center">{{ $invoice->payment_percentage }}%</td>
     <td class="text-right">{{ number_format($grandTotal,0,',','.') }}</td>
     <td class="text-right">{{ number_format($invoice->amount,0,',','.') }}</td>
@@ -185,6 +164,7 @@ Proyek {{ $project->project_name }}
     </tr>
 </tfoot>
 </table>
+
 <br>
 <p><strong>Terbilang :</strong><br>
 {{ ucwords(terbilang($invoice->amount)) }} Rupiah
@@ -192,29 +172,35 @@ Proyek {{ $project->project_name }}
 
 <p class="bold">Keterangan :</p>
 
-<p>Mekanisme Pembayaran sebagai berikut :</p>
+<p>
+Kwitansi ini merupakan bukti sah penerimaan pembayaran atas Invoice
+No. <strong>{{ $invoice->invoice_number }}</strong>,
+yang telah disetujui pada
+{{ optional($invoice->approved_at)->format('d F Y, H:i') }} WIB.
+</p>
 
 <ul>
-
 @foreach($project->invoicebuilds->sortBy('termin') as $inv)
-
     @php
         $buildTermin = $project->buildTermins->firstWhere('termin_no', $inv->termin);
     @endphp
-
 <li>
 Pembayaran {{ $buildTermin->description ?? ('Pembayaran Termin ' . $inv->termin) }}
 sebesar {{ $inv->payment_percentage }}%
 x Rp {{ number_format($grandTotal,0,',','.') }}
 =
 Rp {{ number_format($inv->amount,0,',','.') }}
-@if($inv->bukti_pembayaran_uploaded_at)
-    ({{ $inv->bukti_pembayaran_uploaded_at->format('d F Y') }})
+@if($inv->status === 'approved')
+    (Lunas
+    @if($inv->bukti_pembayaran_uploaded_at)
+        , {{ $inv->bukti_pembayaran_uploaded_at->format('d F Y') }}
+    @endif
+    )
+@else
+    (Belum Lunas)
 @endif
 </li>
-
 @endforeach
-
 </ul>
 
 <div style="
@@ -238,3 +224,5 @@ Rp {{ number_format($inv->amount,0,',','.') }}
 </div>
 </body>
 </html>
+
+{{-- ?regenerate=1 --}}

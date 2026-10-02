@@ -71,7 +71,7 @@
                             </div>
 
                             <h4>Detail Akun</h4>
-                            <div class="table-responsive mb-4">
+                            <div class="jurnal-table-wrapper">
                                 <table class="table table-bordered jurnal-table">
                                     <thead>
                                         <tr>
@@ -86,8 +86,8 @@
                                     <tbody id="detail-rows">
                                         @if(isset($journal) && $journal->details)
                                             @foreach ($journal->details as $i => $detail)
-                                                <tr>
-                                                    <td>
+                                                <tr class="jurnal-row">
+                                                    <td data-label="Akun">
                                                         <select name="details[{{ $i }}][account_id]" 
                                                                 class="form-select select2 account-select" 
                                                                 data-row="{{ $i }}" required>
@@ -101,14 +101,14 @@
                                                     </td>
 
                                                     {{-- Deskripsi --}}
-                                                    <td>
+                                                    <td data-label="Deskripsi">
                                                         <input type="text" 
                                                             name="details[{{ $i }}][description]" 
                                                             class="form-control"
                                                             value="{{ old("details.$i.description", $detail->description) }}">
                                                     </td>
 
-                                                    <td>
+                                                    <td data-label="User">
                                                         <select name="details[{{ $i }}][person]" 
                                                                 class="form-select user-select" 
                                                                 data-row="{{ $i }}" 
@@ -135,7 +135,7 @@
                                                         </select>
                                                     </td>
                                                     
-                                                    <td>
+                                                    <td data-label="Debit">
                                                         <input type="text"
                                                             name="details[{{ $i }}][debit]" 
                                                             class="form-control debit-input" 
@@ -148,7 +148,7 @@
                                                     </td>
 
                                                     
-                                                    <td>
+                                                    <td data-label="Kredit">
                                                         <input type="text" 
                                                             name="details[{{ $i }}][credit]" 
                                                             class="form-control credit-input" 
@@ -159,7 +159,7 @@
                                                             <input type="hidden" name="details[{{ $i }}][credit]" value="{{ $detail->credit }}">
                                                         @endif
                                                     </td>
-                                                    <td><button type="button" class="btn btn-sm btn-dark remove-row" title="Hapus">
+                                                    <td data-label="Aksi" class="action-cell"><button type="button" class="btn btn-sm btn-dark remove-row" title="Hapus">
                                                                 <i class="ti ti-trash"></i>
                                                         </button>
                                                     </td>
@@ -169,10 +169,10 @@
                                     </tbody>
 
                                     <tfoot>
-                                        <tr>
-                                            <td colspan="6"><button type="button" id="add-row" class="btn btn-sm btn-dark text-black">Tambah Baris</button></td>
+                                        <tr class="jurnal-add-row">
+                                            <td colspan="6"><button type="button" id="add-row" class="btn btn-sm btn-dark text-white">Tambah Baris</button></td>
                                         </tr>
-                                        <tr>
+                                        <tr class="jurnal-subtotal-row">
                                             <th colspan="3">Subtotal</th>
                                             <th id="subtotal-debit">{{ $journal->details->sum('debit') }}</th>
                                             <th id="subtotal-credit">{{ $journal->details->sum('credit') }}</th>
@@ -475,19 +475,19 @@ $(document).ready(function () {
         const rowCount = $('#detail-rows tr').length;
 
         const newRow = `
-            <tr>
-                <td>
+            <tr class="jurnal-row">
+                <td data-label="Akun">
                     <select name="details[${rowCount}][account_id]" 
                             class="form-select account-select" required></select>
                 </td>
-                <td><input type="text" name="details[${rowCount}][description]" class="form-control"></td>
-                <td>
+                <td data-label="Deskripsi"><input type="text" name="details[${rowCount}][description]" class="form-control"></td>
+                <td data-label="User">
                     <select name="details[${rowCount}][person]" 
                             class="form-select select2 user-select"></select>
                 </td>
-                <td><input type="text" name="details[${rowCount}][debit]" class="form-control debit-input"></td>
-                <td><input type="text" name="details[${rowCount}][credit]" class="form-control credit-input"></td>
-                <td>
+                <td data-label="Debit"><input type="text" name="details[${rowCount}][debit]" class="form-control debit-input"></td>
+                <td data-label="Kredit"><input type="text" name="details[${rowCount}][credit]" class="form-control credit-input"></td>
+                <td data-label="Aksi" class="action-cell">
                     <button type="button" class="btn btn-sm btn-dark remove-row">
                         <i class="ti ti-trash"></i>
                     </button>

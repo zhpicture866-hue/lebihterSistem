@@ -85,7 +85,7 @@ $rab = $project->rab()->with('items')->first();
 
                         <tr>
                             <th colspan="5" class="text-end">DISCOUNT</th>
-                            <th class="text-end">Rp {{ number_format($rab->discount, 2, ',', '.') }}</th>
+                            <th class="text-end">- Rp {{ number_format($rab->discount, 2, ',', '.') }}</th>
                         </tr>
 
                         <tr>
