@@ -154,58 +154,56 @@
 
             // Delete user functionally
             $('table').on('click', '.delete-projects', function () {
-            const projectId = $(this).data('id');
+                const projectId = $(this).data('id');
 
-            Swal.fire({
-            title: 'Yakin ingin menghapus?',
-            text: "Data akan hilang secara permanen.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Ya, hapus!',
-            cancelButtonText: 'Batal'
+                Swal.fire({
+                title: 'Yakin ingin menghapus?',
+                text: "Data akan hilang secara permanen.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
 
-            }).then((result) => {
+                }).then((result) => {
 
-                if (result.isConfirmed) {
-                    $.ajax({
+                    if (result.isConfirmed) {
+                        $.ajax({
 
-                        url: `/projects/${projectId}`,
-                        method: 'DELETE',
-                        data: {
-                            _token: '{{ csrf_token() }}',
-                        },
+                            url: `/projects/${projectId}`,
+                            method: 'DELETE',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                            },
 
-                        success: function (response) {
-                            if (response.status === 'success') {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Berhasil!',
-                                    text: 'Data Proyek telah dihapus.',
-                                    timer: 2000,
-                                    showConfirmButton: false
-                            });
+                            success: function (response) {
+                                if (response.status === 'success') {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil!',
+                                        text: 'Data Proyek telah dihapus.',
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                });
 
-                        table.ajax.reload(null, false); // refresh datatable
-                        } else {
+                            table.ajax.reload(null, false); // refresh datatable
+                            } else {
 
-                            Swal.fire('Gagal', response.message || 'Tidak bisa menghapus data.', 'error');
+                                Swal.fire('Gagal', response.message || 'Tidak bisa menghapus data.', 'error');
+                            }
+                            },
+
+                        error: function () {
+
+                        Swal.fire('Error', 'Terjadi kesalahan saat menghapus.', 'error');
                         }
-                        },
 
-                    error: function () {
-
-                    Swal.fire('Error', 'Terjadi kesalahan saat menghapus.', 'error');
+                        });
                     }
-
-                    });
-                }
+                });
             });
-            });
-
-
-           
+      
         });
     </script>
 

@@ -104,7 +104,8 @@ public function activeRole()
         'account_holder',
         'active_role',
         'identity_photo',
-        'email_verified_at'
+        'email_verified_at',
+        'title'
     ];
 
     /**
@@ -175,7 +176,14 @@ public function activeRole()
         2 => 'Perempuan',
     ][$this->gender] ?? 'Tidak diketahui';
     }
-
+        public function getReadableTitleAttribute()
+    {
+    return [
+        1 => 'Bapak',
+        2 => 'Ibu',
+        3 => 'Kak',
+    ][$this->title] ?? 'Kak';
+    }
 public function setActiveRoleAttribute($value)
 {
     // Larangan nilai angka

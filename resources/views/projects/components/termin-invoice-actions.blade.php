@@ -37,6 +37,8 @@
         @if($canDownload)
 
             <a href="{{ route('projects.invoice.build', ['project' => $project->id, 'termin' => $t]) }}"
+            data-invoice-download="{{ $t }}"
+            data-invoice-downloaded="{{ $inv && $inv->downloaded_at ? 1 : 0 }}"
             class="btn btn-dark btn-sm"
             target="_blank"
             data-bs-toggle="tooltip"

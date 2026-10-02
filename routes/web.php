@@ -592,6 +592,7 @@ Route::prefix('projects/{project}')->name('projects.')->middleware(['auth'])->gr
     Route::post('termins/{termin}/continue', [TerminSubscriptionController::class, 'continueSubscription'])->name('termins.continue');
     Route::post('termins/{termin}/stop', [TerminSubscriptionController::class, 'stopSubscription'])->name('termins.stop');
     Route::get('termins/{termin}/receipt', [TerminSubscriptionController::class, 'receipt'])->name('termins.receipt');
+    Route::get('termins/refresh', [TerminSubscriptionController::class, 'refresh'])->name('termins.refresh');
 });
 
 Route::prefix('projects/{project}')

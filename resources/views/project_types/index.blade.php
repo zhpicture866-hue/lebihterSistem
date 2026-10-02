@@ -122,26 +122,54 @@ $(function () {
                 }
     });
 
-    // Delete via AJAX (tombol dirender dari controller: class="delete-project-type" data-id="...")
-    $(document).on('click', '.delete-project-type', function () {
-        const id = $(this).data('id');
+    $('table').on('click', '.delete-project-type', function () {
+        const projectId = $(this).data('id');
 
-        if (!confirm('Yakin mau hapus jenis proyek ini?')) {
-            return;
-        }
+        Swal.fire({
+        title: 'Yakin ingin menghapus?',
+        text: "Data akan hilang secara permanen.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal'
 
-        $.ajax({
-            url: `/project_types/${id}`,
-            type: 'DELETE',
-            data: { _token: '{{ csrf_token() }}' },
-            success: function (res) {
-                alert(res.message);
-                table.ajax.reload();
-            },
-            error: function (xhr) {
-                const msg = xhr.responseJSON?.message ?? 'Gagal menghapus jenis proyek.';
-                alert(msg);
-            },
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+                $.ajax({
+
+                    url: `/project_types/${projectId}`,
+                    method: 'DELETE',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                    },
+
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: 'Data Proyek telah dihapus.',
+                                timer: 2000,
+                                showConfirmButton: false
+                        });
+
+                    table.ajax.reload(null, false); // refresh datatable
+                    } else {
+
+                        Swal.fire('Gagal', response.message || 'Tidak bisa menghapus data.', 'error');
+                    }
+                    },
+
+                error: function () {
+
+                Swal.fire('Error', 'Terjadi kesalahan saat menghapus.', 'error');
+                }
+
+                });
+            }
         });
     });
 });

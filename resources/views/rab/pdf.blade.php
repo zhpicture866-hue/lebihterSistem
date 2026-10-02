@@ -117,7 +117,7 @@
     <div class="section-title">Detail Proyek</div>
     <table class="info">
         <tr><td class="label">Project</td><td class="sep">:</td><td>{{ $project->project_name }}</td></tr>
-        <tr><td class="label">Client</td><td class="sep">:</td><td>{{ $offer->contact_name }}</td></tr>
+        <tr><td class="label">Client</td><td class="sep">:</td><td>{{ $project->customer->user->readable_title ?? '-' }} {{ $offer->contact_name }}</td></tr>
         <tr><td class="label">Address</td><td class="sep">:</td><td>{{ $project->customer->user->address ?? '-' }}</td></tr>
         <tr><td class="label">Phone</td><td class="sep">:</td><td>{{ $project->customer->user->phone ?? '-' }}</td></tr>
         <tr><td class="label">Event Date</td><td class="sep">:</td><td>{{ $project->start_date->translatedFormat('d F Y') }}</td></tr>

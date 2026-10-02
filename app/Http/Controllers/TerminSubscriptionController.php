@@ -119,6 +119,103 @@ class TerminSubscriptionController extends Controller
     }
 
     /**
+     * Edit termin langganan. Hanya TERMIN TERAKHIR yang BELUM DITAGIH (invoice belum dibuat)
+     * yang boleh diubah, supaya invoice yang sudah terbit, masa layanan, dan keputusan
+     * lanjut/stop termin sebelumnya tidak ikut berubah.
+     *
+     * - nominal & keterangan: selalu boleh (dan ikut menjadi dasar termin berikutnya)
+     * - periode & tanggal penagihan: hanya selama baru ada 1 termin (patokan masa layanan)
+     */
+    public function update(Request $request, Project $project)
+    {
+        abort_if($request->user()->cannot('ubah data proyek'), 403);
+
+        $project->loadMissing('rab');
+
+        $data = $request->validate([
+            'termin_no'          => ['required', 'integer', 'min:1'],
+            'amount'             => ['required', 'integer', 'min:1'],
+            'termin_description' => ['nullable', 'string', 'max:255'],
+            'billing_period'     => ['nullable', 'in:monthly,annual'],
+            'billing_date'       => ['nullable', 'date'],
+        ], [
+            'amount.required'   => 'Nominal tagihan wajib diisi.',
+            'amount.integer'    => 'Nominal tagihan harus berupa angka bulat (rupiah).',
+            'amount.min'        => 'Nominal tagihan harus lebih besar dari 0.',
+            'billing_period.in' => 'Periode berlangganan harus bulanan atau tahunan.',
+        ]);
+
+        $offerTotal = (float) ($project->rab?->grand_total ?? 0);
+
+        try {
+            DB::transaction(function () use ($project, $data, $offerTotal) {
+                Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+
+                $termin = $project->buildTermins()->orderByDesc('termin_no')->first();
+
+                if (! $termin) {
+                    throw new \DomainException('Termin belum dibuat.');
+                }
+
+                if (! $termin->period_start) {
+                    throw new \DomainException('Termin ini dibuat dengan sistem lama dan tidak dapat diedit di sini.');
+                }
+
+                // Pastikan yang diedit masih termin terakhir (bisa berubah kalau ada yang menekan "Lanjut")
+                if ((int) $data['termin_no'] !== (int) $termin->termin_no) {
+                    throw new \DomainException('Data termin sudah berubah. Muat ulang halaman lalu coba lagi.');
+                }
+
+                if ($project->invoicebuilds()->where('termin', $termin->termin_no)->exists()) {
+                    throw new \DomainException(
+                        "Termin ke-{$termin->termin_no} sudah ditagih (invoice sudah dibuat) dan tidak dapat diubah."
+                    );
+                }
+
+                $attributes = [
+                    'amount'      => (int) $data['amount'],
+                    'percentage'  => $this->percentageOf((float) $data['amount'], $offerTotal),
+                    'description' => $data['termin_description'] ?? null,
+                ];
+
+                // Periode & tanggal hanya boleh berubah selama baru ada satu termin
+                $isOnlyTermin = $project->buildTermins()->count() === 1;
+
+                if ($isOnlyTermin && ! empty($data['billing_period']) && ! empty($data['billing_date'])) {
+                    $start = Carbon::parse($data['billing_date'])->startOfDay();
+
+                    [$periodStart, $periodEnd] = BuildTermin::periodFor($start, $data['billing_period'], 1);
+
+                    $attributes += [
+                        'billing_period' => $data['billing_period'],
+                        'billing_date'   => $start,
+                        'period_start'   => $periodStart,
+                        'period_end'     => $periodEnd,
+                    ];
+                }
+
+                $termin->update($attributes);
+            });
+        } catch (\DomainException $e) {
+            return back()->withInput()->withErrors(['termin' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            Log::error('Gagal memperbarui termin', [
+                'project_id' => $project->id,
+                'error'      => $e->getMessage(),
+                'trace'      => $e->getTraceAsString(),
+            ]);
+
+            return back()->withInput()->withErrors([
+                'termin' => 'Terjadi kesalahan saat memperbarui termin.',
+            ]);
+        }
+
+        return redirect()
+            ->route('projects.create', ['project_id' => $project->id])
+            ->with('success', 'Termin berhasil diperbarui.');
+    }
+
+    /**
      * Customer memilih lanjut berlangganan -> termin berikutnya dibuat otomatis.
      */
     public function continueSubscription(Request $request, Project $project, BuildTermin $termin)
@@ -201,6 +298,38 @@ class TerminSubscriptionController extends Controller
         }
 
         return back()->with('success', 'Langganan telah dihentikan.');
+    }
+
+    /**
+     * Dipanggil lewat AJAX setelah tombol "Download Invoice" diklik, supaya tabel termin
+     * menampilkan tombol upload bukti dkk. tanpa reload halaman.
+     *
+     * Invoice dibuat / ditandai "downloaded" di tab baru, jadi endpoint ini dipolling
+     * sampai invoice termin tsb sudah downloaded, baru HTML tabel dikirim.
+     */
+    public function refresh(Request $request, Project $project)
+    {
+        $user = $request->user();
+        $isCustomer = $project->customer?->user?->id === $user->id;
+
+        abort_unless($user->can('lihat data proyek') || $isCustomer, 403);
+
+        $project->load(['rab', 'customer.user', 'buildTermins', 'invoicebuilds']);
+
+        $terminNo = (int) $request->query('termin');
+
+        $invoice = $terminNo
+            ? $project->invoicebuilds->where('termin', $terminNo)->first()
+            : null;
+
+        if (! $invoice || ! $invoice->downloaded_at) {
+            return response()->json(['ready' => false]);
+        }
+
+        return response()->json([
+            'ready' => true,
+            'html'  => view('projects.details.build-termins', ['project' => $project])->render(),
+        ]);
     }
 
     /* =========================================================

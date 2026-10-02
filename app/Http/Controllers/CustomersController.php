@@ -12,6 +12,7 @@ use App\Models\SubDistrict;
 use App\Models\PostalCode;
 use Illuminate\Support\Carbon;
 use App\Models\User;
+use App\Models\Bank;
 use Spatie\Permission\Models\Role;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Storage;
@@ -142,6 +143,7 @@ class CustomersController extends Controller
         'fullname' => 'required|string|max:255',
         'nickname' => 'nullable|string|max:100',
         'gender' => 'nullable|in:1,2',
+        'title' => 'nullable|in:1,2,3',
         'email' => [
             'required',
             'email',
@@ -244,6 +246,7 @@ if ($request->hasFile('photo')) {
                 'password' => Hash::make($password),
                 'phone' => $validated['phone'] ?? null,
                 'gender' => $validated['gender'] ?? null,
+                'title' => $validated['title'] ?? null,
                 'photo' => $validated['photo'] ?? null,
                 'bank_id' => $validated['bank_id'] ?? null,
                 'account_number' => $validated['account_number'] ?? null,
@@ -355,7 +358,8 @@ public function update(Request $request, Customer $customer)
         // --- data user ---
         'fullname' => 'required|string|max:255',
         'nickname' => 'nullable|string|max:100',
-        'gender' => 'nullable|in:1,2',        
+        'gender' => 'nullable|in:1,2',
+        'title' => 'nullable|in:1,2,3',
         'email' => [
             'required',
             'email',
@@ -381,25 +385,10 @@ public function update(Request $request, Customer $customer)
             'nullable',
             Rule::exists(Province::class, 'id'),
         ],
-        'user_city_id' => [
-            'nullable',
-            Rule::exists(City::class, 'id'),
-        ],
-
-        'user_district_id' => [
-            'nullable',
-            Rule::exists(District::class, 'id'),
-        ],
-
-        'user_sub_district_id' => [
-            'nullable',
-            Rule::exists(SubDistrict::class, 'id'),
-        ],
-
-        'user_postal_code_id' => [
-            'nullable',
-            Rule::exists(PostalCode::class, 'id'),
-        ],
+        'user_city_id' => ['nullable', Rule::exists(City::class, 'id')],
+        'user_district_id' => ['nullable', Rule::exists(District::class, 'id')],
+        'user_sub_district_id' => ['nullable', Rule::exists(SubDistrict::class, 'id')],
+        'user_postal_code_id' => ['nullable', Rule::exists(PostalCode::class, 'id')],
         'bank_id' => ['nullable','uuid', Rule::exists(Bank::class,'id')],
         'account_number' => 'nullable|string|max:50',
         'account_holder' => 'nullable|string|max:50',
@@ -417,7 +406,6 @@ public function update(Request $request, Customer $customer)
             'nullable',
             Rule::exists(City::class, 'id'),
         ],
-
         'district_id' => [
             'nullable',
             Rule::exists(District::class, 'id'),
@@ -485,6 +473,7 @@ public function update(Request $request, Customer $customer)
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'gender' => $validated['gender'],
+            'title' => $validated['title'],
             'bank_id' => $validated['bank_id'] ?? null,
             'account_number' => $validated['account_number'] ?? null,
             'account_holder' => $validated['account_holder'] ?? null,

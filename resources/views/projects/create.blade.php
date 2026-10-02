@@ -37,6 +37,7 @@
                                     class="btn btn-sm btn-dark me-2 btn-toggle-view-edit"
                                     data-view="project-view"
                                     data-edit="project-edit"
+                                    data-bs-toggle="tooltip"
                                     title="Edit Data">
                                     <i class="ti ti-edit"></i>
                                 </button>
@@ -143,13 +144,16 @@
                                 <x-collapse-card :title="$stepTitle" target="{{ $slug }}-body">
                                     <x-slot:actions>
                                         @can('ubah data proyek')
+                                            
                                             <button type="button"
                                                     class="btn btn-sm btn-dark me-2 btn-toggle-view-edit"
                                                     data-view="{{ $slug }}-view"
                                                     data-edit="{{ $slug }}-edit"
+                                                    data-bs-toggle="tooltip"
                                                     title="Edit Data">
                                                 <i class="ti ti-edit"></i>
                                             </button>
+                                            
                                         @endcan
                                     </x-slot:actions>
                                     <div id="{{ $slug }}-view">
@@ -456,6 +460,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             input.files = store.files;
         });
+    });
+    document.querySelectorAll('[data-bs-tooltip="true"]').forEach(function (el) {
+        new bootstrap.Tooltip(el);
     });
 });
 </script>

@@ -123,6 +123,7 @@ class UsersController extends Controller
         'fullname' => 'required',
         'nickname' => 'nullable',
         'gender' => 'nullable|in:1,2',
+        'title' => 'nullable|in:1,2,3',
         'birth_place' => 'nullable',
         'birth_date' => 'nullable|date_format:Y-m-d',
         'email' => [
@@ -169,7 +170,6 @@ class UsersController extends Controller
                 );
         }
 
-        // Hash password
         $validated['password'] = Hash::make($validated['password']);
 
         $validated['email_verified_at'] = now();
@@ -225,7 +225,7 @@ public function update(Request $request, User $user)
         'gender' => 'nullable|in:1,2',
         'birth_place' => 'nullable',
         'birth_date' => 'nullable|date_format:Y-m-d',
-
+        'title' => 'nullable|in:1,2,3',
         'email' => [
             'required',
             'email',

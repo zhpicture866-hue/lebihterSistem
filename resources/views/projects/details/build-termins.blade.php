@@ -30,6 +30,9 @@
     ][$subscriptionStatus];
 @endphp
 
+<div id="termin-subscription-root">
+
+
 @if ($errors->has('termin'))
     <div class="alert alert-danger">
         {{ $errors->first('termin') }}
@@ -106,11 +109,11 @@
                     Termin
                 </th>
 
-                <th class="text-center">
+                <th class="text-center" style="min-width: 200px;">
                     Keterangan &amp; Periode
                 </th>
 
-                <th width="180" class="text-center">
+                <th class="text-center" style="min-width: 100px;">
                     Nominal
                 </th>
 
@@ -145,6 +148,9 @@
                 @php
                     $inv  = $invoiceOf($termin);
                     $paid = $inv && $inv->status === 'approved';
+
+                    // Bukti sudah diupload, tapi invoice belum di-approve
+                    $awaitingApproval = $inv && $inv->bukti_pembayaran && ! $paid;
                 @endphp
 
                 <tr>
@@ -166,7 +172,7 @@
                         @endif
                     </td>
 
-                    <td class="text-end">
+                    <td class="text-end text-nowrap">
                         Rp {{ number_format($termin->amount, 0, ',', '.') }}
                     </td>
 
@@ -182,6 +188,8 @@
                                     {{ $inv->approved_at->translatedFormat('d M Y') }}
                                 </div>
                             @endif
+                        @elseif($awaitingApproval)
+                            <span class="badge bg-blue-lt">Menunggu Persetujuan</span>
                         @elseif($inv)
                             <span class="badge bg-yellow-lt">Menunggu Pembayaran</span>
                         @else
@@ -210,7 +218,9 @@
 
                         @if(! $paid)
 
-                            <span class="text-muted small">Menunggu pembayaran</span>
+                            <span class="text-muted small">
+                                {{ $awaitingApproval ? 'Menunggu persetujuan' : 'Menunggu pembayaran' }}
+                            </span>
 
                         @elseif($termin->renewal_decision === null)
 
@@ -270,7 +280,7 @@
                     Total Tagihan
                 </th>
 
-                <th class="text-end">
+                <th class="text-end text-nowrap">
                     Rp {{ number_format($billedTotal, 0, ',', '.') }}
                 </th>
 
@@ -282,7 +292,7 @@
                     Total Terbayar
                 </th>
 
-                <th class="text-end">
+                <th class="text-end text-nowrap">
                     Rp {{ number_format($paidTotal, 0, ',', '.') }}
                 </th>
 
@@ -294,3 +304,185 @@
     </table>
 
 </div>
+
+</div>{{-- /#termin-subscription-root --}}
+
+@push('js')
+<script>
+// Ingat status buka/tutup card "Setting Termin" per proyek (selama tab masih sama),
+// supaya setelah halaman dimuat ulang (Lanjut, Stop, approve, upload bukti, dll.)
+// card langsung terbuka dan tidak perlu dibuka manual lagi.
+// Memakai event "load" supaya berjalan setelah listener tombol card di blade induk terpasang.
+window.addEventListener('load', function () {
+
+    const root = document.getElementById('termin-subscription-root');
+
+    if (!root) return;
+
+    const target = root.closest('[id$="-body"]');
+
+    if (!target) return;
+
+    const STORAGE_KEY = 'card-open:{{ $project->id }}:' + target.id;
+
+    const isOpen = function () {
+        return window.getComputedStyle(target).display !== 'none'
+            && !target.classList.contains('d-none');
+    };
+
+    // Simpan status saat halaman ditinggalkan (submit form, reload, dst.)
+    window.addEventListener('pagehide', function () {
+        sessionStorage.setItem(STORAGE_KEY, isOpen() ? '1' : '0');
+    });
+
+    // Pulihkan: buka card jika sebelumnya terbuka
+    if (sessionStorage.getItem(STORAGE_KEY) !== '1' || isOpen()) return;
+
+    const selector = [
+        '[data-bs-target="#' + target.id + '"]',
+        '[data-target="#' + target.id + '"]',
+        '[href="#' + target.id + '"]'
+    ].join(',');
+
+    const toggle = document.querySelector(selector);
+
+    if (toggle) {
+        toggle.click(); // pakai mekanisme buka-tutup bawaan komponen
+    } else {
+        target.classList.remove('d-none');
+        target.classList.add('show');
+        target.style.display = '';
+    }
+
+    const card = target.closest('.card') || target;
+    card.style.scrollMarginTop = '110px'; // supaya tidak tertutup header
+
+    setTimeout(function () {
+        card.scrollIntoView({ block: 'start' });
+    }, 350);
+});
+</script>
+@endpush
+
+@push('js')
+<script>
+// Setelah "Download Invoice" diklik (invoice dibuka di tab baru), segarkan tabel termin
+// di latar belakang supaya tombol upload bukti, status, dan tombol termin berikutnya
+// langsung muncul tanpa reload halaman.
+document.addEventListener('DOMContentLoaded', function () {
+
+    const root = document.getElementById('termin-subscription-root');
+
+    if (!root) return;
+
+    const REFRESH_URL = @json(route('projects.termins.refresh', $project->id));
+    const POLL_INTERVAL = 1500;   // ms
+    const MAX_TRIES = 20;         // ~30 detik
+
+    let polling = false;
+
+    // Konfirmasi approve (sama seperti di blade induk) untuk form hasil penyegaran
+    function bindApproveForms(scope) {
+        if (!window.Swal) return;
+
+        scope.querySelectorAll('.approve-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: form.dataset.title || 'Apakah Anda yakin?',
+                    text: form.dataset.text || 'Proses ini akan dilanjutkan.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Lanjutkan',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#212529',
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Memproses...',
+                            allowOutsideClick: false,
+                            didOpen: function () { Swal.showLoading(); }
+                        });
+                        form.submit();
+                    }
+                });
+            });
+        });
+    }
+
+    function swapTable(html) {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const fresh = doc.getElementById('termin-subscription-root');
+
+        if (!fresh) return;
+
+        root.innerHTML = fresh.innerHTML;
+
+        if (window.bootstrap) {
+            root
+                .querySelectorAll('[data-bs-toggle="tooltip"], [data-bs-tooltip="true"]')
+                .forEach(function (el) {
+                    bootstrap.Tooltip.getOrCreateInstance(el);
+                });
+        }
+
+        bindApproveForms(root);
+    }
+
+    function pollUntilReady(terminNo) {
+        if (polling) return;
+
+        polling = true;
+
+        let tries = 0;
+
+        const tick = async function () {
+            tries++;
+
+            try {
+                const response = await fetch(REFRESH_URL + '?termin=' + encodeURIComponent(terminNo), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.ready) {
+                        swapTable(data.html);
+                        polling = false;
+                        return;
+                    }
+                }
+            } catch (error) {
+                // abaikan, coba lagi pada putaran berikutnya
+            }
+
+            if (tries < MAX_TRIES) {
+                setTimeout(tick, POLL_INTERVAL);
+            } else {
+                polling = false; // menyerah; tombol akan muncul setelah reload seperti biasa
+            }
+        };
+
+        setTimeout(tick, 1000);
+    }
+
+    // Delegasi event: tetap berfungsi setelah isi tabel diganti
+    root.addEventListener('click', function (event) {
+        const link = event.target.closest('a[data-invoice-download]');
+
+        if (!link) return;
+
+        // Sudah pernah di-download -> tidak ada yang berubah, tidak perlu menyegarkan
+        if (link.dataset.invoiceDownloaded === '1') return;
+
+        pollUntilReady(link.dataset.invoiceDownload);
+    });
+});
+</script>
+@endpush
