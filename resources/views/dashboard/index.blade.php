@@ -2,442 +2,211 @@
 
 @section('content')
 
+@php
+    // Format rupiah, angka negatif tampil sebagai -Rp 6.200.000
+    $rp = fn ($n) => ($n < 0 ? '-' : '') . 'Rp ' . number_format(abs($n), 0, ',', '.');
+    $tone = fn ($n) => $n < 0 ? 'text-danger' : 'text-success';
+@endphp
+
+<style>
+    .dash-stat {
+        display: block;
+        height: 100%;
+        padding: 1rem 1.25rem;
+        border: 1px solid var(--tblr-border-color);
+        border-radius: .75rem;
+        background: var(--tblr-bg-surface);
+        color: inherit;
+        text-decoration: none;
+    }
+    a.dash-stat:hover { border-color: var(--tblr-primary); color: inherit; }
+    .dash-stat-label { font-size: .8125rem; color: var(--tblr-secondary); }
+    .dash-stat-value { margin-top: .25rem; font-size: 1.375rem; font-weight: 700; line-height: 1.2; }
+
+    .dash-total {
+        height: 100%;
+        padding: 1.25rem 1.5rem;
+        border-radius: .75rem;
+        background: var(--tblr-primary-lt);
+    }
+    .dash-total-value { margin-top: .25rem; font-size: 1.875rem; font-weight: 700; line-height: 1.2; }
+
+    .dash-account {
+        display: flex;
+        align-items: center;
+        gap: .875rem;
+        height: 100%;
+        padding: .875rem 1rem;
+        border: 1px solid var(--tblr-border-color);
+        border-radius: .75rem;
+    }
+    .dash-account-icon {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: .625rem;
+        background: var(--tblr-bg-surface-secondary);
+        font-size: 1.25rem;
+    }
+    .dash-account-name { font-size: .875rem; color: var(--tblr-secondary); overflow-wrap: anywhere; }
+    .dash-account-balance { font-weight: 600; white-space: nowrap; }
+
+    .footer.footer-transparent {
+        display: flex;
+        margin-left: 0;
+        flex-direction: column;
+        padding: 20px 20px 20px 16px;
+        transition: all .3s ease;
+    }
+    .sidebar-collapsed .footer.footer-transparent {
+        padding-left: 20px;
+        padding-right: 18px;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+</style>
+
 <div class="page-body">
     <div class="container-xl dashboard-container">
-        {{-- <div id="alertCarousel" class="position-relative">
-            <div class="overflow-hidden rounded-4 shadow-sm bg-white position-relative">
-                <div class="alert-wrapper d-flex">
-                    @if($incompleteProfile)
-                        <div class="alert alert-warning alert-dismissible fade show alert-item mb-0 flex-shrink-0 border-0 rounded-0" role="alert">
-                            <div class="d-flex align-items-center">
-                                <i class="ti ti-user-exclamation me-2 fs-3"></i>
-                                <div>
-                                    <strong>Profil Belum Lengkap</strong>
-                                    Lengkapi profilmu untuk unlock fitur penuh dan pelayanan yang lebih personal dari 
-                                    <b>Antosa Architect</b>.
-                                    <a href="{{ route('customer.profile') }}" class="alert-link text-warning fw-semibold">Lengkapi sekarang.</a>
-                                </div>
-                            </div>                  
-                        </div>
-                    @endif
+        <div class="row g-4">
 
-                    <div class="alert alert-warning alert-dismissible fade show alert-item mb-0 flex-shrink-0 border-0 rounded-0" role="alert">
-                        <div class="d-flex align-items-center">
-                            <i class="ti ti-exclamation-circle me-2 fs-3"></i>
-                            <div>
-                                <strong>Lengkapi Profil Affiliator!</strong>
-                                Beberapa data penting untuk peran <b>Affiliator</b> belum diisi.
-                                <a href="{{ route('affiliators.profile') }}" class="alert-link text-warning fw-semibold">Klik di sini untuk melengkapi.</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="btn btn-sm btn-light border position-absolute top-50 end-0 translate-middle-y me-2 shadow-sm" 
-                    id="nextAlert" title="Berikutnya" style="border-radius: 50%;">
-                    <i class="ti ti-chevron-right fs-5"></i>
-                </button>
-            </div>
-        </div> --}}
-        {{-- <div class="pt-5 pb-7 text-center">
-            <h2 class="fw-bold g-4">
-                Selamat Datang {{ auth()->user()->fullname ?? 'Admin Utama' }} di Lebih Tersistem
-            </h2>
-        </div> --}}
-        {{-- @if(auth()->user()->isInternal())
-
-        <div class="row mb-4">
-            <div class="col-lg-6 col-xl-5 mx-auto">
-
+            @can('lihat akun-akuntansi')
+            <div class="col-12">
                 <div class="card shadow-sm border-0 rounded-4">
+
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">💰 Finance</h5>
+                        <span class="text-secondary">
+                            {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
+                        </span>
+                    </div>
+
                     <div class="card-body p-4">
 
-                        <div class="text-center mb-4">
-                            <h3 class="mb-1">
-                                Selamat Pagi,
-                                <strong>{{ auth()->user()->fullname }}</strong>
-                            </h3>
-
-                            <div class="text-secondary">
-                                {{ now()->translatedFormat('l, d F Y') }}
+                        {{-- Ringkasan: total kas & bank + angka bulan ini --}}
+                        <div class="row g-3">
+                            <div class="col-lg-4">
+                                <div class="dash-total">
+                                    <div class="text-secondary">Total Kas &amp; Bank</div>
+                                    <div class="dash-total-value {{ $totalCashBank < 0 ? 'text-danger' : 'text-primary' }}">
+                                        {{ $rp($totalCashBank) }}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="fs-2 fw-bold mt-2" id="clock"></div>
+                            <div class="col-lg-8">
+                                <div class="row g-3 h-100">
+                                    <div class="col-sm-4">
+                                        <a href="{{ route('journals.general') }}" class="dash-stat">
+                                            <div class="dash-stat-label">📈 Pendapatan</div>
+                                            <div class="dash-stat-value {{ $tone($monthlyRevenue) }}">
+                                                {{ $rp($monthlyRevenue) }}
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="dash-stat">
+                                            <div class="dash-stat-label">📥 Kas Masuk</div>
+                                            <div class="dash-stat-value text-success">
+                                                {{ $rp($cashInThisMonth) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="dash-stat">
+                                            <div class="dash-stat-label">📤 Kas Keluar</div>
+                                            <div class="dash-stat-value text-danger">
+                                                {{ $rp($cashOutThisMonth) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <hr>
+                        {{-- Saldo per akun --}}
+                        <h6 class="mt-4 mb-3">Saldo per akun</h6>
 
-                        @if(!$attendanceToday)
-
-                            <div class="text-center py-2">
-
-                                <div class="mb-2 text-secondary">
-                                    Status Absensi Hari Ini
+                        <div class="row g-3">
+                            @forelse($cashAccounts as $account)
+                                <div class="col-sm-6 col-xl-4">
+                                    <div class="dash-account">
+                                        <div class="dash-account-icon">
+                                            {{ str_contains(strtolower($account['account_name']), 'bank') ? '🏦' : '💵' }}
+                                        </div>
+                                        <div class="flex-fill">
+                                            <div class="dash-account-name">{{ $account['account_name'] }}</div>
+                                            <div class="dash-account-balance {{ $account['balance'] < 0 ? 'text-danger' : '' }}">
+                                                {{ $rp($account['balance']) }}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                            @empty
+                                <div class="col-12 text-secondary">Belum ada akun kas atau bank.</div>
+                            @endforelse
+                        </div>
 
-                                <h2 class="text-warning mb-3">
-                                    ⭕ Belum Hadir
-                                </h2>
-
-                                <button
-                                    class="btn btn-dark btn-lg px-5 rounded-pill"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#checkInModal">
-
-                                    <i class="ti ti-login me-2"></i>
-                                    Silahkan absen
-
-                                </button>
-
-                            </div>
-                        @elseif(is_null($attendanceToday->check_out))
-
-                            <div class="text-center">
-
-                                <h2 class="text-success mb-3">
-                                    ✅ Sudah Hadir
-                                </h2>
-
-                                <div class="row mt-4">
-
-                                    <div class="col">
-                                        <small class="text-secondary">Jam Masuk</small>
-                                        <h4>{{ $attendanceToday->check_in->format('H:i') }}</h4>
-                                    </div>
-
-                                    <div class="col">
-                                        <small class="text-secondary">Jam Pulang</small>
-                                        <h4>--:--</h4>
-                                    </div>
-
-                                </div>
-
-                                <button
-                                    class="btn btn-danger btn-lg rounded-pill"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#checkOutModal">
-
-                                    <i class="ti ti-logout me-2"></i>
-                                    Pulang
-
-                                </button>
-
-                            </div>
-
-                        @else
-                            <div class="text-center">
-
-                                <h2 class="text-success mb-4">
-                                    ✅ Absensi Selesai
-                                </h2>
-
-                                <div class="row">
-
-                                    <div class="col">
-                                        <small class="text-secondary">Jam Masuk</small>
-                                        <h4>{{ $attendanceToday->check_in->format('H:i') }}</h4>
-                                    </div>
-
-                                    <div class="col">
-                                        <small class="text-secondary">Jam Pulang</small>
-                                        <h4>{{ $attendanceToday->check_out->format('H:i') }}</h4>
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        @endif
                     </div>
                 </div>
-
             </div>
-        </div>
+            @endcan
 
-        @endif --}}
-        <div class="modal fade" id="checkInModal">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
+            {{--
+            ================= Blok Project (nonaktif) =================
+            Hapus tanda komentar ini kalau mau diaktifkan lagi.
+            Perlu variabel: $totalProject, $runningBuild, $completedBuild,
+            $totalDesign, $totalRab, $totalBuild, $topBuildProjects
 
-                    <div class="modal-header">
-                        <h5>Absensi Masuk</h5>
+            @can('lihat daftar proyek')
+            <div class="col-12">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">📁 Project</h5>
                     </div>
+                    <div class="card-body p-4">
 
-                    <form action="{{ route('attendances.check-in') }}" method="POST">
-                        @csrf
-                        <div class="modal-body text-center">
-                            <video id="camera" autoplay playsinline class="img-fluid rounded border"></video>
-                            <canvas
-                                id="canvas"
-                                class="d-none">
-                            </canvas>
-
-                            <img id="preview" class="img-fluid rounded border d-none">
-                            <input type="hidden" id="photo" name="photo">
-                            <input type="hidden" name="check_in_lat" id="check_in_lat">
-                            <input type="hidden" name="check_in_lng" id="check_in_lng">
+                        <div class="row g-3 mb-4">
+                            @foreach([
+                                ['📁', 'Total',             $totalProject,   route('projects.index'),                 ''],
+                                ['🚧', 'Sedang Dikerjakan', $runningBuild,   null,                                    'text-primary'],
+                                ['✅', 'Sudah Selesai',     $completedBuild, null,                                    'text-success'],
+                                ['🎨', 'Desain',            $totalDesign,    route('projects.index', ['type' => 1]), 'text-info'],
+                                ['📑', 'RAB',               $totalRab,       route('projects.index', ['type' => 2]), 'text-warning'],
+                                ['🏗', 'Build',             $totalBuild,     route('projects.index', ['type' => 3]), 'text-success'],
+                            ] as [$icon, $label, $value, $url, $color])
+                                <div class="col-6 col-md-4 col-xl-2">
+                                    <{{ $url ? 'a' : 'div' }} @if($url) href="{{ $url }}" @endif class="dash-stat text-center">
+                                        <div class="fs-2">{{ $icon }}</div>
+                                        <div class="dash-stat-label">{{ $label }}</div>
+                                        <div class="dash-stat-value {{ $color }}">{{ $value }}</div>
+                                    </{{ $url ? 'a' : 'div' }}>
+                                </div>
+                            @endforeach
                         </div>
 
-                        <div class="modal-footer justify-content-center">
-                            <button type="button" id="capture" class="btn btn-dark">
-                                📸 Ambil Foto
-                            </button>
-                            <button type="button" id="retake" class="btn btn-secondary d-none">
-                                🔄 Ambil Ulang
-                            </button>
-                            <button type="submit" id="confirm" class="btn btn-success d-none">
-                                ✅ Konfirmasi Hadir
-                            </button>
-                        </div>
-                    </form>
+                        <h6 class="mb-3">🏗 Progress Tertinggi</h6>
+                        @foreach($topBuildProjects as $project)
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>{{ $project->project_name }}</span>
+                                    <span>{{ number_format($project->progress, 0) }}%</span>
+                                </div>
+                                <div class="progress mt-1" style="height:8px;">
+                                    <div class="progress-bar" style="width: {{ $project->progress }}%"></div>
+                                </div>
+                            </div>
+                        @endforeach
+
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="modal fade" id="checkOutModal">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
+            @endcan
+            --}}
 
-                    <div class="modal-header">
-                        <h5>Absensi Pulang</h5>
-                    </div>
-
-                    <form action="{{ route('attendances.check-out') }}" method="POST">
-                        @csrf
-                        <div class="modal-body text-center">
-                            <video id="cameraCheckout" autoplay playsinline class="img-fluid rounded border"></video>
-                            <canvas
-                                id="canvasCheckout"
-                                class="d-none">
-                            </canvas>
-
-                            <img id="previewCheckout" class="img-fluid rounded border d-none">
-                            <input type="hidden" id="photoCheckOut" name="photo">
-                            <input type="hidden" name="check_out_lat" id="check_out_lat">
-                            <input type="hidden" name="check_out_lng" id="check_out_lng">
-                        </div>
-
-                        <div class="modal-footer justify-content-center">
-                            <button type="button" id="captureCheckout" class="btn btn-dark">
-                                📸 Ambil Foto
-                            </button>
-                            <button type="button" id="retakeCheckout" class="btn btn-secondary d-none">
-                                🔄 Ambil Ulang
-                            </button>
-                            <button type="submit" id="confirmCheckout" class="btn btn-success d-none">
-                                ✅ Konfirmasi Hadir
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </div>
     </div>
 </div>
 @endsection
-
-@push('js')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const wrapper = document.querySelector('.alert-wrapper');
-    if (!wrapper) return;
-
-    const alerts = document.querySelectorAll('.alert-item');
-    const total = alerts.length;
-    let currentIndex = 0;
-
-    function updateSlide() {
-        const offset = -currentIndex * 100;
-        wrapper.style.transform = `translateX(${offset}%)`;
-    }
-
-    function nextSlide() {
-        currentIndex = (currentIndex + 1) % total;
-        updateSlide();
-    }
-
-    const nextBtn = document.getElementById('nextAlert');
-    if (nextBtn) {
-        nextBtn.addEventListener('click', nextSlide);
-    }
-
-    updateSlide();
-});
-</script>
-<script>
-
-function updateClock() {
-
-    const now = new Date();
-
-    document.getElementById('clock').innerHTML =
-        now.toLocaleTimeString('id-ID', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        }) + ' WIB';
-}
-
-updateClock();
-setInterval(updateClock, 1000);
-let stream;
-const modal = document.getElementById('checkInModal');
-const modalOut = document.getElementById('checkOutModal');
-
-const camera = document.getElementById('camera');
-const canvas = document.getElementById('canvas');
-const preview = document.getElementById('preview');
-const capture = document.getElementById('capture');
-const retake = document.getElementById('retake');
-const confirm = document.getElementById('confirm');
-const photo = document.getElementById('photo');
-const latInput = document.getElementById('check_in_lat');
-const lngInput = document.getElementById('check_in_lng');
-
-const cameraOut = document.getElementById('cameraCheckout');
-const canvasOut = document.getElementById('canvasCheckout');
-const previewOut = document.getElementById('previewCheckout');
-const captureOut = document.getElementById('captureCheckout');
-const retakeOut = document.getElementById('retakeCheckout');
-const confirmOut = document.getElementById('confirmCheckout');
-const photoOut = document.getElementById('photoCheckOut');
-const latOutInput = document.getElementById('check_out_lat');
-const lngOutInput = document.getElementById('check_out_lng');
-
-if(modal){
-    modal.addEventListener('shown.bs.modal', async () => {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-
-            alert("Browser tidak mendukung Camera API.");
-
-            return;
-        }
-        stream = await navigator.mediaDevices.getUserMedia({
-            video:{
-                facingMode:"user"
-            }
-        });
-        camera.srcObject = stream;
-        if ('geolocation' in navigator) {
-
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    latInput.value = position.coords.latitude;
-                    lngInput.value = position.coords.longitude;
-                },
-                (err) => {
-                    console.error(err);
-                    alert("Tidak bisa mendapatkan lokasi.");
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
-            );
-
-        } else {
-            alert("Browser tidak mendukung Geolocation.");
-        }
-    });
-}
-capture.addEventListener('click',()=>{
-
-    canvas.width = camera.videoWidth;
-    canvas.height = camera.videoHeight;
-
-    canvas.getContext('2d')
-        .drawImage(camera,0,0);
-
-    const image = canvas.toDataURL('image/jpeg');
-
-    photo.value = image;
-    preview.src = image;
-    preview.classList.remove('d-none');
-    camera.classList.add('d-none');
-    capture.classList.add('d-none');
-    retake.classList.remove('d-none');
-    confirm.classList.remove('d-none');
-});
-retake.addEventListener('click',()=>{
-    photo.value = '';
-    preview.classList.add('d-none');
-
-    camera.classList.remove('d-none');
-
-    capture.classList.remove('d-none');
-
-    retake.classList.add('d-none');
-
-    confirm.classList.add('d-none');
-
-});
-if(modalOut){
-    modalOut.addEventListener('shown.bs.modal', async () => {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-
-            alert("Browser tidak mendukung Camera API.");
-
-            return;
-        }
-        stream = await navigator.mediaDevices.getUserMedia({
-            video:{
-                facingMode:"user"
-            }
-        });
-        cameraOut.srcObject = stream;
-        if ('geolocation' in navigator) {
-
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    latOutInput.value = position.coords.latitude;
-                    lngOutInput.value = position.coords.longitude;
-                },
-                (err) => {
-                    console.error(err);
-                    alert("Tidak bisa mendapatkan lokasi.");
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
-            );
-
-        } else {
-            alert("Browser tidak mendukung Geolocation.");
-        }
-    });
-}
-captureOut.addEventListener('click',()=>{
-
-    canvasOut.width = cameraOut.videoWidth;
-    canvasOut.height = cameraOut.videoHeight;
-
-    canvasOut.getContext('2d')
-        .drawImage(cameraOut,0,0);
-
-    const image = canvasOut.toDataURL('image/jpeg');
-
-    photoOut.value = image;
-    previewOut.src = image;
-    previewOut.classList.remove('d-none');
-    cameraOut.classList.add('d-none');
-    captureOut.classList.add('d-none');
-    retakeOut.classList.remove('d-none');
-    confirmOut.classList.remove('d-none');
-});
-retake.addEventListener('click',()=>{
-    photoOut.value = '';
-    previewOut.classList.add('d-none');
-
-    cameraOut.classList.remove('d-none');
-
-    captureOut.classList.remove('d-none');
-
-    retakeOut.classList.add('d-none');
-
-    confirmOut.classList.add('d-none');
-
-});
-</script>
-@endpush
