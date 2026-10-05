@@ -235,4 +235,86 @@ public function getSubscriptionStatusAttribute(): string
 
     return 'active';
 }
+
+/**
+ * Selaraskan level proyek dengan template jenis proyek saat ini ($this->project_type).
+ * - Level dengan nama sama dipertahankan (progres aman), hanya urutannya disesuaikan.
+ * - Level baru dibuat; level lama yang tidak ada di template dihapus HANYA jika belum berjalan.
+ * - Jika ada level berjalan yang tidak ada di template baru, proses dibatalkan (DomainException).
+ */
+public function syncLevels(): void
+{
+    $existing = $this->levels()->get();
+
+    // Belum pernah generateLevels() -> belum ada yang perlu diselaraskan
+    if ($existing->isEmpty()) {
+        return;
+    }
+
+    $template = ProjectTypeLevel::where('project_type_id', $this->project_type)
+        ->orderBy('level_order')
+        ->get(['level_order', 'level_name']);
+
+    if ($template->isEmpty()) {
+        throw new \DomainException(
+            'Step untuk jenis proyek ini belum diatur di pengaturan Jenis Proyek.'
+        );
+    }
+
+    $templateNames = $template->pluck('level_name');
+
+    // Level lama yang tidak ada di jenis proyek baru
+    $removed = $existing->reject(
+        fn ($level) => $templateNames->contains($level->level_name)
+    );
+
+    // Kalau salah satunya sudah berjalan, progresnya akan hilang -> batalkan
+    $running = $removed->filter(
+        fn ($level) => $level->is_started || $level->is_completed
+    );
+
+    if ($running->isNotEmpty()) {
+        throw new \DomainException(
+            'Jenis proyek tidak dapat diubah: tahap '
+            . $running->pluck('level_name')->implode(', ')
+            . ' sudah berjalan dan tidak ada pada jenis proyek yang dipilih.'
+        );
+    }
+
+    // Ingat tahap aktif (berdasarkan nama) karena nomor urutnya bisa berubah
+    $activeName = $existing->firstWhere('level_order', $this->active_step)?->level_name;
+
+    // 1) Buang level yang belum berjalan dan tidak dipakai lagi
+    $removed->each->delete();
+
+    // 2) Level dengan nama sama dipertahankan (progres aman), hanya urutannya disesuaikan.
+    //    Diproses dari urutan terbesar supaya tidak bentrok jika ada unique index.
+    $kept = $existing->reject(
+        fn ($level) => $removed->contains('level_name', $level->level_name)
+    );
+
+    foreach ($template->sortByDesc('level_order') as $item) {
+        $level = $kept->firstWhere('level_name', $item->level_name);
+
+        if ($level) {
+            if ((int) $level->level_order !== (int) $item->level_order) {
+                $level->update(['level_order' => $item->level_order]);
+            }
+        } else {
+            $this->levels()->create([
+                'level_order' => $item->level_order,
+                'level_name'  => $item->level_name,
+            ]);
+        }
+    }
+
+    // 3) Arahkan tahap aktif ke nomor urut barunya
+    if ($activeName) {
+        $newOrder = $this->levels()->where('level_name', $activeName)->value('level_order');
+
+        if ($newOrder !== null) {
+            $this->active_step = $newOrder;
+        }
+    }
+}
 }

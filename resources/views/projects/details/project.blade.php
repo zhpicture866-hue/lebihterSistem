@@ -1,17 +1,22 @@
 @php
-    $type = [
-        '1'     => 'Jasa Konstruksi',
-        '2'     => 'Klinik',
-        '3'     => 'Toko',
-        '4'     => 'Event',
-        '5'     => 'Company Profile',
-    ];
     $status = [
         '1'     => 'Proses',
         '2'     => 'Revisi',
         '3'     => 'Butuh Persetujuan',
         '4'     => 'Selesai',
     ];
+
+    // Nama jenis proyek diambil dari database (sama seperti form edit),
+    // bukan dari daftar tulisan tangan yang bisa tidak sinkron dengan data.
+    // TODO: sesuaikan 'App\Models\ProjectType' jika nama model jenis proyek berbeda.
+    $projectTypeName = isset($projectTypes)
+        ? $projectTypes->firstWhere('id', $project->project_type ?? null)?->name
+        : (class_exists(\App\Models\ProjectType::class)
+            ? \App\Models\ProjectType::find($project->project_type ?? null)?->name
+            : null);
+
+    // Tanggal kosong ditampilkan "-" (Carbon::parse(null) akan menghasilkan tanggal hari ini)
+    $formatDate = fn ($date) => $date ? \Carbon\Carbon::parse($date)->format('d/m/Y') : '-';
 @endphp
 
 @can('lihat data proyek')
@@ -31,17 +36,17 @@
 
             <div class="col-md-2">
                 <label class="fw-semibold">Jenis Proyek</label>
-                <input type="text" class="form-control" value="{{ $type[$project->project_type] }}" readonly>
+                <input type="text" class="form-control" value="{{ $projectTypeName ?? '-' }}" readonly>
             </div>
 
             <div class="col-md-3">
                 <label class="fw-semibold">Tanggal Mulai Proyek</label>
-                <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') }}" readonly>
+                <input type="text" class="form-control" value="{{ $formatDate($project->start_date) }}" readonly>
             </div>
 
             <div class="col-md-3">
                 <label class="fw-semibold">Tanggal Akhir Proyek(Estimasi)</label>
-                <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($project->end_date)->format('d/m/Y') }}" readonly>
+                <input type="text" class="form-control" value="{{ $formatDate($project->end_date) }}" readonly>
             </div>
 
             {{-- <div class="col-md-2">

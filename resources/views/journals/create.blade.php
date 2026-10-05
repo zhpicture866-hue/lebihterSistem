@@ -79,17 +79,17 @@
                         
                                 <h5>Detail Akun</h5>
                                     <div class="jurnal-table-wrapper">
-
+                                        <small class="text-muted d-md-none d-block mb-1">Geser ke samping untuk melihat semua kolom →</small>
                                         <table class="table table-bordered jurnal-table">
 
                                             <thead>
                                                 <tr>
-                                                    <th style="width:22%">Akun</th>
-                                                    <th style="width:22%">Deskripsi</th>
-                                                    <th style="width:18%">User</th>
-                                                    <th style="width:15%">Debit</th>
-                                                    <th style="width:15%">Kredit</th>
-                                                    <th style="width:8%">Aksi</th>
+                                                    <th>Akun</th>
+                                                    <th>Deskripsi</th>
+                                                    <th>User</th>
+                                                    <th>Debit</th>
+                                                    <th>Kredit</th>
+                                                    <th>Aksi</th>
                                                 </tr>
                                             </thead>
 
@@ -210,7 +210,7 @@
                                         {{ $isBalanced ? '✅ Seimbang' : '❌ Tidak Seimbang' }}
                                     </div>
 
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-4 mb-3 mt-3">
                                     <label for="description">Keterangan</label>
                                     <textarea name="description" class="form-control"></textarea>
                                 </div>
@@ -346,7 +346,11 @@ $(document).ready(function () {
     }
 
     function appendUsers($select, data) {
-        $.each(data, function (_, user) {
+        const sorted = [...data].sort((a, b) =>
+            String(a.name || '').localeCompare(String(b.name || ''), 'id', { sensitivity: 'base' })
+        );
+
+        $.each(sorted, function (_, user) {
             $select.append(`<option value="${user.id}">${user.name}</option>`);
         });
     }

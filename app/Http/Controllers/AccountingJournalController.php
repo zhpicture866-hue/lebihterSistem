@@ -278,16 +278,16 @@ public function edit(AccountingJournal $journal)
             'name' => $cus->user?->fullname ?? '-',
         ]);
 
-    $workers = Worker::with('user')
-        ->get()
-        ->map(fn($work) => [
-            'id'   => $work->id,
-            'name' => $work->user?->fullname ?? '-',
-        ]);
+    // $workers = Worker::with('user')
+    //     ->get()
+    //     ->map(fn($work) => [
+    //         'id'   => $work->id,
+    //         'name' => $work->user?->fullname ?? '-',
+    //     ]);
 
     $journal->load(['details.account']);
 
-    return view('journals.edit', compact('journal', 'accounts', 'employees', 'customers', 'workers'));
+    return view('journals.edit', compact('journal', 'accounts', 'employees', 'customers'));
 }
 
 

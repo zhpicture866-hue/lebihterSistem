@@ -1,4 +1,4 @@
-<div class=n"card shadow-sm border-0 mb-4">
+<div class="card shadow-sm border-0 mb-4">
     <div class="card-body px-5 py-4">
     <h3 class="mb-4 fw-bold">Edit Data Proyek</h3>
         <form id="project-edit-form"
@@ -17,13 +17,8 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label required">Jenis Proyek</label>
-                    @php
-                        // Sudah punya level = sudah pernah generateLevels() -> tipe tidak boleh diubah lagi
-                        $isLocked = $project && $project->levels->isNotEmpty();
-                    @endphp
                     <select name="project_type"
                             class="form-select select2 @error('project_type') is-invalid @enderror"
-                            @disabled($isLocked)
                             required>
                         <option value="">-- Pilih --</option>
                         @foreach($projectTypes as $type)
@@ -33,11 +28,6 @@
                             </option>
                         @endforeach
                     </select>
-                    @if($isLocked)
-                        {{-- disabled select tidak ikut ter-submit, jadi kirim value asli lewat hidden input --}}
-                        <input type="hidden" name="project_type" value="{{ $project->project_type }}">
-                        {{-- <small class="text-muted">Jenis proyek tidak bisa diubah setelah proyek dibuat.</small> --}}
-                    @endif
                     @error('project_type')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -92,7 +82,7 @@
                         placeholder="https://example.com"
                         maxlength="255"
                     >
-                    @error('project_location')
+                    @error('base_url')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>

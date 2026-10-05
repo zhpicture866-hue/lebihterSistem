@@ -1270,251 +1270,70 @@ input[type=number]::-webkit-outer-spin-button {
         box-shadow: 0 0 0 .15rem rgba(0,0,0,.05);
     }
 
-.jurnal-table-wrapper {
+    .jurnal-table-wrapper {
     width: 100%;
     max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* scroll halus di iOS */
 }
 
 .jurnal-table {
     width: 100%;
+    min-width: 1060px;
+    table-layout: fixed;   /* lebar kolom mengikuti <th>, tidak ditentukan isi */
     margin-bottom: 0;
 }
 
-.jurnal-table th,
-.jurnal-table td {
-    vertical-align: middle;
-}
+.jurnal-table th:nth-child(1) { width: 220px; }  /* Akun */
+.jurnal-table th:nth-child(2) { width: 300px; }  /* Deskripsi */
+.jurnal-table th:nth-child(3) { width: 180px; }  /* User */
+.jurnal-table th:nth-child(4) { width: 130px; }  /* Debit */
+.jurnal-table th:nth-child(5) { width: 130px; }  /* Kredit */
+.jurnal-table th:nth-child(6) { width: 60px;  }  /* Aksi */
 
+/* Input tidak melebihi kolomnya */
 .jurnal-table .form-control,
-.jurnal-table .form-select {
-    width: 100%;
-}
-@media (min-width: 992px) {
-    .jurnal-table-wrapper {
-        overflow-x: auto;
-    }
-    .jurnal-table {
-        min-width: 900px;
-    }
-}
-
-@media (max-width: 991.98px) {
-
-
-    .jurnal-table-wrapper {
-        width: 100%;
-        max-width: 100%;
-        overflow-x: hidden;
-    }
-
-    /* Semua elemen tabel jadi block, termasuk <table> itu sendiri */
-    .jurnal-table,
-    .jurnal-table thead,
-    .jurnal-table tbody,
-    .jurnal-table tfoot,
-    .jurnal-table tr,
-    .jurnal-table td,
-    .jurnal-table th {
-        display: block;
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        box-sizing: border-box;
-        text-align: left;
-    }
-
-    .jurnal-table {
-        table-layout: auto;
-        border: 0;
-    }
-
-    .jurnal-table thead {
-        display: none;
-    }
-
-/* Setiap baris = card, pakai grid 2 kolom */
-.jurnal-table tbody tr.jurnal-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 12px;
-
-    width: 100%;
-    margin-bottom: 15px;
-    padding: 14px;
-
-    background: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 12px;
-    box-sizing: border-box;
-}
-
-/* Default: setiap cell memenuhi 2 kolom */
-.jurnal-table tbody tr.jurnal-row td {
-    grid-column: 1 / -1;
-    display: block;
+.jurnal-table .form-select,
+.jurnal-table .select2-container {
     width: 100% !important;
-    padding: 0;
-    margin-bottom: 12px;
-    border: 0 !important;
-    box-sizing: border-box;
+    min-width: 0;
 }
 
-/* Debit & Kredit masing-masing 1 kolom */
-.jurnal-table tbody tr.jurnal-row td[data-label="Debit"],
-.jurnal-table tbody tr.jurnal-row td[data-label="Kredit"] {
-    grid-column: auto;
+/* Angka tidak terpotong */
+.jurnal-table .debit-input,
+.jurnal-table .credit-input {
+    min-width: 120px;
+    text-align: right;
 }
-.jurnal-table .jurnal-subtotal-row th:last-child {
-    display: none;
-}
-    .jurnal-table tbody tr.jurnal-row td::before {
-        content: attr(data-label);
 
-        display: block;
+   .jurnal-table-wrapper { min-width: 0; }
+   .card-body, .col-12 { min-width: 0; }
 
-        margin-bottom: 5px;
-
-        font-size: 12px;
-        font-weight: 600;
-
-        color: #6c757d;
-    }
-.jurnal-table .jurnal-subtotal-row #subtotal-debit::before  { content: "Debit: ";  font-weight: 400; }
-.jurnal-table .jurnal-subtotal-row #subtotal-credit::before { content: "Kredit: "; font-weight: 400; }
-    .jurnal-table tbody tr.jurnal-row
-    .form-control,
-
-    .jurnal-table tbody tr.jurnal-row
-    .form-select,
-
-    .jurnal-table tbody tr.jurnal-row
-    .select2-container {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box;
-    }
-    .jurnal-table tbody tr.jurnal-row
-    td[data-label="Aksi"] {
-        display: flex;
-
-        justify-content: flex-end;
-
-        margin-bottom: 0;
-        margin-top: 5px;
+/* Target sentuh yang nyaman di HP */
+@media (max-width: 991.98px) {
+    .jurnal-table .form-control,
+    .jurnal-table .select2-container .select2-selection--single {
+        min-height: 40px;
     }
 
-    .jurnal-table tbody tr.jurnal-row
-    td[data-label="Aksi"]::before {
-        display: none;
+    .jurnal-table .select2-container .select2-selection__rendered {
+        line-height: 38px;
+    }
+
+    .jurnal-table .select2-container .select2-selection__arrow {
+        height: 38px;
     }
 
     .jurnal-table .remove-row {
-        width: 44px;
-        height: 44px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        min-width: 40px;
+        min-height: 40px;
     }
 
-    .jurnal-table .select2-container {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-
-    .jurnal-table
-    .select2-container
-    .select2-selection--single {
-        height: 44px;
-    }
-
-    .jurnal-table
-    .select2-container
-    .select2-selection__rendered {
-        line-height: 42px;
-        font-size: 14px;
-    }
-
-    .jurnal-table
-    .select2-container
-    .select2-selection__arrow {
-        height: 42px;
-    }
-
-    .jurnal-table tfoot {
-        display: block;
-        width: 100%;
-    }
-
-    .jurnal-table tfoot tr {
-        display: block;
-        width: 100%;
-    }
-
-    .jurnal-table tfoot td,
-    .jurnal-table tfoot th {
-        border: 0;
-    }
-
-    /* Tambah baris */
-    .jurnal-table .jurnal-add-row td {
-        width: 100% !important;
-        display: block;
-        padding: 0 0 15px;
-    }
-
-    #add-row {
-        width: 100%;
-        min-height: 44px;
-    }
-
-    /* Subtotal */
-    .jurnal-table .jurnal-subtotal-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-
-        width: 100%;
-
-        border: 1px solid #dee2e6;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .jurnal-table .jurnal-subtotal-row th {
-        padding: 12px;
-        font-size: 13px;
-    }
-
-    .jurnal-table .jurnal-subtotal-row
-    th[colspan="3"] {
-        grid-column: 1 / -1;
-        text-align: left;
-    }
-
-        .jurnal-table tbody tr.jurnal-row td,
-    .jurnal-table tbody tr.jurnal-row td::before {
-        text-align: left !important;
-    }
-
-    .jurnal-table tbody tr.jurnal-row td[data-label="Aksi"] {
-        display: flex !important;
-        justify-content: flex-end;
-    }
-}
-/* Tablet: card pakai grid 4 kolom */
-@media (min-width: 576px) and (max-width: 991.98px) {
-
-    .jurnal-table tbody tr.jurnal-row {
-        grid-template-columns: repeat(4, 1fr);
-    }
-
-    /* Baris 1: Akun + Deskripsi | Baris 2: User + Debit + Kredit */
-    .jurnal-table tbody tr.jurnal-row td[data-label="Akun"],
-    .jurnal-table tbody tr.jurnal-row td[data-label="Deskripsi"],
-    .jurnal-table tbody tr.jurnal-row td[data-label="User"] {
-        grid-column: span 2;
-    }
-
-    /* Debit & Kredit otomatis 1 kolom (grid-column: auto dari rule sebelumnya) */
-    /* Aksi tetap full width, rata kanan */
+        /* .jurnal-table th:first-child,
+       .jurnal-table td:first-child {
+           position: sticky;
+           left: 0;
+           z-index: 1;
+           background: #fff;
+       } */
 }

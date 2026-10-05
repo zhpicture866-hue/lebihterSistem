@@ -28,33 +28,33 @@ class AjaxController extends Controller
         return response()->json($accounts);
     }
 
-    public function getCustomers()
-    {
-        $customers = Customer::with('user')
-            ->get()
-            ->map(function ($cus) {
-                return [
-                    'id'   => $cus->id,
-                    'name' => $cus->user?->fullname ?? '-',
-                ];
-            });
+public function getCustomers()
+{
+    $customers = Customer::with('user:id,fullname')
+        ->get()
+        ->map(fn ($cus) => [
+            'id'   => $cus->id,
+            'name' => $cus->user?->fullname ?? '-',
+        ])
+        ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+        ->values();
 
-        return response()->json($customers);
-    }
+    return response()->json($customers);
+}
 
-    public function getEmployees()
-    {
-        $employees = Employee::with('user')
-            ->get()
-            ->map(function ($emp) {
-                return [
-                    'id'   => $emp->id,
-                    'name' => $emp->user?->fullname ?? '-',
-                ];
-            });
+public function getEmployees()
+{
+    $employees = Employee::with('user:id,fullname')
+        ->get()
+        ->map(fn ($emp) => [
+            'id'   => $emp->id,
+            'name' => $emp->user?->fullname ?? '-',
+        ])
+        ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+        ->values();
 
-        return response()->json($employees);
-    }
+    return response()->json($employees);
+}
 
     public function getWorkers()
     {

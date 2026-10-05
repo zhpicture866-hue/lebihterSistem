@@ -157,7 +157,7 @@ class EmployeeController extends Controller
         'identity_photo' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
 
         // --- data employee ---
-        'nik' => 'required|unique:employees,nik',
+        'nik' => 'required', Rule::unique(Employee::class, 'nik'),
         'role' => 'required|array',
         'role.*' => 'string|exists:roles,name',
         'marital_status' => 'nullable|in:1,2,3,4',
@@ -408,7 +408,13 @@ public function show(Employee $employee)
         'account_holder' => 'nullable|string|max:100',
         'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         'identity_photo' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-        'nik' => 'required|string|max:50|unique:employees,nik,' . $employee->id,
+        'nik' => [
+            'required',
+            'string',
+            'max:50',
+            Rule::unique(Employee::class, 'nik')
+                ->ignore($employee->id),
+        ],
         'role' => 'required|array',
         'role.*' => 'string|exists:roles,name',
         'marital_status' => 'nullable|in:1,2,3,4',

@@ -362,22 +362,40 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function update(Request $request, Project $project)
-    {
-        abort_if(auth()->user()->cannot('lihat daftar proyek'), 403);
- 
-        $data = $request->all();
- 
-        // project_type dikunci begitu project sudah punya level (sudah lewat generateLevels()),
-        // jadi berapapun value yang dikirim, abaikan — tetap pakai yang lama.
-        if ($project->levels()->exists()) {
-            unset($data['project_type']);
-        }
- 
-        $project->update($data);
- 
-        return back()->with('success', 'Data proyek berhasil diperbarui!');
+public function update(Request $request, Project $project)
+{
+    abort_if(auth()->user()->cannot('lihat daftar proyek'), 403);
+
+    $data = $request->all();
+
+    // Jenis proyek ditangani terpisah (menyelaraskan level), bukan lewat mass update
+    $newType = $data['project_type'] ?? null;
+    unset($data['project_type']);
+
+    $typeChanged = filled($newType)
+        && (string) $newType !== (string) $project->project_type;
+
+    try {
+        DB::transaction(function () use ($project, $data, $newType, $typeChanged) {
+            if ($typeChanged) {
+                // Kunci proyek supaya tidak bentrok dengan proses lain (mis. simpan termin)
+                Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+
+                $project->project_type = $newType;
+                $project->syncLevels();
+            }
+
+            $project->update($data);
+        });
+    } catch (\DomainException $e) {
+        return back()
+            ->withInput()
+            ->withErrors(['project_type' => $e->getMessage()])
+            ->with('error', $e->getMessage());
     }
+
+    return back()->with('success', 'Data proyek berhasil diperbarui!');
+}
 
     public function show(Project $project)
     {
