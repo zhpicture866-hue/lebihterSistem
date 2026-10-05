@@ -723,252 +723,77 @@ col.just-hidden {
     -webkit-overflow-scrolling: touch;
 }
 
-.progress-table {
-    background-color: #fff;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin: 0 !important;
+#rabItemsTable {
+    min-width: 930px;
     table-layout: fixed;
+    margin-bottom: 0;
+}
+#editrabItemsTable {
+    min-width: 930px;
+    table-layout: fixed;
+    margin-bottom: 0;
+}
+
+/* Header Rincian Pekerjaan: judul kiri, tombol kanan (semua device) */
+.rab-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     width: 100%;
-    min-width: max-content;
-}
-.progress-table col[style*="display: none"] {
-    width: 0 !important;
-}
-.progress-table th,
-.progress-table td {
-    border: 1px solid #adb5bd !important;
-    min-width: 60px;
-    white-space: normal;
-    word-break: break-word;
-    line-height: 1.2;
-    background-color: #fff;
-}
-.progress-table tr:first-child th {
-    border-top: 1px solid #adb5bd;
-    height: 60px;
-}
-.progress-table thead tr:nth-child(2) th {
-    height: 60px;
-}
-.progress-table th:first-child,
-.progress-table td:first-child {
-    border-left: 1px solid #adb5bd;
-}
-.progress-table thead th {
-    background-color: #fff !important;
-    position: sticky;
-    vertical-align: middle;
+    flex: 0 0 100%;      /* parent-nya .row, jadi harus selebar baris */
 }
 
-.progress-table thead th.sticky-col {
-    background-color: #ffff;
+.rab-detail-header h4 {
+    margin: 0;
 }
 
-.progress-table col.col-hidden {
-    visibility: collapse;
-    width: 0 !important;
+.rab-action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
 }
-
-/* sel yang ikut kolom hidden */
-.progress-table th.col-hidden,
-.progress-table td.col-hidden {
-    visibility: collapse;
-    padding: 0 !important;
-    border: 0 !important;
-}
-.progress-table .sticky-col{
-    position: sticky !important;
-    background: #fff !important;
-    background-clip: padding-box;
-    z-index: 25;
-}
-
-.progress-table tbody td.sticky-col {
-    top: auto !important;
-}
-.progress-table tr.table-warning td.sticky-col {
-    background-color: #fff3cd;
-    z-index: 6;
-}
-
-/* sticky kolom kiri (class dari JS) */
-.sticky-col {
-    position: sticky;
-    background-color: #fff;
-    box-shadow: 1px 0 0 #adb5bd;
-}
-.sticky-last{
-    border-right: 2px solid #adb5bd !important;
-}
-/* row kategori */
-.row-category .sticky-col{
-    background-color: #c4c4c4;
-    font-weight: 700;
-    z-index: 8;
-}
-.d-none {
-    display: none;
-}
-.week-foot.d-none,
-.just-foot.d-none {
-    display: none !important;
-}
-
-.table-warning .badge.bg-warning {
-    background-color: #ffca2c; /* lebih pekat dari cell */
-}
-.volume-input {
-    width: 80px;
-    margin: auto;
-    padding: 4px 6px;
-    font-size: 14px;
-}
-.row-editor td {
-    background: #fff;
-}
-
-.row-editor .freeze-col {
-    position: sticky;
-    left: 0;
-    z-index: 9;
-    background: #fff;
-}
-
-.progress-table thead .sticky-col{
-    z-index: 50;
-    background: #fff !important;
-}
-
-
-.progress-table tbody .sticky-col{
-    z-index: 40;
-}
-tr.row-tambahan-item td.sticky-col{
-    background:#fff3cd;
-    z-index: 60;
-}
-tr.row-category td.sticky-col,
-tr.row-uraian td.sticky-col{
-    z-index: 65;
-}
-.sticky-editor{
-    position: sticky;
-    left: 0;
-    z-index: 11;
-    background: #fff;
-}
-.table-real {
-    max-height: 75vh; /* atau nilai lain sesuai kebutuhan */
-    overflow-y: auto;
-    overflow-x: auto;
-}
-.table-plan {
-    max-height: 75vh; /* atau nilai lain sesuai kebutuhan */
-    overflow-y: auto;
-    overflow-x: auto;
-    max-width: 100%;
-    width: 100%;
-    background: transparent;
-    display: block;
-}
-.table-plan::after {
-    display: none;
-}
-#buildPlanTable {
-    border-collapse: separate;
-    border-spacing: 0;
-    table-layout: fixed !important;
-    margin: 0 !important;
-}
-
-#buildPlanTable .sticky-col{
-    position: sticky;
-    background: #fff;
-}
-#buildPlanTable thead tr:first-child th {
-    position: sticky;
-    top: 80px; 
-    z-index: 102;
-    background: #fff;
-    height: 45px;
-}
-
-#buildPlanTable thead tr:nth-child(2) th {
-    position: sticky;
-    top: 125px; 
-    z-index: 101;
-    background: #fff;
-    height: 45px;
-}
-
-#buildPlanTable thead th.sticky-col {
-    z-index: 155 !important;
-}
-#buildPlanTable thead th.sticky-col {
-    z-index: 155 !important;
-}
-#buildPlanTable tbody td {
-    background: #fff;
-    white-space: normal;
-    word-break: break-word;
-}
-
-#buildPlanTable tr.table-secondary td {
-    background: #e2e3e5 !important;
-}
-
-#buildPlanTable tr.table-light td {
-    background: #f8f9fa !important;
-}
-
-#buildPlanTable tbody .sticky-col {
-    position: sticky;
-    background: #fff !important;
-    z-index: 20;
-}
-
-#buildPlanTable .sticky-last{
-    box-shadow: none;
-}
-
-#buildPlanTable .row-category td,
-#buildPlanTable .row-uraian td{
-    background: #ffff;
-    font-weight: 600;
-}
-.week-plan{
-    width:70px!important;
-    text-align:center;
-}
-#rabItemsTableEdit col:nth-child(1){ width:50px }
-#rabItemsTableEdit col:nth-child(2){ width:35% }
-#rabItemsTableEdit col:nth-child(3){ width:90px }
-#rabItemsTableEdit col:nth-child(4){ width:140px }
-#rabItemsTableEdit col:nth-child(5){ width:150px }
-#rabItemsTableEdit col:nth-child(6){ width:160px }
-
-#rabItemsTable col:nth-child(1){ width:50px }
-#rabItemsTable col:nth-child(2){ width:35% }
-#rabItemsTable col:nth-child(3){ width:90px }
-#rabItemsTable col:nth-child(4){ width:110px }
-#rabItemsTable col:nth-child(5){ width:150px }
-#rabItemsTable col:nth-child(6){ width:160px }
-
-@media (max-width:576px){
-
-    /* Kolom Volume */
-    #rabItemsTableEdit td:nth-child(4){
-        min-width:120px !important;
+@media (max-width: 767.98px) {
+    /* Jarak antar field di bagian atas form */
+    .rab-form-top > [class*="col-"],
+    #rabForm .row.mb-3 > [class*="col-"] {
+        margin-bottom: 12px;
     }
+    #rabForm .form-label { margin-bottom: 6px; }
+    #rabForm .form-control,
+    #rabForm .form-select { min-height: 42px; }
+    .rab-detail-header h4 { font-size: 16px; }
+    .rab-action-buttons .btn { min-height: 40px; }
 
-    /* Input Volume */
-    #rabItemsTableEdit .vol{
-        min-width:100px !important;
-        width:100% !important;
-        box-sizing:border-box;
+}
+@media (max-width: 575.98px) {
+    #addRabItemModal .modal-dialog {
+        margin: 12px;
+        max-width: calc(100% - 24px);
     }
+    #addRabItemModal .modal-header { padding: 16px 16px 8px; }
+    #addRabItemModal .modal-body   { padding: 8px 16px; }
+    #addRabItemModal .modal-footer {
+        padding: 12px 16px 16px;
+        gap: 8px;
+    }
+    #addRabItemModal .modal-footer .btn { flex: 1; min-height: 42px; }
 
+    #addRabItemModal .ql-editor { min-height: 110px; }
+    
+    #editRabItemModal .modal-dialog {
+        margin: 12px;
+        max-width: calc(100% - 24px);
+    }
+    #editRabItemModal .modal-header { padding: 16px 16px 8px; }
+    #editRabItemModal .modal-body   { padding: 8px 16px; }
+    #editRabItemModal .modal-footer {
+        padding: 12px 16px 16px;
+        gap: 8px;
+    }
+    #editRabItemModal .modal-footer .btn { flex: 1; min-height: 42px; }
+    #editRabItemModal .ql-editor { min-height: 110px; }
 }
 .uraian-row{
 position:relative;

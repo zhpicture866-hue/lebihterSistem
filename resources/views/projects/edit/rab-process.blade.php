@@ -16,7 +16,7 @@
 
     <h4 class="fw-bold mb-3">Informasi Pembuatan Rab</h4>
 
-    <div class="row g-3">
+    <div class="row mb-3 rab-form-top">
         <div class="col-md-4">
             <label class="form-label fw-semibold">Nomor Penawaran</label>
             <input type="text" name="offer_number" class="form-control" value="{{ old('offer_number', $rab->offer_number) ?? '' }}" placeholder="Auto Generate" readonly>
@@ -79,16 +79,16 @@
         </div>
         <div class="table-responsive">
 
-            <table class="table table-bordered align-middle" id="rabItemsTable">
+            <table class="table table-bordered align-middle" id="editrabItemsTable">
 
                 <colgroup>
-                    <col style="width: 60px">
-                    <col style="width: 180px">
-                    <col style="width: 130px">
-                    <col style="width: 60px">
-                    <col style="width: 130px">
-                    <col style="width: 180px">
+                    <col style="width: 50px">
+                    <col style="width: 280px">
+                    <col style="width: 140px">
                     <col style="width: 90px">
+                    <col style="width: 150px">
+                    <col style="width: 170px">
+                    <col style="width: 50px">
                 </colgroup>
 
                 <thead>
@@ -212,7 +212,7 @@
     </div>
     <div class="modal fade" id="editRabItemModal" tabindex="-1" aria-hidden="true">
 
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
 
             <div class="modal-content">
 
@@ -300,7 +300,6 @@
                         </div>
                     </div>
                 </div>
-
 
                 <div class="modal-footer border-0">
 
