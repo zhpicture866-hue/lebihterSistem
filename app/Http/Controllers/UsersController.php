@@ -153,7 +153,7 @@ class UsersController extends Controller
         'district_id' => ['nullable', Rule::exists(District::class, 'id')],
         'sub_district_id' => ['nullable', Rule::exists(SubDistrict::class, 'id')],
         'postal_code_id' => ['nullable', Rule::exists(PostalCode::class, 'id')],
-        'phone' => 'nullable',
+        'phone' => ['required', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
         'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
@@ -278,7 +278,7 @@ public function update(Request $request, User $user)
             Rule::exists(PostalCode::class, 'id'),
         ],
 
-        'phone' => 'nullable|regex:/^[0-9]+$/',
+        'phone' => ['nullable', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
 
         'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);

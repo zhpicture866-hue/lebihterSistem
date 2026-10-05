@@ -56,6 +56,15 @@
                                 <div class="section-block mb-5">
                                     <h3 class="fw-semibold mb-3 border-bottom pb-2">🧍 Informasi Pribadi</h3>
                                     <div class="row g-4">
+                                        <div class="col-md-2">
+                                            <label class="form-label">Title</label>
+                                            <select name="title" class="form-select select2">
+                                                <option value="">-- Pilih --</option>
+                                                <option value="1" {{ old('title') == '1' ? 'selected' : '' }}>Bapak</option>
+                                                <option value="2" {{ old('title') == '2' ? 'selected' : '' }}>Ibu</option>
+                                                <option value="3" {{ old('title') == '3' ? 'selected' : '' }}>Kak</option>
+                                            </select>
+                                        </div>
                                         <div class="col-md-5">
                                             <label class="form-label required" for="fullname">Nama Lengkap:</label>
                                             <input type="text" class="form-control @error('fullname') is-invalid @enderror" id="fullname" name="fullname" value="{{ old('fullname') }}" required>
@@ -64,7 +73,7 @@
                                             @enderror
                                         </div>
 
-                                        <div class="col-md-5">
+                                        <div class="col-md-3">
                                                 <label class="form-label">Nama Panggilan</label>
                                                 <input type="text" class="form-control @error('nickname') is-invalid @enderror" id="nickname" name="nickname" value="{{ old('nickname') }}">
                                                 @error('nickname')
@@ -132,10 +141,17 @@
                                     <div class="row g-4">
                                         <div class="col-md-4">
                                             <label class="form-label">Telepon</label>
-                                            <input type="number" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}">
-                                            @error('phone')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                            <div class="input-group">
+                                                <input type="text" name="phone"
+                                                    class="form-control @error('phone') is-invalid @enderror"
+                                                    value="{{ old('phone') }}"
+                                                    placeholder="08xx atau +65 9123 4567"
+                                                    inputmode="numeric" required>
+                                                @error('phone')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <small class="text-muted">Nomor luar negeri awali dengan + dan kode negara.</small>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label required" for="email">Email</label>

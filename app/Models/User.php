@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class User extends Authenticatable
 {
@@ -212,5 +213,26 @@ public function isExternal(): bool
     return $this->roles()
         ->where('role_group', 'External')
         ->exists();
+}
+
+protected function phone(): Attribute
+{
+    return Attribute::make(
+        set: function ($value) {
+            if (blank($value)) return null;
+
+            $v = trim($value);
+            $d = preg_replace('/\D/', '', $v);
+
+            return match (true) {
+                str_starts_with($v, '+')  => $d,                    // internasional
+                str_starts_with($d, '00') => substr($d, 2),         // 0065... -> 65...
+                str_starts_with($d, '62') => $d,
+                str_starts_with($d, '0')  => '62' . substr($d, 1),
+                str_starts_with($d, '8')  => '62' . $d,             // anggap Indonesia
+                default                   => $d,
+            };
+        }
+    );
 }
 }

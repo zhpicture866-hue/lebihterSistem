@@ -148,11 +148,18 @@
                         <h3 class="fw-semibold mb-3 border-bottom pb-2">📞 Kontak & Alamat</h3>
                         <div class="row g-4">
                             <div class="col-md-6">
-                                <label class="form-label required">Nomor Telepon</label>
-                                <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone') }}" required>
-                                @error('phone')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <label class="form-label">Nomor Telepon</label>
+                                <div class="input-group">
+                                    <input type="text" name="phone"
+                                        class="form-control @error('phone') is-invalid @enderror"
+                                        value="{{ old('phone') }}"
+                                        placeholder="08xx atau +65 9123 4567"
+                                        inputmode="numeric" required>
+                                    @error('phone')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <small class="text-muted">Nomor luar negeri awali dengan + dan kode negara.</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label required">Email</label>

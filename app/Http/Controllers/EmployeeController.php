@@ -140,7 +140,7 @@ class EmployeeController extends Controller
             Rule::exists(Religion::class, 'id'),
         ],
         'npwp' => 'nullable|string|max:30',
-        'phone' => 'required|string|max:20',
+        'phone' => ['required', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
         'address' => 'nullable|string|max:255',
         'province_id' => [
             'nullable',
@@ -360,7 +360,7 @@ public function show(Employee $employee)
         'birth_place' => 'nullable|string|max:255',
         'birth_date' => 'nullable|date',
         'gender' => 'nullable|in:1,2',
-        'phone' => 'nullable|string|max:20',
+        'phone' => ['nullable', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
         
         'email' => [
             'required',

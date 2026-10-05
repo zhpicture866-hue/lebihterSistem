@@ -161,7 +161,7 @@ class CustomersController extends Controller
             Rule::exists(Religion::class, 'id'),
         ],
         'npwp' => 'nullable|string|max:30',
-        'phone' => 'required|string|max:20',
+        'phone' => ['required', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
         'address' => 'nullable|string|max:255',
         'user_province_id' => [
             'nullable',
@@ -379,7 +379,7 @@ public function update(Request $request, Customer $customer)
             Rule::exists(Religion::class, 'id'),
         ],
         'npwp' => 'nullable|string|max:30',
-        'phone' => 'nullable|string|max:20',
+        'phone' => ['nullable', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
         'address' => 'nullable|string|max:255',
         'user_province_id' => [
             'nullable',
