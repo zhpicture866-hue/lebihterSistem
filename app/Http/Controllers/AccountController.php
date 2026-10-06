@@ -126,7 +126,7 @@ class AccountController extends Controller
     public function updateRole(Request $request)
 {
     $request->validate([
-        'user_id' => 'required|uuid|exists:users,id',
+        'user_id' => ['required','uuid', Rule::exists(User::class,'id')],
         'roles' => 'array',
         'roles.*' => 'string|exists:roles,name',
     ]);
