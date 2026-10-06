@@ -83,9 +83,17 @@
 @push('js')
 <script>
 $(function () {
+    const isMobile = window.innerWidth < 576;
     const table = $('#journals-table').DataTable({
+        scrollY: '500px',
+        scrollX: true,
+        scrollCollapse: true,
+        fixedColumns: !isMobile ? {
+            leftColumns: 0
+        } : false,
         processing: true,
         serverSide: true,
+        responsive: false,
         ajax: '{{ route("journals.index") }}',
         order: [[2, 'desc']],
         columns: [

@@ -272,17 +272,7 @@
         z-index: auto !important;
     }
 }
-@media (max-width:576px){
-    .chart-wrapper{
-        overflow-x:auto;
-        height:280px;
-    }
 
-    .chart-wrapper canvas{
-        min-width:900px !important;
-    }
-
-}
 @media (max-width: 576px){
 
     #dailyModal .modal-header{
@@ -311,4 +301,41 @@
         font-size:.8rem;
     }
 
+}
+
+@media (max-width: 767.98px) {
+    /* hanya baris bawah (info + paging) */
+    .dt-container .row:has(.dt-info),
+    .dt-container .row:has(.dt-paging) {
+        justify-content: center !important;
+    }
+
+    .dt-container .dt-layout-start:has(.dt-info),
+    .dt-container .dt-layout-end:has(.dt-paging) {
+        display: flex !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+
+    .dt-container .dt-info {
+        margin: 10px 0 !important;
+        text-align: center !important;
+        width: 100%;
+    }
+
+    .dt-container .dt-paging,
+    .dt-container .dt-paging .pagination {
+        justify-content: center !important;
+        flex-wrap: wrap;
+        margin: 0;
+    }
+
+    .dt-container .dt-length,
+.dt-container .dt-search {
+    margin-bottom: 16px;
+}
 }
