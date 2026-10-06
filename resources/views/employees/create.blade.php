@@ -142,16 +142,24 @@
                             <div class="col-md-6">
                                 <label class="form-label required">Nomor Telepon</label>
                                 <div class="input-group">
-                                    <input type="text" name="phone"
+                                    <select name="phone_code" id="phone_code" class="form-select" style="max-width: 210px;">
+                                        @foreach (config('phone_codes') as $code => $negara)
+                                            <option value="{{ $code }}" @selected(old('phone_code', '62') == $code)>
+                                                +{{ $code }} {{ $negara }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <input type="text" name="phone_number" id="phone_number"
                                         class="form-control @error('phone') is-invalid @enderror"
-                                        value="{{ old('phone') }}"
-                                        placeholder="08xx atau +65 9123 4567"
-                                        inputmode="numeric" required>
-                                    @error('phone')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                        value="{{ old('phone_number') }}"
+                                        placeholder="85655xxxxxxx" inputmode="numeric" required>
                                 </div>
-                                <small class="text-muted">Nomor luar negeri awali dengan + dan kode negara.</small>
+                                @error('phone')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                @error('phone_code')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label required">Email</label>
@@ -616,6 +624,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 $('#bank_id').val(oldBankId).trigger('change');
             });
         });
+});
+</script>
+<script>
+$('#phone_number').on('input', function () {
+    let v = $(this).val().replace(/\D/g, '').replace(/^0+/, ''); // hanya angka, buang 0 di depan
+    if ($('#phone_code').val() === '62' && v.startsWith('62')) v = v.slice(2); // paste +62...
+    $(this).val(v);
+});
+
+$('#phone_code').on('change', function () {
+    $('#phone_number').trigger('input');
 });
 </script>
 @endpush

@@ -97,6 +97,7 @@ public function activeRole()
         'sub_district_id',
         'postal_code_id',
         'phone',
+        'phone_code',
         'photo',
         'identity_number',
         'npwp',
@@ -215,24 +216,23 @@ public function isExternal(): bool
         ->exists();
 }
 
-protected function phone(): Attribute
+   protected function phone(): Attribute
+   {
+       return Attribute::make(
+           set: fn ($value) => blank($value) ? null : preg_replace('/\D/', '', $value),
+       );
+   }
+
+   protected function phoneNumber(): Attribute
 {
     return Attribute::make(
-        set: function ($value) {
-            if (blank($value)) return null;
+        get: function () {
+            if (!$this->phone) return null;
 
-            $v = trim($value);
-            $d = preg_replace('/\D/', '', $v);
-
-            return match (true) {
-                str_starts_with($v, '+')  => $d,                    // internasional
-                str_starts_with($d, '00') => substr($d, 2),         // 0065... -> 65...
-                str_starts_with($d, '62') => $d,
-                str_starts_with($d, '0')  => '62' . substr($d, 1),
-                str_starts_with($d, '8')  => '62' . $d,             // anggap Indonesia
-                default                   => $d,
-            };
-        }
+            return ($this->phone_code && str_starts_with($this->phone, $this->phone_code))
+                ? substr($this->phone, strlen($this->phone_code))
+                : $this->phone;
+        },
     );
 }
 }

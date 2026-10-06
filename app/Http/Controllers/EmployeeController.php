@@ -117,7 +117,14 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
 {
+    $code = preg_replace('/\D/', '', $request->phone_code ?? '');
+    $num  = ltrim(preg_replace('/\D/', '', $request->phone_number ?? ''), '0');
 
+    if ($code === '62' && str_starts_with($num, '62')) {
+        $num = substr($num, 2);
+    }
+
+    $request->merge(['phone' => $num !== '' ? $code . $num : null]);
     $validated = $request->validate([
         'user_id' => ['nullable','uuid', Rule::exists(User::class,'id')],
         'fullname' => 'required|string|max:255',
@@ -140,7 +147,16 @@ class EmployeeController extends Controller
             Rule::exists(Religion::class, 'id'),
         ],
         'npwp' => 'nullable|string|max:30',
-        'phone' => ['required', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
+        'phone_code' => ['required', Rule::in(array_keys(config('phone_codes')))],
+        'phone' => [
+            'required',
+            'regex:/^[1-9][0-9]{7,14}$/',
+            function ($attr, $value, $fail) use ($code) {
+                if ($code === '62' && !preg_match('/^628[0-9]{8,11}$/', $value)) {
+                    $fail('Nomor Indonesia harus diawali 8 (contoh: 85655xxxxxxx).');
+                }
+            },
+        ],
         'address' => 'nullable|string|max:255',
         'province_id' => [
             'nullable',
@@ -175,55 +191,55 @@ class EmployeeController extends Controller
     ]);
 
     // 🔹 Upload foto karyawan (kalau ada)
-if ($request->hasFile('photo')) {
-    $filename = Str::uuid().'.'.$request->file('photo')->getClientOriginalExtension();
+    if ($request->hasFile('photo')) {
+        $filename = Str::uuid().'.'.$request->file('photo')->getClientOriginalExtension();
 
-    $path = $request->file('photo')->storeAs(
-        'photos',
-        $filename,
-        'public'
-    );
+        $path = $request->file('photo')->storeAs(
+            'photos',
+            $filename,
+            'public'
+        );
 
-    // simpan full relative path
-    $validated['photo'] = $path;   // → photos/uuid.jpg
-}
+        // simpan full relative path
+        $validated['photo'] = $path;   // → photos/uuid.jpg
+    }
 
-if ($request->hasFile('identity_photo')) {
+    if ($request->hasFile('identity_photo')) {
 
-    $identityPhotoPath = $request->file('identity_photo')->storeAs(
-        'identity_photos',
-        Str::uuid().'.'.$request->file('identity_photo')->getClientOriginalExtension(),
-        'public'
-    );
+        $identityPhotoPath = $request->file('identity_photo')->storeAs(
+            'identity_photos',
+            Str::uuid().'.'.$request->file('identity_photo')->getClientOriginalExtension(),
+            'public'
+        );
 
-    $validated['identity_photo'] = $identityPhotoPath;
-}
+        $validated['identity_photo'] = $identityPhotoPath;
+    }
 
-if ($request->hasFile('contract_letter_file')) {
-    $filename = Str::uuid().'.'.$request->file('contract_letter_file')->getClientOriginalExtension();
+    if ($request->hasFile('contract_letter_file')) {
+        $filename = Str::uuid().'.'.$request->file('contract_letter_file')->getClientOriginalExtension();
 
-    $path = $request->file('contract_letter_file')->storeAs(
-        'contracts',
-        $filename,
-        'public'
-    );
+        $path = $request->file('contract_letter_file')->storeAs(
+            'contracts',
+            $filename,
+            'public'
+        );
 
-    // simpan full relative path
-    $validated['contract_letter_file'] = $path;   // → photos/uuid.jpg
-}
+        // simpan full relative path
+        $validated['contract_letter_file'] = $path;   // → photos/uuid.jpg
+    }
 
-if ($request->hasFile('training_certificate')) {
-    $filename = Str::uuid().'.'.$request->file('training_certificate')->getClientOriginalExtension();
+    if ($request->hasFile('training_certificate')) {
+        $filename = Str::uuid().'.'.$request->file('training_certificate')->getClientOriginalExtension();
 
-    $path = $request->file('training_certificate')->storeAs(
-        'certificates',
-        $filename,
-        'public'
-    );
+        $path = $request->file('training_certificate')->storeAs(
+            'certificates',
+            $filename,
+            'public'
+        );
 
-    // simpan full relative path
-    $validated['training_certificate'] = $path;   // → photos/uuid.jpg
-}
+        // simpan full relative path
+        $validated['training_certificate'] = $path;   // → photos/uuid.jpg
+    }
 
     DB::transaction(function () use ($validated, $request) {
 
@@ -255,6 +271,7 @@ if ($request->hasFile('training_certificate')) {
                 'email_verified_at' => now(),
                 'password' => Hash::make($password),
                 'phone' => $validated['phone'] ?? null,
+                'phone_code' => $validated['phone_code'] ?? null,
                 'gender' => $validated['gender'] ?? null,
                 'photo' => $validated['photo'] ?? null,
                 'bank_id' => $validated['bank_id'] ?? null,
@@ -354,14 +371,30 @@ public function show(Employee $employee)
 
     public function update(Request $request, Employee $employee)
 {
+    $code = preg_replace('/\D/', '', $request->phone_code ?? '');
+    $num  = ltrim(preg_replace('/\D/', '', $request->phone_number ?? ''), '0');
+
+    if ($code === '62' && str_starts_with($num, '62')) {
+        $num = substr($num, 2);
+    }
+
+    $request->merge(['phone' => $num !== '' ? $code . $num : null]);
     $validated = $request->validate([
         // --- data user ---
         'fullname' => 'required|string|max:255',
         'birth_place' => 'nullable|string|max:255',
         'birth_date' => 'nullable|date',
         'gender' => 'nullable|in:1,2',
-        'phone' => ['nullable', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
-        
+        'phone_code' => ['required', Rule::in(array_keys(config('phone_codes')))],
+        'phone' => [
+            'required',
+            'regex:/^[1-9][0-9]{7,14}$/',
+            function ($attr, $value, $fail) use ($code) {
+                if ($code === '62' && !preg_match('/^628[0-9]{8,11}$/', $value)) {
+                    $fail('Nomor Indonesia harus diawali 8 (contoh: 85655xxxxxxx).');
+                }
+            },
+        ],   
         'email' => [
             'required',
             'email',
@@ -444,6 +477,7 @@ public function show(Employee $employee)
         'identity_number' => $validated['identity_number'],
         'gender' => $validated['gender'] ?? null,
         'phone' => $validated['phone'] ?? null,
+        'phone_code' => $validated['phone_code'] ?? null,
         'address' => $validated['address'] ?? null,
         'religion_id' => $validated['religion_id'],
         'province_id' => $validated['province_id'],

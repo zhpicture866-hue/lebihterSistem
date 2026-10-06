@@ -138,6 +138,14 @@ class CustomersController extends Controller
 
     public function store(Request $request)
 {
+    $code = preg_replace('/\D/', '', $request->phone_code ?? '');
+    $num  = ltrim(preg_replace('/\D/', '', $request->phone_number ?? ''), '0');
+
+    if ($code === '62' && str_starts_with($num, '62')) {
+        $num = substr($num, 2);
+    }
+
+    $request->merge(['phone' => $num !== '' ? $code . $num : null]);
     $validated = $request->validate([
         'user_id' => ['nullable','uuid', Rule::exists(User::class,'id')],
         'fullname' => 'required|string|max:255',
@@ -161,7 +169,8 @@ class CustomersController extends Controller
             Rule::exists(Religion::class, 'id'),
         ],
         'npwp' => 'nullable|string|max:30',
-        'phone' => ['required', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
+        'phone_code' => ['nullable', 'required_with:phone_number', Rule::in(array_keys(config('phone_codes')))],
+        'phone'      => ['nullable', 'regex:/^[1-9][0-9]{7,14}$/'],
         'address' => 'nullable|string|max:255',
         'user_province_id' => [
             'nullable',
@@ -195,18 +204,18 @@ class CustomersController extends Controller
         'loyalty_level' => 'nullable|in:1,2,3,4,5'
     ]);
 
-if ($request->hasFile('photo')) {
-    $filename = Str::uuid().'.'.$request->file('photo')->getClientOriginalExtension();
+    if ($request->hasFile('photo')) {
+        $filename = Str::uuid().'.'.$request->file('photo')->getClientOriginalExtension();
 
-    $path = $request->file('photo')->storeAs(
-        'photos',
-        $filename,
-        'public'
-    );
+        $path = $request->file('photo')->storeAs(
+            'photos',
+            $filename,
+            'public'
+        );
 
-    // simpan full relative path
-    $validated['photo'] = $path;   // → photos/uuid.jpg
-}
+        // simpan full relative path
+        $validated['photo'] = $path;   // → photos/uuid.jpg
+    }
 
     // Jika alamat pengiriman sama dengan domisili user
         if ($request->has('same_address')) {
@@ -245,6 +254,7 @@ if ($request->hasFile('photo')) {
                 'email_verified_at' => now(),
                 'password' => Hash::make($password),
                 'phone' => $validated['phone'] ?? null,
+                'phone_code' => $validated['phone_code'] ?? null,
                 'gender' => $validated['gender'] ?? null,
                 'title' => $validated['title'] ?? null,
                 'photo' => $validated['photo'] ?? null,
@@ -290,19 +300,6 @@ if ($request->hasFile('photo')) {
             (session('new_user_password') ? ' Akun user baru dibuat. Password: ' . session('new_user_password') : '')
         );
 }
-
-
-// public function generateNicAjax()
-// {
-//     $lastNumber = Customer::selectRaw("MAX(CAST(SUBSTRING(nic, 3) AS INTEGER)) as max_nic")->value('max_nic');
-//     $newNumber = ($lastNumber ?? 0) + 1;
-
-//     $newNic = 'C-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
-
-//     return response()->json([
-//         'nic' => $newNic
-//     ]);
-// }
 
 public static function generateNicAjax()
 {
@@ -354,6 +351,14 @@ public function edit($id)
 
 public function update(Request $request, Customer $customer)
 {
+    $code = preg_replace('/\D/', '', $request->phone_code ?? '');
+    $num  = ltrim(preg_replace('/\D/', '', $request->phone_number ?? ''), '0');
+
+    if ($code === '62' && str_starts_with($num, '62')) {
+        $num = substr($num, 2);
+    }
+
+    $request->merge(['phone' => $num !== '' ? $code . $num : null]);
     $validated = $request->validate([
         // --- data user ---
         'fullname' => 'required|string|max:255',
@@ -379,7 +384,8 @@ public function update(Request $request, Customer $customer)
             Rule::exists(Religion::class, 'id'),
         ],
         'npwp' => 'nullable|string|max:30',
-        'phone' => ['nullable', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
+        'phone_code' => ['nullable', 'required_with:phone_number', Rule::in(array_keys(config('phone_codes')))],
+        'phone'      => ['nullable', 'regex:/^[1-9][0-9]{7,14}$/'],
         'address' => 'nullable|string|max:255',
         'user_province_id' => [
             'nullable',
@@ -472,6 +478,7 @@ public function update(Request $request, Customer $customer)
             'postal_code_id' => $validated['user_postal_code_id'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
+            'phone_code' => $validated['phone_code'],
             'gender' => $validated['gender'],
             'title' => $validated['title'],
             'bank_id' => $validated['bank_id'] ?? null,

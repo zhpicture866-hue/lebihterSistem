@@ -76,7 +76,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="text-muted small">Telepon</div>
-                                    <div class="fw-bold">{{ $user->phone ?? '-' }}</div>
+                                    <div class="fw-bold">+{{ $user->phone ?? '-' }}</div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="text-muted small mt-2">Tanggal Lahir</div>

@@ -117,8 +117,16 @@ class UsersController extends Controller
         return view('users.create', compact('religions', 'provinces', 'roles', 'user'));
     }
 
-        public function store(Request $request)
+    public function store(Request $request)
 {
+    $code = preg_replace('/\D/', '', $request->phone_code ?? '');
+    $num  = ltrim(preg_replace('/\D/', '', $request->phone_number ?? ''), '0');
+
+    if ($code === '62' && str_starts_with($num, '62')) {
+        $num = substr($num, 2);
+    }
+
+    $request->merge(['phone' => $num !== '' ? $code . $num : null]);
     $validated = $request->validate([
         'fullname' => 'required',
         'nickname' => 'nullable',
@@ -153,7 +161,16 @@ class UsersController extends Controller
         'district_id' => ['nullable', Rule::exists(District::class, 'id')],
         'sub_district_id' => ['nullable', Rule::exists(SubDistrict::class, 'id')],
         'postal_code_id' => ['nullable', Rule::exists(PostalCode::class, 'id')],
-        'phone' => ['required', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
+        'phone_code' => ['required', Rule::in(array_keys(config('phone_codes')))],
+        'phone' => [
+            'required',
+            'regex:/^[1-9][0-9]{7,14}$/',
+            function ($attr, $value, $fail) use ($code) {
+                if ($code === '62' && !preg_match('/^628[0-9]{8,11}$/', $value)) {
+                    $fail('Nomor Indonesia harus diawali 8 (contoh: 85655xxxxxxx).');
+                }
+            },
+        ],
         'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
@@ -219,6 +236,14 @@ public function show(User $user)
 
 public function update(Request $request, User $user)
 {
+    $code = preg_replace('/\D/', '', $request->phone_code ?? '');
+    $num  = ltrim(preg_replace('/\D/', '', $request->phone_number ?? ''), '0');
+
+    if ($code === '62' && str_starts_with($num, '62')) {
+        $num = substr($num, 2);
+    }
+
+    $request->merge(['phone' => $num !== '' ? $code . $num : null]);
     $validated = $request->validate([
         'fullname' => 'required',
         'nickname' => 'nullable',
@@ -277,9 +302,16 @@ public function update(Request $request, User $user)
             'nullable',
             Rule::exists(PostalCode::class, 'id'),
         ],
-
-        'phone' => ['nullable', 'regex:/^(\+[1-9][0-9]{7,14}|00[1-9][0-9]{7,14}|0?8[0-9]{8,12}|62[0-9]{8,13})$/'],
-
+        'phone_code' => ['required', Rule::in(array_keys(config('phone_codes')))],
+        'phone' => [
+            'required',
+            'regex:/^[1-9][0-9]{7,14}$/',
+            function ($attr, $value, $fail) use ($code) {
+                if ($code === '62' && !preg_match('/^628[0-9]{8,11}$/', $value)) {
+                    $fail('Nomor Indonesia harus diawali 8 (contoh: 85655xxxxxxx).');
+                }
+            },
+        ],
         'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
 
