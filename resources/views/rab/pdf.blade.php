@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>{{ $offer->offer_number }} {{ $project->project_name }} {{ $project->customer?->user?->fullname }} {{ $project->project_location }}</title>
+    <title>{{ $offer->offer_number }} {{ $project->projectType->name }} {{ $project->project_name }}</title>
     <style>
         @page { margin: 150px 0 90px 0; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 9px; color: #000; margin: 0; }

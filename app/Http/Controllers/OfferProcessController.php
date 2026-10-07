@@ -280,13 +280,8 @@ public function exportPdf(Project $project)
         'payments'
     ))->setPaper('A4', 'portrait');
 
-    // Nama customer
-    $customerName = $project->customer?->user?->fullname ?? 'CUSTOMER';
+    $projectType = $project->projectType->name;
 
-    // Kota proyek
-    $cityName = $project->project_location ?? 'KOTA';
-
-    // Bersihkan karakter yang tidak boleh digunakan pada nama file
     $clean = function ($value) {
         return trim(
             preg_replace('/[\\\\\/:*?"<>|]+/', '-', $value)
@@ -295,12 +290,10 @@ public function exportPdf(Project $project)
 
     $filename =
         $clean($offer->offer_number)
-        . ' '
+        . '- '
+        . $clean($projectType)
+        . ' - '
         . $clean($project->project_name)
-        . ' - '
-        . $clean($customerName)
-        . ' - '
-        . $clean($cityName)
         . '.pdf';
 
     return $pdf->stream($filename);
