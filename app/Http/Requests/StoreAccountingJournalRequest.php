@@ -26,7 +26,7 @@ class StoreAccountingJournalRequest extends FormRequest
                 'uuid',
                 function ($attribute, $value, $fail) {
                     $exists = DB::connection('pgsql')
-                        ->table('zhpicture.accounting_accounts')
+                        ->table('lebihtersistem.accounting_accounts')
                         ->where('id', $value)
                         ->exists();
 
