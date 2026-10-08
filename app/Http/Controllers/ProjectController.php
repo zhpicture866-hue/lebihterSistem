@@ -51,7 +51,7 @@ class ProjectController extends Controller
                 ->addIndexColumn()
                 ->addColumn('customer', fn ($row) => $row->customer?->user?->fullname ?? '-')
                 ->addColumn('employee', fn ($row) => $row->employee?->user?->fullname ?? '-')
-                ->addColumn('affiliator', fn ($row) => $row->affiliator?->user?->fullname ?? '-')
+                ->addColumn('project_location', fn ($row) => $row->project_location ?? '-')
                 ->addColumn('start_date', fn ($row) => $row->start_date
                     ? Carbon::parse($row->start_date)->format('d/m/Y')
                     : '-')

@@ -53,12 +53,8 @@
                                         <th>Karyawan</th>
                                         {{-- <th>Affiliator</th> --}}
                                         <th>Tanggal</th>
-                                        {{-- <th>Lokasi</th> --}}
-                                        {{-- <th>Provinsi</th>
-                                        <th>Kabupaten/Kota</th>
-                                        <th>Kecamatan</th>
-                                        <th>Kelurahan</th>
-                                        <th>Kode Pos</th> --}}
+                                        <th>Lokasi</th>
+                                        <th>Base URL</th>
                                         <th>Tahapan</th>
                                         {{-- <th>Status</th> --}}
                                         <th>Aksi</th>
@@ -119,8 +115,8 @@
                     { data: 'employee', name: 'employee.user.fullname' },
                     // { data: 'affiliator', name: 'affiliator.user.fullname' },
                     { data: 'start_date', name: 'start_date' },
-                    // { data: 'project_location', name: 'project_location' },
-                    // { data: 'province_name', name: 'province.name' },
+                    { data: 'project_location', name: 'project_location' },
+                    { data: 'base_url', name: 'base_url' },
                     // { data: 'city_name', name: 'city.name'},
                     // { data: 'district_name', name: 'district.name' },
                     // { data: 'sub_district_name', name: 'sub_district_name' },
