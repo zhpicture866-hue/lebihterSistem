@@ -7,7 +7,7 @@
         <div class="sidebar-header">
             <div class="sidebar-logo-wrapper">
                 <a href="/" class="logo-expand">
-                    <img src="{{ asset('images/logo-landscape.png') }}" alt="Ruang Kembali">
+                    <img src="{{ asset('images/logo-landscape.png') }}" alt="Lebih Tersistem">
                 </a>
                 <a href="/" class="logo-collapse">
                     <img src="{{ asset('images/logo-icon.jpeg') }}" alt="Logo Icon">

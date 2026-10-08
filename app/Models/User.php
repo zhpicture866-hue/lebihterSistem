@@ -18,7 +18,7 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles, HasUuid;
 
-    protected $guard_name = 'web';
+    protected $guard_name = 'sistem_b';
     protected $table = 'global.users';
 
     public $incrementing = false;
