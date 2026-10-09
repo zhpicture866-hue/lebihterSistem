@@ -255,7 +255,7 @@ private function generateOfferNumber(): string
     );
 }
 
-public function exportPdf(Project $project)
+ public function exportPdf(Project $project, ?string $filename = null)
 {
     $offer = $project->rab()
         ->with([
@@ -270,6 +270,29 @@ public function exportPdf(Project $project)
         abort(404);
     }
 
+    // Bersihkan karakter yang tidak boleh digunakan pada nama file
+    $clean = function ($value) {
+        return trim(
+            preg_replace('/[\\\\\/:*?"<>|]+/', '-', (string) $value)
+        );
+    };
+
+    $newFilename =
+        $clean($offer->offer_number)
+        . ' - '
+        . $clean($project->projectType?->name)
+        . ' - '
+        . $clean($project->project_name)
+        . '.pdf';
+
+    // Kalau URL belum memuat nama file, arahkan ke URL yang berakhir dengan nama file
+    if ($filename === null) {
+        return redirect()->route('projects.rab.pdf', [
+            'project'  => $project,
+            'filename' => $newFilename,
+        ]);
+    }
+
     $payments = $project->buildTermins()
         ->orderBy('termin_no')
         ->get();
@@ -280,23 +303,7 @@ public function exportPdf(Project $project)
         'payments'
     ))->setPaper('A4', 'portrait');
 
-    $projectType = $project->projectType->name;
-
-    $clean = function ($value) {
-        return trim(
-            preg_replace('/[\\\\\/:*?"<>|]+/', '-', $value)
-        );
-    };
-
-    $filename =
-        $clean($offer->offer_number)
-        . '- '
-        . $clean($projectType)
-        . ' - '
-        . $clean($project->project_name)
-        . '.pdf';
-
-    return $pdf->stream($filename);
+    return $pdf->stream($newFilename);
 }
 public function structure($id)
 {

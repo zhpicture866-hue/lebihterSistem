@@ -19,7 +19,7 @@ use DB;
 class InvoiceBuildController extends Controller
 {
 
-public function invoiceBuild(Project $project, int $termin)
+public function invoiceBuild(Project $project, int $termin, ?string $filename = null)
 {
     abort_if(!$project->rab, 404);
 
@@ -123,7 +123,25 @@ public function invoiceBuild(Project $project, int $termin)
     if ($result['justCreated']) {
         $this->notifyInvoiceBuildCreated($project, $result['invoice']);
     }
+    $clean = function ($value) {
+        return trim(
+            preg_replace('/[\\\\\/:*?"<>|]+/', '-', (string) $value)
+        );
+    };
+    $newFilename =
+        $clean($result['invoice']->invoice_number)
+        . '-' . $clean($project->projectType?->name)
+        . '-' . $clean($project->project_name)
+        . '.pdf';
 
+    // Kalau URL belum memuat nama file, arahkan ke URL yang berakhir dengan nama file
+    if ($filename === null) {
+        return redirect()->route('projects.invoice.build', [
+            'project'  => $project,
+            'termin'   => $termin,
+            'filename' => $newFilename,
+        ]);
+    }
     return Pdf::loadView('invoice.build', [
         'invoice'    => $result['invoice'],
         'project'    => $project,
@@ -131,9 +149,7 @@ public function invoiceBuild(Project $project, int $termin)
         'grandTotal' => $result['grandTotal'],
     ])
     ->setPaper('A4', 'portrait')
-    ->stream(
-        "{$result['invoice']->invoice_number}-{$project->projectType->name}-{$project->project_name}.pdf"
-    );
+    ->stream($newFilename);
 }
 
 /**
@@ -388,7 +404,7 @@ public function approve(Project $project, InvoiceBuild $invoice)
         );
 }
 
-public function downloadKwitansi(Project $project, InvoiceBuild $invoice, Request $request)
+public function downloadKwitansi(Project $project, InvoiceBuild $invoice, Request $request, ?string $filename = null)
 {
     abort_if($invoice->project_id !== $project->id, 404);
     abort_if($invoice->status !== InvoiceBuild::STATUS_APPROVED, 403);
@@ -399,7 +415,7 @@ public function downloadKwitansi(Project $project, InvoiceBuild $invoice, Reques
     if (! $regenerate
         && $invoice->kwitansi_path
         && Storage::disk('local')->exists($invoice->kwitansi_path)) {
-        return $this->streamKwitansi($invoice);
+        return $this->respondKwitansi($project, $invoice, $filename);
     }
  
     DB::transaction(function () use ($invoice, $regenerate) {
@@ -440,21 +456,42 @@ public function downloadKwitansi(Project $project, InvoiceBuild $invoice, Reques
         ]);
     });
  
-    return $this->streamKwitansi($invoice->fresh());
+    return $this->respondKwitansi($project, $invoice->fresh(), $filename);
 }
  
-private function streamKwitansi(InvoiceBuild $invoice)
+    private function respondKwitansi(Project $project, InvoiceBuild $invoice, ?string $filename)
 {
-    $project = $invoice->project;
+    $namaFile = $this->kwitansiFilename($invoice);
 
-    $namaFile = "{$invoice->kwitansi_number}-"
-        . "{$project->projectType->name}-"
-        . "{$project->project_name}.pdf";
+    // URL belum memuat nama file: arahkan ke URL yang berakhir dengan nama file.
+    // Query string (mis. regenerate) sengaja tidak dibawa.
+    if ($filename === null) {
+        return redirect()->route('projects.invoice.build.kwitansi', [
+            'project'  => $project,
+            'invoice'  => $invoice,
+            'filename' => $namaFile,
+        ]);
+    }
 
     return Storage::disk('local')->response(
         $invoice->kwitansi_path,
         $namaFile
     );
+}
+
+    private function kwitansiFilename(InvoiceBuild $invoice): string
+{
+    $project = $invoice->project;
+
+    // Bersihkan karakter yang tidak boleh digunakan pada nama file
+    $clean = fn ($value) => trim(
+        preg_replace('/[\\\\\/:*?"<>|]+/', '-', (string) $value)
+    );
+
+    return $clean($invoice->kwitansi_number)
+        . '-' . $clean($project->projectType?->name)
+        . '-' . $clean($project->project_name)
+        . '.pdf';
 }
  
 private function generateKwitansiNumber(): string

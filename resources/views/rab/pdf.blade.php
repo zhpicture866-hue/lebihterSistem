@@ -11,7 +11,7 @@
         .footer { position: fixed; bottom: -90px; left: 0; right: 0; }
         .header img, .footer img { width: 100%; display: block; }
 
-        .content { padding: 20px 50px 0 50px; }
+        .content { padding: 20px 50px 10px 50px; }
         .meta { line-height: 1.4; }
         .section-title { font-weight: bold; font-size: 11px; margin: 28px 0 10px 0; }
 
@@ -40,7 +40,7 @@
         table.summary tr.total td.val { background: #000; color: #fff; font-weight: bold; }
         table.summary tr.total td.lbl { border-bottom: none; }
 
-        .notes { margin-top: 18px; line-height: 1.5; }
+        .notes { margin-top: 12px; line-height: 1.5; }
 
         /* ==== Tambahan untuk Lampiran 2 ==== */
         .page-break { page-break-before: always; }
@@ -61,7 +61,7 @@
 
         .closing { margin-top: 18px; line-height: 1.5; }
 
-        .ttd { margin-top: 24px; }
+        .ttd { margin-top: 12px; page-break-inside: avoid; }
         .ttd img.signature { height: 70px; margin: 6px 0; display: block; }
         .ttd .signer-name { font-weight: bold; text-decoration: underline; }
     </style>
@@ -129,10 +129,9 @@
         <thead>
             <tr>
                 <th style="width:50%">Nama Produk</th>
-                <th style="width:9%">Periode</th>
-                <th style="width:10%">Qty</th>
-                <th style="width:11%">Harga</th>
-                <th style="width:20%">Jumlah</th>
+                <th style="width:9%">Qty</th>
+                <th style="width:20%">Harga</th>
+                <th style="width:21%">Jumlah</th>
             </tr>
         </thead>
         <tbody>
@@ -155,7 +154,6 @@
                             </div>
                         @endif
                     </td>
-                    <td class="text-center">{{ $item->billing_period_label }}</td>
                     <td class="text-center">{{ rtrim(rtrim(number_format($item->volume, 5, '.', ''), '0'), '.') }}</td>
                     <td class="text-right">{{ $rp($item->price) }}</td>
                     <td class="text-right">{{ $rp($item->total) }}</td>
@@ -163,7 +161,7 @@
             @endforeach
 
             @for($i = $offer->items->count(); $i < 4; $i++)
-                <tr class="empty-row"><td colspan="5">&nbsp;</td></tr>
+                <tr class="empty-row"><td colspan="4">&nbsp;</td></tr>
             @endfor
         </tbody>
     </table>
@@ -205,7 +203,12 @@
             <td class="val text-right">{{ $rp($rounded) }}</td>
         </tr>
     </table>
-
+        @if($offer->notes)
+            <div>
+                <h5 class="fw-bold">Keterangan</h5>
+                <div class="notes">{{ $offer->notes }}</div>
+            </div>
+        @endif
 </div>
 
 {{-- ======================= LAMPIRAN 2 ======================= --}}
@@ -253,7 +256,7 @@
                     </td>
 
                     <td class="text-center">
-                        {{ $payment->percentage }}%
+                        {{ number_format($payment->percentage, 2) }}%
                     </td>
                 </tr>
             @empty
