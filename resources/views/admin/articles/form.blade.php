@@ -152,80 +152,63 @@
                                           class="form-control">{{ old('meta_description', $article->meta_description) }}</textarea>
                             </div>
 
-                            {{-- <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Canonical URL <span class="text-muted">(opsional)</span></label>
-                                    <input type="url" name="canonical_url" class="form-control"
-                                           value="{{ old('canonical_url', $article->canonical_url) }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Gambar share / OG image <span class="text-muted">(opsional)</span></label>
-                                    <input type="file" name="og_image" accept="image/*" class="form-control">
-                                </div>
-                            </div>
-
-                            <label class="form-check mb-4">
-                                <input type="checkbox" name="noindex" value="1" class="form-check-input"
-                                       @checked(old('noindex', $article->noindex))>
-                                <span class="form-check-label">Jangan diindex Google (noindex)</span>
-                            </label> --}}
                             @php
-    $advancedOpen = old('canonical_url', $article->canonical_url)
-        || $article->og_image
-        || old('noindex', $article->noindex)
-        || $errors->has('canonical_url')
-        || $errors->has('og_image');
-@endphp
+                                $advancedOpen = old('canonical_url', $article->canonical_url)
+                                    || $article->og_image
+                                    || old('noindex', $article->noindex)
+                                    || $errors->has('canonical_url')
+                                    || $errors->has('og_image');
+                            @endphp
 
-<details class="border rounded-3 mb-4" @if($advancedOpen) open @endif>
-    <summary class="px-3 py-2 fw-semibold" style="cursor:pointer">
-        Pengaturan lanjutan <span class="text-muted fw-normal">(opsional, boleh dilewati)</span>
-    </summary>
+                            <details class="border rounded-3 mb-4" @if($advancedOpen) open @endif>
+                                <summary class="px-3 py-2 fw-semibold" style="cursor:pointer">
+                                    Pengaturan lanjutan <span class="text-muted fw-normal">(opsional, boleh dilewati)</span>
+                                </summary>
 
-    <div class="p-3 border-top">
+                                <div class="p-3 border-top">
 
-        {{-- Gambar share --}}
-        <div class="mb-4">
-            <label class="form-label">Gambar share</label>
-            <input type="file" name="og_image" accept="image/*" class="form-control">
-            <div class="text-muted small mt-1">
-                Gambar yang muncul saat link artikel dibagikan ke WhatsApp atau Facebook.
-                Kosongkan saja untuk memakai gambar utama artikel.
-            </div>
-            @if($article->og_image)
-                <div class="small mt-2">
-                    Gambar share saat ini:
-                    <img src="{{ asset('storage/'.$article->og_image) }}" alt="" height="40" class="rounded ms-1">
-                </div>
-            @endif
-        </div>
+                                    {{-- Gambar share --}}
+                                    <div class="mb-4">
+                                        <label class="form-label">Gambar share</label>
+                                        <input type="file" name="og_image" accept="image/*" class="form-control">
+                                        <div class="text-muted small mt-1">
+                                            Gambar yang muncul saat link artikel dibagikan ke WhatsApp atau Facebook.
+                                            Kosongkan saja untuk memakai gambar utama artikel.
+                                        </div>
+                                        @if($article->og_image)
+                                            <div class="small mt-2">
+                                                Gambar share saat ini:
+                                                <img src="{{ asset('storage/'.$article->og_image) }}" alt="" height="40" class="rounded ms-1">
+                                            </div>
+                                        @endif
+                                    </div>
 
-        {{-- Canonical URL --}}
-        <div class="mb-4">
-            <label class="form-label">Canonical URL</label>
-            <input type="text" name="canonical_url" class="form-control" placeholder="https://…"
-                   value="{{ old('canonical_url', $article->canonical_url) }}">
-            <div class="text-muted small mt-1">
-                Kosongkan, kecuali artikel ini salinan dari tulisan lain dan kamu ingin Google
-                menganggap alamat aslinya sebagai yang utama. Kalau diisi salah, artikel ini bisa
-                hilang dari hasil pencarian.
-            </div>
-        </div>
+                                    {{-- Canonical URL --}}
+                                    <div class="mb-4">
+                                        <label class="form-label">Canonical URL</label>
+                                        <input type="text" name="canonical_url" class="form-control" placeholder="https://…"
+                                            value="{{ old('canonical_url', $article->canonical_url) }}">
+                                        <div class="text-muted small mt-1">
+                                            Kosongkan, kecuali artikel ini salinan dari tulisan lain dan kamu ingin Google
+                                            menganggap alamat aslinya sebagai yang utama. Kalau diisi salah, artikel ini bisa
+                                            hilang dari hasil pencarian.
+                                        </div>
+                                    </div>
 
-        {{-- Noindex --}}
-        <div>
-            <label class="form-check mb-0">
-                <input type="checkbox" name="noindex" value="1" class="form-check-input"
-                       @checked(old('noindex', $article->noindex))>
-                <span class="form-check-label">Jangan tampilkan di Google (noindex)</span>
-            </label>
-            <div class="text-muted small ms-4">
-                Centang kalau halaman ini tidak boleh muncul di hasil pencarian Google.
-                Artikel tetap bisa dibuka lewat link-nya.
-            </div>
-        </div>
-    </div>
-</details>
+                                    {{-- Noindex --}}
+                                    <div>
+                                        <label class="form-check mb-0">
+                                            <input type="checkbox" name="noindex" value="1" class="form-check-input"
+                                                @checked(old('noindex', $article->noindex))>
+                                            <span class="form-check-label">Jangan tampilkan di Google (noindex)</span>
+                                        </label>
+                                        <div class="text-muted small ms-4">
+                                            Centang kalau halaman ini tidak boleh muncul di hasil pencarian Google.
+                                            Artikel tetap bisa dibuka lewat link-nya.
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
                             <div class="form-label">Preview</div>
                             <div class="btn-group btn-group-sm mb-2" id="pv-tabs" role="group">
                                 <button type="button" class="btn btn-outline-secondary active" data-pv="desktop">Google (desktop)</button>
@@ -346,12 +329,34 @@
                         </div>
                     </div>
 
+                    @php
+                        $popularTags = \App\Models\Tag::has('articles')
+                            ->withCount('articles')
+                            ->orderByDesc('articles_count')
+                            ->orderBy('name')
+                            ->limit(20)
+                            ->get();
+                    @endphp
+
                     <div class="card mb-3">
                         <div class="card-header"><h3 class="card-title">Tag</h3></div>
                         <div class="card-body">
-                            <input type="text" name="tags" class="form-control"
-                                   placeholder="pisahkan dengan koma"
-                                   value="{{ old('tags', $article->tags->pluck('name')->implode(', ')) }}">
+                            <input type="text" id="tags" name="tags" class="form-control"
+                                placeholder="pisahkan dengan koma"
+                                value="{{ old('tags', $article->tags->pluck('name')->implode(', ')) }}">
+
+                            @if($popularTags->isNotEmpty())
+                                <div class="mt-3">
+                                    <div class="small fw-semibold mb-2">Tag yang sering dipakai</div>
+                                    <div id="tag-popular" class="d-flex flex-wrap gap-1">
+                                        @foreach($popularTags as $t)
+                                            <button type="button" class="btn btn-sm btn-outline-secondary tag-chip"
+                                                    data-name="{{ $t->name }}"
+                                                    title="{{ $t->articles_count }} artikel">{{ $t->name }}</button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -555,7 +560,30 @@ function renderSection(title, data) {
     }
     return html + '</div>';
 }
+// ---------- Tag (Paling sering dipakai) ----------
+const tagsInput = $('tags');
+const parseTags = () => tagsInput.value.split(',').map(s => s.trim()).filter(Boolean);
 
+function syncTagChips() {
+    const current = parseTags().map(t => t.toLowerCase());
+    document.querySelectorAll('.tag-chip').forEach(b => {
+        const on = current.includes(b.dataset.name.toLowerCase());
+        b.classList.toggle('btn-primary', on);
+        b.classList.toggle('btn-outline-secondary', !on);
+    });
+}
+
+document.querySelectorAll('.tag-chip').forEach(b => b.addEventListener('click', () => {
+    const name = b.dataset.name;
+    const list = parseTags();
+    const i = list.findIndex(t => t.toLowerCase() === name.toLowerCase());
+    if (i >= 0) list.splice(i, 1); else list.push(name);
+    tagsInput.value = list.join(', ');
+    syncTagChips();
+}));
+
+tagsInput.addEventListener('input', syncTagChips);
+syncTagChips();
 // ---------- Kategori ----------
 const CAT_URL  = @json(route('categories.store'));
 const catList  = $('cat-list');

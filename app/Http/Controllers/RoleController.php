@@ -61,7 +61,7 @@ class RoleController extends Controller
             'name' => [
                 'required',
                 'string',
-                Rule::unique('roles', 'name')->where('guard_name', 'web'),
+                Rule::unique('roles', 'name')->where('guard_name', 'sistem_b'),
             ],
             'role_group' => 'required|in:Internal,Eksternal',
             'external_model' => 'nullable|string'
@@ -101,7 +101,7 @@ class RoleController extends Controller
                 'required',
                 'string',
                 Rule::unique('roles', 'name')
-                    ->where('guard_name', 'web')
+                    ->where('guard_name', 'sistem_b')
                     ->ignore($role->id),
             ],
             'role_group' => 'required|in:Internal,Eksternal',

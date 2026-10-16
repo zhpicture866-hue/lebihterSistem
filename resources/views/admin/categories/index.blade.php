@@ -33,6 +33,15 @@
                             <small class="text-muted">Nama yang tampil di situs.</small>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Induk kategori</label>
+                            <select name="parent_id" class="form-select">
+                                <option value="">— Tanpa induk —</option>
+                                @foreach(\App\Models\Category::flatTree() as $c)
+                                    <option value="{{ $c->id }}">{{ str_repeat('— ', $c->depth) }}{{ $c->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Slug</label>
                             <input type="text" name="slug" value="{{ old('slug') }}"
                                    class="form-control @error('slug') is-invalid @enderror">
@@ -63,7 +72,7 @@
                                 <option value="delete">Hapus</option>
                             </select>
                             <button class="btn btn-outline-secondary">Apply</button>
-                            <span class="ms-auto text-muted">{{ $cats->total() }} kategori</span>
+                            <span class="ms-auto text-muted">{{ $cats->count() }} kategori</span>
                         </div>
 
                         <div class="table-responsive">
@@ -81,7 +90,10 @@
                                     <tr>
                                         <td><input type="checkbox" name="ids[]" value="{{ $t->id }}" class="row-check"></td>
                                         <td style="white-space:normal;word-break:break-word">
-                                            <strong><a href="{{ route('categories.edit', $t) }}">{{ $t->name }}</a></strong>
+                                            <strong>
+                                                @if($t->depth)<span class="text-muted">{{ str_repeat('— ', $t->depth) }}</span>@endif
+                                                <a href="{{ route('categories.edit', $t) }}">{{ $t->name }}</a>
+                                            </strong>
                                             <div class="small">
                                                 <a href="{{ route('categories.edit', $t) }}">Edit</a> |
                                                 <a href="#" class="text-danger"
@@ -101,8 +113,6 @@
                             </table>
                         </div>
                     </form>
-
-                    {{ $cats->links() }}
                 </div></div>
             </div>
         </div>
@@ -163,45 +173,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const tbody = table.querySelector('tbody');
-            const emptyRow = tbody.querySelector('td[colspan]');
-
-            if (emptyRow) {
-                tbody.innerHTML = '';
-            }
-
-            const row = document.createElement('tr');
-
-            const checkboxCell = document.createElement('td');
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.name = 'ids[]';
-            checkbox.value = data.id;
-            checkbox.className = 'row-check';
-            checkboxCell.appendChild(checkbox);
-
-            const nameCell = document.createElement('td');
-            const strong = document.createElement('strong');
-            const editLink = document.createElement('a');
-
-            editLink.href = `/categories/${data.id}/edit`;
-            editLink.textContent = data.name;
-            strong.appendChild(editLink);
-            nameCell.appendChild(strong);
-
-            const slugCell = document.createElement('td');
-            slugCell.textContent = data.slug || '';
-
-            const countCell = document.createElement('td');
-            countCell.textContent = '0';
-
-            row.append(checkboxCell, nameCell, slugCell, countCell);
-            tbody.prepend(row);
-
-            form.reset();
-
-            alert('Kategori berhasil ditambahkan.');
-
+            location.reload();
+            return;
         } catch (error) {
             alert(error.message);
         } finally {
