@@ -6,10 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\Role;
 use App\Models\Permission;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
 class PermissionController extends Controller
 {
+    private const GUARD = 'sistem_b';
 public function index(Request $request)
 {
     if ($request->ajax()) {
@@ -55,24 +57,28 @@ public function create()
 }
 
 public function store(Request $request)
-{
-    $request->validate([
-        'name' => 'required|unique:permissions,name',
-        'guard_name' => 'required',
-        'modules' => 'nullable'
-    ]);
+    {
+        $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('permissions', 'name')->where('guard_name', self::GUARD),
+            ],
+            'modules' => 'nullable',
+        ]);
 
-    Permission::create([
-        'id' => Str::uuid(),
-        'name' => $request->name,
-        'guard_name' => 'web',
-        'modules' => $request->modules,
-    ]);
+        Permission::create([
+            'id'         => Str::uuid(),
+            'name'       => $request->name,
+            'guard_name' => self::GUARD,
+            'modules'    => $request->modules,
+        ]);
 
-    return redirect()
-        ->route('permissions.index')
-        ->with('success','Permission berhasil ditambahkan.');
-}
+        return redirect()
+            ->route('permissions.index')
+            ->with('success', 'Permission berhasil ditambahkan.');
+    }
 
 
 public function edit(Permission $permission)
@@ -80,24 +86,29 @@ public function edit(Permission $permission)
     return view('permissions.edit', compact('permission'));
 }
 
-public function update(Request $request, Permission $permission)
-{
-    $request->validate([
-        'name' => 'required|unique:permissions,name,'.$permission->id,
-        'guard_name' => 'required',
-        'modules' => 'nullable'
-    ]);
+    public function update(Request $request, Permission $permission)
+    {
+        $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('permissions', 'name')
+                    ->where('guard_name', self::GUARD)
+                    ->ignore($permission->id),
+            ],
+            'modules' => 'nullable',
+        ]);
 
-    $permission->update([
-        'name' => $request->name,
-        'guard_name' => 'web',
-        'modules' => $request->modules,
-    ]);
+        $permission->update([
+            'name'    => $request->name,
+            'modules' => $request->modules,
+        ]);
 
-    return redirect()
-        ->route('permissions.index')
-        ->with('success','Permission berhasil diubah.');
-}
+        return redirect()
+            ->route('permissions.index')
+            ->with('success', 'Permission berhasil diubah.');
+    }
     public function destroy(Permission $permission) 
     {
     
