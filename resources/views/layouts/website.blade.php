@@ -7,8 +7,8 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Lebih Tersistem</title>
-    <!-- sesuaikan dengan brand guidelines -->
+    {!! SEO::generate() !!}
+    <meta name="google-site-verification" content="-ZkQP48WrQjJvIk7GEI6Z8IGCwqBB1oxmNXdLIJ1AOE" />
     <link rel="icon" type="image/x-icon" href="{{ asset('apple-touch-icon.png') }}">
 
     <!-- Bootstrap -->
