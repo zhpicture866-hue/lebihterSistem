@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\Permission;
 use App\Models\Menu;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Validation\Rule;
 
 class RoleController extends Controller
 {
@@ -57,7 +58,11 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|unique:roles,name',
+            'name' => [
+                'required',
+                'string',
+                Rule::unique('roles', 'name')->where('guard_name', 'web'),
+            ],
             'role_group' => 'required|in:Internal,Eksternal',
             'external_model' => 'nullable|string'
         ]);
@@ -92,7 +97,13 @@ class RoleController extends Controller
     public function update(Request $request, Role $role)
     {
         $request->validate([
-            'name' => 'required|string|unique:roles,name,' . $role->id,
+            'name' => [
+                'required',
+                'string',
+                Rule::unique('roles', 'name')
+                    ->where('guard_name', 'web')
+                    ->ignore($role->id),
+            ],
             'role_group' => 'required|in:Internal,Eksternal',
             'external_model' => 'nullable|string'
         ]);

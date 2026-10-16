@@ -1096,7 +1096,117 @@ input[type=number]::-webkit-outer-spin-button {
         border-color: #9ca3af;
         box-shadow: 0 0 0 .15rem rgba(0,0,0,.05);
     }
+.wp-article-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
 
+.wp-toolbar-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.wp-toolbar-filters select {
+    width: auto;
+    min-width: 0;
+    height: 36px;
+    font-size: 13px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.wp-toolbar-filters select[name="month"] {
+    width: 155px;
+}
+
+.wp-toolbar-filters select[name="category"] {
+    width: 205px;
+}
+
+.wp-toolbar-filters select[name="seo"] {
+    width: 160px;
+}
+
+.wp-toolbar-filters select[name="readability"] {
+    width: 195px;
+}
+
+.wp-toolbar-filters .btn,
+.wp-toolbar-search .btn {
+    height: 36px;
+    padding: 6px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.wp-toolbar-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 300px;
+}
+
+.wp-toolbar-search .form-control {
+    min-width: 0;
+    height: 36px;
+    font-size: 13px;
+}
+
+.wp-toolbar-search .btn-dark {
+    background: #000;
+    border-color: #000;
+}
+
+.wp-toolbar-search .btn-primary:hover {
+    background: #c4c4c4;
+    border-color: #c4c4c4;
+}
+
+.article-title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+    max-width: 600px;
+}
+
+/* Area judul memiliki lebar yang konsisten */
+.table td.article-title-cell {
+    min-width: 260px;
+    max-width: 600px;
+    white-space: normal;
+    vertical-align: middle;
+}
+/* Tablet */
+@media (max-width: 1199.98px) {
+    .wp-article-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .wp-toolbar-filters {
+        flex-basis: 100%;
+    }
+
+    .wp-toolbar-search {
+        flex-basis: 100%;
+        justify-content: flex-end;
+    }
+
+    .wp-toolbar-search .form-control {
+        flex: 0 1 280px;
+    }
+}
     .jurnal-table-wrapper {
     width: 100%;
     max-width: 100%;

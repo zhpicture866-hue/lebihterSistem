@@ -20,7 +20,7 @@
     <!-- Tabler Icons -->
     <link rel="stylesheet" href="{{ asset('fonts/tabler-icons.css') }}">
 
-    <!-- CSS tambahan -->
+    @include('partials.footer-css')
     @stack('styles')
 </head>
 
