@@ -43,7 +43,7 @@ class LayananController extends Controller
 
         // Nomor WhatsApp admin ZH Picture (format internasional tanpa +). Ganti sesuai nomor asli.
         $waNumber = config('services.zh.whatsapp');
-        $waText   = urlencode('Halo ZH Picture, saya tertarik dengan layanan ' . $layanan->name . '.');
+        $waText   = urlencode('Halo Lebih Tersistem, saya tertarik dengan layanan ' . $layanan->name . '.');
         $waUrl    = "https://wa.me/{$waNumber}?text={$waText}";
 
         return view('layanan.show', compact('layanan', 'lainnya', 'projects', 'waUrl'));

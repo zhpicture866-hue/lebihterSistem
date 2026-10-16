@@ -616,7 +616,7 @@ a.service-card:hover{ transform:translateY(-6px); box-shadow:0 16px 36px rgba(0,
         @foreach ($projectTypes as $t)
             @php $txt = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string) $t->description))), 130); @endphp
             <{{ $svcShowName ? 'a' : 'div' }} @if ($svcShowName) href="{{ route($svcShowName, $t->code) }}" @endif class="service-card">
-                <div class="service-card-icon"><i class="ti ti-camera"></i></div>
+                <div class="service-card-icon"><i class="ti {{ $t->icon }}"></i></div>
                 <h3 class="service-card-title">{{ $t->name }}</h3>
                 @if ($txt)<p class="service-card-text">{{ $txt }}</p>@endif
                 @if ($svcShowName)<span class="service-card-cta">Lihat Detail <i class="ti ti-arrow-right"></i></span>@endif

@@ -107,7 +107,7 @@
                 <img src="{{ asset('storage/' . $img) }}" alt="{{ $layanan->name }}" fetchpriority="high">
             @endif
             <div class="svc-hero-body">
-                <div class="svc-hero-icon"><i class="ti ti-camera"></i></div>
+                <div class="svc-hero-icon"><i class="ti {{ $layanan->icon }}"></i></div>
                 <h1>{{ $layanan->name }}</h1>
             </div>
         </section>
