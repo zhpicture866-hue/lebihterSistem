@@ -189,7 +189,7 @@ Route::middleware(['auth', 'permission:lihat akun-akuntansi'])
          ->parameters(['accounting' => 'account']);
 
 
-Route::get('/journals/{journal}/print', [AccountingJournalController::class, 'print'])
+Route::get('/journals/{journal}/print/{filename?}', [AccountingJournalController::class, 'print'])
     ->name('journals.print');
 
 
@@ -200,14 +200,17 @@ Route::get('/journals/report', [AccountingJournalController::class, 'report'])
 Route::get('/journals/general', [AccountingJournalController::class, 'generalJournal'])
     ->name('journals.general')
     ->middleware(['auth', 'permission:lihat jurnal umum']);
-Route::get('/journals/export/pdf', [AccountingJournalController::class, 'exportPDF'])->name('journals.export.pdf');
+Route::get('/journals/export/pdf/{filename?}', [AccountingJournalController::class, 'exportPDF'])
+    ->middleware(['auth', 'permission:lihat jurnal umum'])
+    ->name('journals.export.pdf');
 
 Route::get('/journals/ledger', [AccountingJournalController::class, 'ledger'])
     ->name('journals.ledger')
     ->middleware(['auth', 'permission:lihat buku besar']);
-Route::get('/journals/ledgerpdf', [AccountingJournalController::class, 'exportLedgerPdf'])->name('ledgerpdf');
-
-Route::get('/journals/export/trial-pdf', [AccountingJournalController::class, 'exportTrial'])
+Route::get('/journals/ledgerpdf/{filename?}', [AccountingJournalController::class, 'exportLedgerPdf'])
+    ->name('ledgerpdf')
+    ->middleware(['auth', 'permission:lihat buku besar']);
+Route::get('/journals/export/trial-pdf/{filename?}', [AccountingJournalController::class, 'exportTrial'])
     ->name('journals.trial.pdf');
 
 Route::get('/journals/income/pdf', [AccountingJournalController::class, 'exportIncome'])
@@ -225,7 +228,7 @@ Route::get('/reports/balance_sheet', [AccountingJournalController::class, 'balan
 Route::get('/reports/income-statement', [AccountingReportController::class, 'incomeStatement'])
     ->name('reports.income_statement')
     ->middleware(['auth', 'permission:lihat laba rugi']);
-Route::get('/reports/income-statement/pdf', [AccountingReportController::class, 'exportPdf'])
+Route::get('/reports/income-statement/pdf/{filename?}', [AccountingReportController::class, 'exportPdf'])
     ->name('reports.income_statement.pdf');
 
 Route::get('/reports/income-statement/excel', [AccountingReportController::class, 'exportExcel'])
