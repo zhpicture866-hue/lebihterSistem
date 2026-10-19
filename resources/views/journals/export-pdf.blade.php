@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Antosa Architect</title>
+    <title>Lebih Tersistem</title>
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;

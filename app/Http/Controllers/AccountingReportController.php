@@ -122,11 +122,27 @@ public function incomeStatement(Request $request)
     ));
 }
 
-public function exportPdf(Request $request)
+public function exportPdf(Request $request, ?string $filename = null)
 {
     $startDate = $request->start_date ?? now()->startOfMonth()->toDateString();
     $endDate   = $request->end_date ?? now()->endOfMonth()->toDateString();
     $activeLicenseId = $request->license_id ?? session('active_license_id');
+
+    $clean = fn ($value) => trim(
+        preg_replace('/[\\\\\/:*?"<>|\x00-\x1F]+/', '-', (string) $value)
+    );
+
+    $newFilename = 'Lebih Tersistem - '
+        . $clean($startDate) . ' to ' . $clean($endDate)
+        . ' - Laba Rugi.pdf';
+
+    // Arahkan ke URL yang berakhir dengan nama file, query string ikut dibawa
+    if ($filename === null) {
+        return redirect()->route('reports.income_statement.pdf', array_merge(
+            ['filename' => $newFilename],
+            $request->query()
+        ));
+    }
 
     $query = DB::table('lebihtersistem.accounting_accounts as accounts')
         ->select(
@@ -156,20 +172,11 @@ public function exportPdf(Request $request)
             '=',
             'details.journal_id'
         )
-        ->whereIn('accounts.category', [
-            'PENDAPATAN',
-            'BEBAN'
-        ])
-        ->whereBetween(
-            'journals.transaction_date',
-            [$startDate, $endDate]
-        );
+        ->whereIn('accounts.category', ['PENDAPATAN', 'BEBAN'])
+        ->whereBetween('journals.transaction_date', [$startDate, $endDate]);
 
     if ($activeLicenseId) {
-        $query->where(
-            'accounts.license_id',
-            $activeLicenseId
-        );
+        $query->where('accounts.license_id', $activeLicenseId);
     }
 
     $accounts = $query
@@ -179,37 +186,22 @@ public function exportPdf(Request $request)
             'accounts.category',
             'accounts.sub_category'
         )
-        ->orderBy(
-            'accounts.account_code',
-            'asc'
-        )
+        ->orderBy('accounts.account_code', 'asc')
         ->get();
 
-    $totalIncome = $accounts
-        ->where('category', 'PENDAPATAN')
-        ->sum('balance');
+    $totalIncome  = $accounts->where('category', 'PENDAPATAN')->sum('balance');
+    $totalExpense = $accounts->where('category', 'BEBAN')->sum('balance');
+    $netIncome    = $totalIncome - $totalExpense;
 
-    $totalExpense = $accounts
-        ->where('category', 'BEBAN')
-        ->sum('balance');
-
-    $netIncome = $totalIncome - $totalExpense;
-
-    $pdf = Pdf::loadView(
-        'reports.income_statement_pdf',
-        [
-            'accounts'      => $accounts,
-            'startDate'     => $startDate,
-            'endDate'       => $endDate,
-            'totalIncome'   => $totalIncome,
-            'totalExpense'  => $totalExpense,
-            'netIncome'     => $netIncome,
-        ]
-    )->setPaper('a4', 'portrait');
-
-    return $pdf->stream(
-        "Laporan_Laba_Rugi_{$startDate}_sd_{$endDate}.pdf"
-    );
+    return Pdf::loadView('reports.income_statement_pdf', [
+        'accounts'     => $accounts,
+        'startDate'    => $startDate,
+        'endDate'      => $endDate,
+        'totalIncome'  => $totalIncome,
+        'totalExpense' => $totalExpense,
+        'netIncome'    => $netIncome,
+    ])->setPaper('a4', 'portrait')
+      ->stream($newFilename);
 }
 
 public function exportExcel(Request $request)

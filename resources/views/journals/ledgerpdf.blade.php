@@ -49,7 +49,7 @@
 
 <body>
     <div class="header">
-        <h2 style="text-align:center;">Antosa Architect</h2>
+        <h2 style="text-align:center;">Lebih Tersistem</h2>
         <p>Periode: {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}</p>
     </div>
 
