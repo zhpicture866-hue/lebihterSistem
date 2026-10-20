@@ -154,7 +154,21 @@
                             </div>
                         @endif
                     </td>
-                    <td class="text-center">{{ rtrim(rtrim(number_format($item->volume, 5, '.', ''), '0'), '.') }}</td>
+                    @php
+                        $periodLabel = [
+                            'monthly'  => 'bulan',
+                            'annual'   => 'tahun',
+                            'one_time' => null,
+                        ][$item->billing_period] ?? null;
+                    @endphp
+                    <td class="text-center">
+                        {{ rtrim(rtrim(number_format($item->volume, 5, '.', ''), '0'), '.') }}
+                        @if($periodLabel)
+                            {{ $periodLabel }}
+                        @elseif($item->billing_period === 'one_time')
+                            <br><span style="font-size:8px">(sekali bayar)</span>
+                        @endif
+                    </td>
                     <td class="text-right">{{ $rp($item->price) }}</td>
                     <td class="text-right">{{ $rp($item->total) }}</td>
                 </tr>

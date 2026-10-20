@@ -14,7 +14,7 @@
 
     <input type="hidden" name="project_id" value="{{ $project->id }}">
 
-    <h4 class="fw-bold mb-3">Informasi Pembuatan Rab</h4>
+    <h4 class="fw-bold mb-3">Informasi Pembuatan Penawaran</h4>
 
     <div class="row g-3">
         <div class="col-md-4">
@@ -269,6 +269,7 @@
                                     class="form-select">
                                 <option value="monthly">Bulanan (Monthly)</option>
                                 <option value="annual">Tahunan (Annual)</option>
+                                <option value="one_time">Sekali Bayar (One-time)</option>
                             </select>
 
                         </div>
@@ -358,7 +359,7 @@
         $initialItems['job_' . ($i + 1)] = [
             'id'             => $row['id'] ?? null,
             'description'    => $row['description'] ?? '',
-            'billing_period' => in_array($period, ['monthly', 'annual'], true) ? $period : 'monthly',
+            'billing_period' => in_array($period, ['monthly', 'annual', 'one_time'], true) ? $period : 'monthly',
             'volume'         => (float) ($row['volume'] ?? 0),
             'base_price'     => $basePrice,
             'harga'          => (float) ($row['price'] ?? $basePrice),
@@ -371,8 +372,9 @@
     window.currentRabId = "{{ $rab->id ?? '' }}";
 
     const BILLING_PERIODS = {
-        monthly: { label: 'Bulanan', unit: 'bulan' },
-        annual:  { label: 'Tahunan', unit: 'tahun' }
+        monthly:  { label: 'Bulanan',      unit: 'bulan' },
+        annual:   { label: 'Tahunan',      unit: 'tahun' },
+        one_time: { label: 'Sekali Bayar', unit: null }
     };
 
     // Object (bukan array): key = id baris DOM, mis. "job_1"
@@ -436,8 +438,9 @@
         const qtyHint = document.getElementById('rab_item_qty_hint_edit');
         const priceHint = document.getElementById('rab_item_price_hint_edit');
 
-        if (qtyHint) qtyHint.textContent = `(jumlah ${unit})`;
-        if (priceHint) priceHint.textContent = `(per ${unit})`;
+        // unit null = sekali bayar (bukan langganan)
+        if (qtyHint) qtyHint.textContent = unit ? `(jumlah ${unit})` : '(jumlah paket/unit)';
+        if (priceHint) priceHint.textContent = unit ? `(per ${unit})` : '(sekali bayar)';
     }
 
     // =========================
@@ -635,6 +638,7 @@
                         onchange="updateEditItemBillingPeriod('${jobId}', this.value)">
                     <option value="monthly" ${period === 'monthly' ? 'selected' : ''}>Bulanan</option>
                     <option value="annual" ${period === 'annual' ? 'selected' : ''}>Tahunan</option>
+                    <option value="one_time" ${period === 'one_time' ? 'selected' : ''}>Sekali Bayar</option>
                 </select>
             </td>
 

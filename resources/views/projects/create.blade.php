@@ -94,7 +94,7 @@
                             'action'  => '<button type="submit" form="rabForm" class="btn btn-dark" title="Simpan RAB">
                                             <i class="ti ti-device-floppy me-1"></i>
                                         </button>',
-                            'updateText' => 'Simpan Perubahan RAB',
+                            'updateText' => 'Simpan Perubahan Data',
                         ],
                         'Setting Termin' => [
                             'create'  => 'projects.steps.build-termin',
