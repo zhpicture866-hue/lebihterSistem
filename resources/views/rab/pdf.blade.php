@@ -321,7 +321,7 @@
 
     <div class="ttd">
         Hormat kami,<br>
-        ZH Picture<br>
+        lebihtersistem<br>
 
         <img class="signature" src="{{ public_path('images/ttd-lebihtersistem.png') }}">
 

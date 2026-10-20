@@ -125,6 +125,16 @@
                     // { data: 'project_status', name: 'project_status' },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ],
+                columnDefs: [
+                    {
+                        targets: 6, // Lokasi
+                        render: function (data, type) {
+                            if (type !== 'display' || !data) return data;
+                            const safe = $('<div>').text(data).html(); // escape HTML
+                            return `<span class="cell-ellipsis" style="max-width:300px" title="${safe}">${safe}</span>`;
+                        }
+                    }
+                ],
                 language: {
                     search: "",
                     searchPlaceholder: "Cari proyek...",

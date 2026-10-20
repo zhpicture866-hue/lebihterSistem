@@ -35,6 +35,14 @@ header.navbar .d-flex {
     justify-content:flex-end;
     align-items:center;
 }
+.cell-ellipsis {
+    display: inline-block;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
 @media (max-width: 1200px){
 
     .mobile-header{
