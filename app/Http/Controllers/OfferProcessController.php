@@ -104,7 +104,7 @@ private function validateOffer(Request $request, bool $isUpdate = false): array
 
         'items'                  => ['required', 'array', 'min:1'],
         'items.*.description'    => ['nullable', 'string'],
-        'items.*.billing_period' => ['required', 'in:monthly,annual'],
+        'items.*.billing_period' => ['required', 'in:monthly,annual,one_time'],
         'items.*.volume'         => ['required', 'numeric', 'gt:0'],
         'items.*.base_price'     => ['required', 'numeric', 'min:0'],
     ];

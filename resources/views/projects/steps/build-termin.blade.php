@@ -52,7 +52,7 @@
 
                     @if ($suggestedAmount)
                         <div class="text-muted small mt-1">
-                            Harga untuk 1 periode ({{ $defaultPeriod === 'annual' ? 'tahunan' : 'bulanan' }}):
+                            Harga untuk {{ $defaultPeriod === 'one_time' ? 'sekali bayar' : '1 periode (' . ($defaultPeriod === 'annual' ? 'tahunan' : 'bulanan') . ')' }}:
                             <strong>Rp {{ number_format($suggestedAmount, 0, ',', '.') }}</strong>
                             (belum termasuk diskon dan pajak)
                         </div>
@@ -120,7 +120,7 @@
 
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">
-                        Periode Berlangganan <span class="text-danger">*</span>
+                        Jenis Pembayaran / Periode <span class="text-danger">*</span>
                     </label>
 
                     <select name="billing_period" class="form-select" required>
@@ -129,6 +129,9 @@
                         </option>
                         <option value="annual" {{ old('billing_period', $defaultPeriod) === 'annual' ? 'selected' : '' }}>
                             Tahunan (Annual)
+                        </option>
+                        <option value="one_time" {{ old('billing_period', $defaultPeriod) === 'one_time' ? 'selected' : '' }}>
+                            Sekali Bayar (One-time)
                         </option>
                     </select>
                 </div>

@@ -46,7 +46,7 @@ class TerminSubscriptionController extends Controller
 
         $data = $request->validate([
             'amount'             => ['required', 'integer', 'min:1'],
-            'billing_period'     => ['required', 'in:monthly,annual'],
+            'billing_period'     => ['required', 'in:monthly,annual,one_time'],
             'billing_date'       => ['required', 'date'],
             'termin_description' => ['nullable', 'string', 'max:255'],
         ], [
@@ -77,7 +77,10 @@ class TerminSubscriptionController extends Controller
 
                 $start = Carbon::parse($data['billing_date'])->startOfDay();
 
-                [$periodStart, $periodEnd] = BuildTermin::periodFor($start, $data['billing_period'], 1);
+                // Sekali bayar: tidak ada masa layanan berulang
+                [$periodStart, $periodEnd] = $data['billing_period'] === 'one_time'
+                    ? [$start, null]
+                    : BuildTermin::periodFor($start, $data['billing_period'], 1);
 
                 BuildTermin::create([
                     'project_id'     => $project->id,
@@ -136,7 +139,7 @@ class TerminSubscriptionController extends Controller
             'termin_no'          => ['required', 'integer', 'min:1'],
             'amount'             => ['required', 'integer', 'min:1'],
             'termin_description' => ['nullable', 'string', 'max:255'],
-            'billing_period'     => ['nullable', 'in:monthly,annual'],
+            'billing_period'     => ['nullable', 'in:monthly,annual,one_time'],
             'billing_date'       => ['nullable', 'date'],
         ], [
             'amount.required'   => 'Nominal tagihan wajib diisi.',
@@ -184,7 +187,9 @@ class TerminSubscriptionController extends Controller
                 if ($isOnlyTermin && ! empty($data['billing_period']) && ! empty($data['billing_date'])) {
                     $start = Carbon::parse($data['billing_date'])->startOfDay();
 
-                    [$periodStart, $periodEnd] = BuildTermin::periodFor($start, $data['billing_period'], 1);
+                    [$periodStart, $periodEnd] = $data['billing_period'] === 'one_time'
+                        ? [$start, null]
+                        : BuildTermin::periodFor($start, $data['billing_period'], 1);
 
                     $attributes += [
                         'billing_period' => $data['billing_period'],
@@ -339,6 +344,11 @@ class TerminSubscriptionController extends Controller
     /** Termin hanya boleh diputuskan kalau sudah lunas, belum diputuskan, dan paling akhir. */
     private function assertCanDecide(Project $project, BuildTermin $termin): void
     {
+        // Termin sekali bayar tidak punya pilihan lanjut / stop
+        if ($termin->billing_period === 'one_time') {
+            throw new \DomainException('Termin sekali bayar tidak memiliki pilihan lanjut atau berhenti berlangganan.');
+        }
+
         // Lunas = invoice termin ini sudah di-approve (alur invoice yang sudah ada)
         $invoice = $project->invoicebuilds()->where('termin', $termin->termin_no)->first();
 

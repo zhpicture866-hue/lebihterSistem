@@ -41,6 +41,10 @@ class OfferProcessItem extends Model
 
 public function getBillingPeriodLabelAttribute(): string
 {
-    return $this->billing_period === 'annual' ? 'Tahunan' : 'Bulanan';
+    return match ($this->billing_period) {
+        'annual'   => 'Tahunan',
+        'one_time' => 'Sekali Bayar',
+        default    => 'Bulanan',
+    };
 }
 }

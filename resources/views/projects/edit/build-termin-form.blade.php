@@ -120,7 +120,7 @@
 
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">
-                                Periode Berlangganan <span class="text-danger">*</span>
+                                Jenis Pembayaran / Periode <span class="text-danger">*</span>
                             </label>
 
                             <select name="billing_period" class="form-select" required>
@@ -129,6 +129,9 @@
                                 </option>
                                 <option value="annual" {{ old('billing_period', $latest->billing_period) === 'annual' ? 'selected' : '' }}>
                                     Tahunan (Annual)
+                                </option>
+                                <option value="one_time" {{ old('billing_period', $latest->billing_period) === 'one_time' ? 'selected' : '' }}>
+                                    Sekali Bayar (One-time)
                                 </option>
                             </select>
                         </div>

@@ -3,8 +3,9 @@
 
     $user = auth()->user();
 
+    $canManage  = $user->can('ubah data proyek');
     $isCustomer = $user->id === $project->customer?->user?->id;
-    $canDecide  = $isCustomer;
+    $canDecide  = $canManage || $isCustomer;
 
     // Invoice termin (sama seperti di komponen invoice & bukti pembayaran)
     $invoiceOf = fn ($t) => $project->invoicebuilds->where('termin', $t->termin_no)->first();
@@ -17,6 +18,7 @@
     };
 
     $subscriptionStatus = $project->subscription_status; // not_started | active | stopped
+    $isOneTime = $termins->first()?->billing_period === 'one_time';
     $stoppedTermin = $termins->firstWhere('renewal_decision', 'stopped');
 
     $billedTotal = $termins->sum('amount');
@@ -27,6 +29,10 @@
         'active'      => ['bg-green-lt', 'Berlangganan Aktif'],
         'stopped'     => ['bg-red-lt', 'Berhenti Berlangganan'],
     ][$subscriptionStatus];
+
+    if ($isOneTime) {
+        $statusBadge = ['bg-blue-lt', 'Sekali Bayar'];
+    }
 @endphp
 
 <div id="termin-subscription-root">
@@ -62,7 +68,7 @@
 
         <div class="col-md-3">
             <label class="form-label text-muted">
-                Status Langganan
+                {{ $isOneTime ? "Jenis Pembayaran" : "Status Langganan" }}
             </label>
 
             <div>
@@ -225,7 +231,11 @@
 
                     <td class="text-center">
 
-                        @if(! $paid)
+                        @if($termin->billing_period === 'one_time')
+
+                            <span class="text-muted small">Sekali bayar</span>
+
+                        @elseif(! $paid)
 
                             <span class="text-muted small">
                                 {{ $awaitingApproval ? 'Menunggu persetujuan' : 'Menunggu pembayaran' }}

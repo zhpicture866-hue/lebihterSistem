@@ -16,7 +16,7 @@
 
     <h4 class="fw-bold mb-3">Informasi Pembuatan Rab</h4>
 
-    <div class="row mb-3 rab-form-top">
+    <div class="row g-3">
         <div class="col-md-4">
             <label class="form-label fw-semibold">Nomor Penawaran</label>
             <input type="text" name="offer_number" class="form-control" value="{{ old('offer_number', $rab->offer_number) ?? '' }}" placeholder="Auto Generate" readonly>
@@ -79,16 +79,16 @@
         </div>
         <div class="table-responsive">
 
-            <table class="table table-bordered align-middle" id="editrabItemsTable">
+            <table class="table table-bordered align-middle" id="rabItemsTable">
 
                 <colgroup>
-                    <col style="width: 50px">
-                    <col style="width: 280px">
-                    <col style="width: 140px">
+                    <col style="width: 60px">
+                    <col style="width: 180px">
+                    <col style="width: 130px">
+                    <col style="width: 60px">
+                    <col style="width: 130px">
+                    <col style="width: 180px">
                     <col style="width: 90px">
-                    <col style="width: 150px">
-                    <col style="width: 170px">
-                    <col style="width: 50px">
                 </colgroup>
 
                 <thead>
@@ -119,16 +119,23 @@
                         <th></th>
                     </tr>
 
-                    <tr> 
-                        <th colspan="5" class="text-end"> DISCOUNT </th> 
-                        <th> 
-                            <div class="d-flex align-items-center gap-2"> 
-                                <span>-</span> 
-                                <input type="text" class="form-control" id="rab_discount_display_edit"> 
-                            </div> 
-                            <input type="hidden" name="discount" id="rab_discount"> 
-                        </th> 
-                        <th></th> 
+                    <tr>
+                        <th colspan="5" class="text-end">
+                            DISCOUNT
+                        </th>
+
+                        <th>
+                            <input type="text"
+                                class="form-control"
+                                id="rab_discount_display_edit">
+
+                            <input type="hidden"
+                                name="discount"
+                                id="rab_discount"
+                                value="{{ old('discount', (float) $rab->discount) }}">
+                        </th>
+
+                        <th></th>
                     </tr>
 
                     <tr>
@@ -212,7 +219,7 @@
     </div>
     <div class="modal fade" id="editRabItemModal" tabindex="-1" aria-hidden="true">
 
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-centered">
 
             <div class="modal-content">
 
@@ -220,11 +227,11 @@
 
                     <div>
                         <h5 class="modal-title fw-bold">
-                            Tambah Item Penawaran
+                            Tambah Item RAB
                         </h5>
 
                         <small class="text-muted">
-                            Masukkan produk yang akan ditambahkan ke item Penawaran
+                            Masukkan produk yang akan ditambahkan ke RAB
                         </small>
                     </div>
 
@@ -300,6 +307,7 @@
                         </div>
                     </div>
                 </div>
+
 
                 <div class="modal-footer border-0">
 

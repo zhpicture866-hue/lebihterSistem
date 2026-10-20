@@ -258,13 +258,14 @@
                         <div class="col-md-6 mb-3">
 
                             <label class="form-label required fw-semibold">
-                                Periode Berlangganan
+                                Jenis Pembayaran / Periode
                             </label>
 
                             <select id="rab_item_billing_period"
                                     class="form-select">
                                 <option value="monthly">Bulanan (Monthly)</option>
                                 <option value="annual">Tahunan (Annual)</option>
+                                <option value="one_time">Sekali Bayar (One-time)</option>
                             </select>
 
                         </div>
@@ -352,7 +353,8 @@
 
     const BILLING_PERIODS = {
         monthly: { label: 'Bulanan', unit: 'bulan' },
-        annual:  { label: 'Tahunan', unit: 'tahun' }
+        annual:  { label: 'Tahunan', unit: 'tahun' },
+        one_time: { label: 'Sekali Bayar', unit: null }
     };
 
     function normalizeBillingPeriod(value) {
@@ -370,8 +372,9 @@
         const qtyHint = document.getElementById('rab_item_qty_hint');
         const priceHint = document.getElementById('rab_item_price_hint');
 
-        if (qtyHint) qtyHint.textContent = `(jumlah ${unit})`;
-        if (priceHint) priceHint.textContent = `(per ${unit})`;
+        // unit null = sekali bayar (bukan langganan)
+        if (qtyHint) qtyHint.textContent = unit ? `(jumlah ${unit})` : '(jumlah paket/unit)';
+        if (priceHint) priceHint.textContent = unit ? `(per ${unit})` : '(sekali bayar)';
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -1433,6 +1436,10 @@ function renderRabItems() {
                         <option value="annual"
                             ${normalizeBillingPeriod(item.billing_period) === 'annual' ? 'selected' : ''}>
                             Tahunan
+                        </option>
+                        <option value="one_time"
+                            ${normalizeBillingPeriod(item.billing_period) === 'one_time' ? 'selected' : ''}>
+                            Sekali Bayar
                         </option>
                     </select>
 
