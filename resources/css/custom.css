@@ -730,12 +730,20 @@ col.just-hidden {
     table-layout: fixed;
     margin-bottom: 0;
 }
+
+#rabItemsTable .rab-description-preview {
+    white-space: normal !important;
+    word-break: break-word;
+}
 #editrabItemsTable {
     min-width: 930px;
     table-layout: fixed;
     margin-bottom: 0;
 }
-
+#editrabItemsTable .rab-description-preview {
+    white-space: normal !important;
+    word-break: break-word;
+}
 /* Header Rincian Pekerjaan: judul kiri, tombol kanan (semua device) */
 .rab-detail-header {
     display: flex;

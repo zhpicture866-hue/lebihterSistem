@@ -2,239 +2,231 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Invoice Pembayaran Tahap {{ $invoice->termin }}</title>
+<title>Invoice {{ $invoice->invoice_number }}</title>
 
 <style>
 @page {
-    margin: 120px 30px 40px 30px;
+    margin: 120px 30px 70px 30px;
 }
 
 body {
     font-family: DejaVu Sans, sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.5;
+    color: #111;
 }
 
-/* HEADER & FOOTER */
+/* HEADER & FOOTER (full bleed) */
 .header {
     position: fixed;
-    top: -100px;
-    left: 0;
-    right: 0;
+    top: -120px;
+    left: -30px;
+    right: -30px;
+}
+.header img {
+    width: 100%;
+}
+
+.footer {
+    position: fixed;
+    bottom: -70px;
+    left: -30px;
+    right: -30px;
+    height: 45px;
+    background: #0d0d0d;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    page-break-inside: avoid;
-}
-th, td {
-    border: 1px solid #333;
-    padding: 6px;
-}
-.no-border td {
-    border: none;
-    padding: 0px 0;
 }
 
-th {
-    background: #000;
-    color: #fff;
-}
+p { margin: 0; }
 
+.bold { font-weight: bold; }
+.italic { font-style: italic; }
 .text-right { text-align: right; }
 .text-center { text-align: center; }
-.bold { font-weight: bold; }
-p {
-    margin: 0 0 6px 0;
+
+/* BLOK INFO (tanpa border) */
+.info td {
+    border: none;
+    padding: 0;
+    vertical-align: top;
+}
+.info .label {
+    font-style: italic;
+    width: 60px;
+}
+.info .sep {
+    width: 12px;
 }
 
+/* TABEL ITEM */
+.items {
+    table-layout: fixed;
+    width: 100%;
+}
+.items th {
+    background: #000;
+    color: #fff;
+    font-size: 10px;
+    text-align: center;
+    padding: 9px 4px;
+    line-height: 1.2;
+    white-space: nowrap;
+    border: none;
+    border-right: 1px solid #fff;
+}
+.items th:last-child {
+    border-right: none;
+}
+.items td {
+    padding: 10px 6px;
+    font-size: 10px;
+    border: none;
+    border-bottom: 1.5px solid #000;
+    vertical-align: middle;
+}
+.items tr.total td {
+    border-bottom: none;
+    padding: 10px 6px;
+}
+.items td.nowrap {
+    white-space: nowrap;
+}
+.items td.total-value {
+    white-space: nowrap;
+    background: #000;
+    color: #fff;
+    font-weight: bold;
+    text-align: right;
+}
+
+.section-title {
+    font-weight: bold;
+    font-size: 11px;
+    margin-bottom: 8px;
+}
+
+.notes {
+    font-style: italic;
+    font-size: 10px;
+}
 </style>
 </head>
 
 <body>
 
-{{-- HEADER --}}
-<div class="header">
-    <img src="{{ public_path('images/header-penawaran.png') }}" style="width:100%;">
-</div>
-
-<div style="height:20px;"></div>
-
-<table width="100%" class="no-border" style="margin-top:15px;">
-<tr>
-    <!-- KIRI -->
-    <td width="60%" valign="top">
-        <table class="no-border">
-            <tr><td>CP</td><td>: +62838 7424 3693</td></tr>
-            <tr><td>Email</td><td>: zoelhapner@gmail.com</td></tr>
-        </table>
-    </td>
-
-    <!-- KANAN -->
-    <td width="40%" valign="top" align="right">
-        <table class="no-border" align="right">
-            <tr>
-                <td style="padding-right:10px;">Invoice No</td>
-                <td><strong>{{ $invoice->invoice_number  }}</strong></td>
-            </tr>
-            <tr>
-                <td>Tanggal</td>
-                <td>{{ $invoice->invoice_date->format('d F Y') }}</td>
-            </tr>
-        </table>
-    </td>
-</tr>
-</table>
-
-
-
-<table width="100%" class="no-border" style="margin-top:15px;">
-<tr>
-    <!-- KIRI -->
-    <td width="50%" valign="top">
-        <p class="bold">Tagihan Kepada</p>
-        <p>
-            <strong>{{ optional($project->customer->user)->readable_title }} {{ $offer->contact_name }}</strong><br>
-            {{ optional($project->customer->user)->address }}<br>
-            Telp: {{ optional($project->customer->user)->phone }}
-        </p>
-
-    </td>
-
-    <!-- KANAN -->
-    <td width="50%" valign="top">
-        <p class="bold">Informasi Pembayaran</p>
-        <table class="no-border">
-            <tr>
-                <td width="45%">Metode pembayaran</td>
-                <td>: Cash / Transfer</td>
-            </tr>
-            <tr>
-                <td>Nama Bank</td>
-                <td>: Bank Mandiri</td>
-            </tr>
-            <tr>
-                <td>No. Rekening</td>
-                <td>: 141 001 378 428 5</td>
-            </tr>
-            <tr>
-                <td>Atas Nama</td>
-                <td>: Achmad Zulkifli Nur Rochim</td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <em>Harap mengirimkan bukti pembayaran</em>
-                </td>
-            </tr>
-        </table>
-    </td>
-</tr>
-</table>
-
-
-<br>
-
-{{-- TABEL --}}
-<table>
-<thead>
-<tr>
-    <th>Deskripsi</th>
-    <th>%</th>
-    <th>Total Harga Proyek (Rp)</th>
-    <th>Total Yang Harus Dibayar (Rp)</th>
-</tr>
-</thead>
-
 @php
     $buildTermin = $project->buildTermins->firstWhere('termin_no', $invoice->termin);
     $terminLabel = $buildTermin->description ?? ('Pembayaran Termin ' . $invoice->termin);
+    $amount      = number_format($invoice->amount, 0, ',', '.');
 @endphp
 
-<tbody>
-<tr>
-   
-        <td>
-Pembayaran {{ $terminLabel }}
-Proyek {{ $project->project_name }} 
-        </td>
+{{-- HEADER --}}
+<div class="header">
+    <img src="{{ public_path('images/header-penawaran.png') }}">
+</div>
 
-    
-    <td class="text-center">{{ $invoice->payment_percentage }}%</td>
-    <td class="text-right">{{ number_format($grandTotal,0,',','.') }}</td>
-    <td class="text-right">{{ number_format($invoice->amount,0,',','.') }}</td>
-</tr>
-</tbody>
+{{-- FOOTER --}}
+<div class="footer">
+    <img src="{{ public_path('images/footer-penawaran.png') }}">
+</div>
 
-<tfoot>
-    @if(isset($total_price))
-    <tr>
-        <th colspan="3" class="text-right">SUBTOTAL</th>
-        <th class="text-right">
-            {{ number_format($offer->total_price,0,',','.') }}
-        </th>
-    </tr>
-    @endif
+{{-- INVOICE --}}
+<div style="margin-top:20px;">
+    <p class="bold" style="font-size:12px;">Invoice</p>
+    <p>{{ $invoice->invoice_number }}</p>
+    <p>{{ $invoice->invoice_date->translatedFormat('d F Y') }}</p>
+</div>
 
-    <tr>
-        <th colspan="3" class="text-right bold">TOTAL PEMBAYARAN {{ $terminLabel }}
-        ({{ $invoice->payment_percentage }}%)</th>
-        <th class="text-right bold">
-            {{ number_format($invoice->amount,0,',','.') }}
-        </th>
-    </tr>
-</tfoot>
+{{-- INFORMASI DETAIL PROYEK & TAGIHAN --}}
+<div style="margin-top:28px;">
+    <p class="section-title">Informasi Detail Proyek &amp; Tagihan :</p>
+
+    <table class="info" style="width:70%; margin-left:20px;">
+        <tr>
+            <td class="label">Project</td>
+            <td class="sep">:</td>
+            <td>{{ $project->project_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Client</td>
+            <td class="sep">:</td>
+            <td>{{ optional($project->customer->user)->readable_title }} {{ $offer->contact_name }}</td>
+        </tr>
+        <tr><td colspan="3" style="height:8px;"></td></tr>
+        <tr>
+            <td class="label">Address</td>
+            <td class="sep">:</td>
+            <td>{{ optional($project->customer->user)->address }}</td>
+        </tr>
+        <tr>
+            <td class="label">Phone</td>
+            <td class="sep">:</td>
+            <td>{{ optional($project->customer->user)->phone }}</td>
+        </tr>
+    </table>
+</div>
+
+{{-- TABEL ITEM --}}
+<table class="items" style="margin-top:25px;">
+    <thead>
+        <tr>
+            <th style="width:36%;">Nama Produk</th>
+            <th style="width:8%;">Qty</th>
+            <th style="width:8%;">Day</th>
+            <th style="width:24%;">Harga Satuan</th>
+            <th style="width:24%;">Total Harga</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Pembayaran {{ $terminLabel }} Proyek {{ $project->project_name }}</td>
+            <td class="text-center">1</td>
+            <td class="text-center">-</td>
+            <td class="text-right nowrap">Rp. {{ $amount }}</td>
+            <td class="text-right nowrap">Rp. {{ $amount }}</td>
+        </tr>
+        <tr class="total">
+            <td colspan="4" class="text-right bold">Jumlah Total</td>
+            <td class="total-value">Rp. {{ $amount }}</td>
+        </tr>
+    </tbody>
 </table>
-<br>
-<p><strong>Terbilang :</strong><br>
-{{ ucwords(terbilang($invoice->amount)) }} Rupiah
-</p>
 
-<p class="bold">Keterangan :</p>
+{{-- INFORMASI PEMBAYARAN --}}
+<div style="margin-top:45px; page-break-inside:avoid;">
+    <p class="section-title">Informasi Pembayaran</p>
 
-<p>Mekanisme Pembayaran sebagai berikut :</p>
+    <table class="info">
+        <tr>
+            <td style="width:50%; padding-left:20px;">
+                Bank Mandiri<br>
+                <strong>141 001 378 428 5</strong><br>
+                a.n. <strong>Achmad Zulkifli Nur Rochim</strong>
+            </td>
+            <td class="notes" style="width:50%;">
+                Mohon untuk segera konfirmasi kepada kami, Apabila telah melakukan pembayaran.
+                <br><br>
+                * DP dan pembayaran yang telah dibayarkan tidak bisa dikembalikan dengan alasan apapun
+            </td>
+        </tr>
+    </table>
+</div>
 
-<ul>
-
-@foreach($project->invoicebuilds->sortBy('termin') as $inv)
-
-    @php
-        $buildTermin = $project->buildTermins->firstWhere('termin_no', $inv->termin);
-    @endphp
-
-<li>
-Pembayaran {{ $buildTermin->description ?? ('Pembayaran Termin ' . $inv->termin) }}
-sebesar {{ $inv->payment_percentage }}%
-x Rp {{ number_format($grandTotal,0,',','.') }}
-=
-Rp {{ number_format($inv->amount,0,',','.') }}
-@if($inv->bukti_pembayaran_uploaded_at)
-    ({{ $inv->bukti_pembayaran_uploaded_at->format('d F Y') }})
-@endif
-</li>
-
-@endforeach
-
-</ul>
-
-<div style="
-    page-break-inside: avoid;
-    page-break-before: avoid;
-    margin-top:15px;
-">
-
-    <p>Hormat Kami,<br>
-       ZH Picture
-    </p>
-    <div style="height:90px;">
-        <img src="{{ public_path('images/ttd-zhpicture.png') }}"
-             style="height:100px;">
+{{-- TANDA TANGAN --}}
+<div style="margin-top:60px; page-break-inside:avoid;">
+    <p style="padding-left:20px;">lebihtersistem</p>
+    <div style="height:95px;">
+        <img src="{{ public_path('images/ttd-lebihtersistem.png') }}" style="height:100px;">
     </div>
-    <p>
-        <strong><u>Achmad Zulkifli Nur Rochim, S.Psi.</u></strong><br>
+    <p style="padding-left:20px;">
+        Achmad Zulkifli Nur Rochim, S.Psi<br>
         Direktur
     </p>
-
 </div>
+
 </body>
 </html>

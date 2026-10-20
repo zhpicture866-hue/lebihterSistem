@@ -230,7 +230,7 @@ private function generateOfferNumber(): string
 
     $lastOffer = OfferProcess::query()
         ->whereYear('offer_date', $year)
-        ->where('offer_number', 'like', "ZH.Q.{$year}.%")
+        ->where('offer_number', 'like', "LT.Q.{$year}.%")
         ->orderByDesc('id')
         ->first();
 
@@ -249,7 +249,7 @@ private function generateOfferNumber(): string
     }
 
     return sprintf(
-        'ZH.Q.%s.%02d',
+        'LT.Q.%s.%02d',
         $year,
         $number
     );

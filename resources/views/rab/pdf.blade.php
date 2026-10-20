@@ -323,7 +323,7 @@
         Hormat kami,<br>
         ZH Picture<br>
 
-        <img class="signature" src="{{ public_path('images/ttd-zhpicture.png') }}">
+        <img class="signature" src="{{ public_path('images/ttd-lebihtersistem.png') }}">
 
         <div class="signer-name">{{ $company->director_name ?? 'Achmad Zulkifli Nur Rochim, S.Psi.' }}</div>
         <div>{{ $company->director_title ?? 'Direktur' }}</div>

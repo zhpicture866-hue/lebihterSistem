@@ -498,7 +498,7 @@ private function generateKwitansiNumber(): string
 {
     $year = now()->format('Y');
  
-    $lastNumber = InvoiceBuild::where('kwitansi_number', 'like', "ZH.K.{$year}.%")
+    $lastNumber = InvoiceBuild::where('kwitansi_number', 'like', "LT.K.{$year}.%")
         ->orderByDesc('kwitansi_number')
         ->value('kwitansi_number');
  
@@ -506,14 +506,14 @@ private function generateKwitansiNumber(): string
         ? ((int) substr($lastNumber, -2)) + 1
         : 1;
  
-    return sprintf('ZH.K.%s.%02d', $year, $next);
+    return sprintf('LT.K.%s.%02d', $year, $next);
 }
  
     private function generateInvoiceNumber(): string
 {
     $year = now()->format('Y');
 
-    $lastInvoice = InvoiceBuild::where('invoice_number', 'like', "ZH.I.{$year}.%")
+    $lastInvoice = InvoiceBuild::where('invoice_number', 'like', "LT.I.{$year}.%")
         ->orderByDesc('invoice_number')
         ->first();
 
@@ -525,7 +525,7 @@ private function generateKwitansiNumber(): string
     }
 
     return sprintf(
-        'ZH.I.%s.%02d',
+        'LT.I.%s.%02d',
         $year,
         $nextNumber
     );

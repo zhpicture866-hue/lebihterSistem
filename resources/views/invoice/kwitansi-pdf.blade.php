@@ -209,11 +209,9 @@ Rp {{ number_format($inv->amount,0,',','.') }}
     margin-top:15px;
 ">
 
-    <p>Hormat Kami,<br>
-       ZH Picture
-    </p>
+    <p style="padding-left:20px;">lebihtersistem</p>
     <div style="height:90px;">
-        <img src="{{ public_path('images/ttd-zhpicture.png') }}"
+        <img src="{{ public_path('images/ttd-lebihtersistem.png') }}"
              style="height:100px;">
     </div>
     <p>

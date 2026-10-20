@@ -77,7 +77,9 @@ class ProjectController extends Controller
                 ->editColumn('project_name', function ($row) {
                     $url  = route('projects.continue', $row->id);
                     $name = Str::title($row->project_name ?? '-');
-                    return '<a href="' . $url . '">' . e($name) . '</a>';
+                    return '<a href="' . $url . '" class="cell-ellipsis" title="' . e($name) . '">'
+                        . e($name) .
+                        '</a>';
                 })
                 ->addColumn('action', function ($project) {
                     $buttons = '';
