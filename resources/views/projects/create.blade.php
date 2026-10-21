@@ -83,7 +83,7 @@
                             'edit'    => 'projects.edit.rab-process',
                             'detail'  => 'projects.details.rab-process',
                             'hasData' => (bool) ($project->rab && $project->rab->items()->exists()),
-                            'action'  => '<button type="submit" form="rabForm" class="btn btn-dark" title="Simpan RAB"><i class="ti ti-device-floppy me-1"></i></button>',
+                            'action'  => '<button type="submit" form="rabForm" class="btn btn-dark" title="Simpan Data"><i class="ti ti-device-floppy me-1"></i></button>',
                         ],
                         'Penawaran Harga' => [
                             'create'  => 'projects.steps.rab-process',
@@ -91,7 +91,7 @@
                             'detail'  => 'projects.details.rab-process',
                             'hasData' => (bool) ($project->rab && $project->rab->items()->exists()),
                             'formId'  => 'rab-edit-form',
-                            'action'  => '<button type="submit" form="rabForm" class="btn btn-dark" title="Simpan RAB">
+                            'action'  => '<button type="submit" form="rabForm" class="btn btn-dark" title="Simpan Data">
                                             <i class="ti ti-device-floppy me-1"></i>
                                         </button>',
                             'updateText' => 'Simpan Perubahan Data',
