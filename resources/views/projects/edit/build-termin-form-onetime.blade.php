@@ -144,7 +144,7 @@
                                 class="form-control termin-percentage"
                                 min="0.01"
                                 max="100"
-                                step="0.0001"
+                                step="0.01"
                                 placeholder="30"
                                 required
                             >
@@ -400,7 +400,7 @@ document.addEventListener('DOMContentLoaded', function () {
         f.amountValue.value = String(amount);
 
         f.percentage.value = offerTotal > 0
-            ? ((amount / offerTotal) * 100).toFixed(4)
+            ? ((amount / offerTotal) * 100).toFixed(2)
             : '';
     }
 
@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const f = fields(lastRow);
         f.percentage.value = offerTotal > 0
-            ? ((remainder / offerTotal) * 100).toFixed(4)
+            ? ((remainder / offerTotal) * 100).toFixed(2)
             : '';
 
         // true kalau nominal termin-termin lain sudah melebihi total penawaran.
@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ---------- Tambah / hapus baris ---------- */
 
-    function addRow(data) {
+    function addRow(data, silent) {
         data = data || {};
 
         const row = template.content
@@ -513,7 +513,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const f = fields(row);
 
-        f.percentage.value = data.percentage ?? '';
+        f.percentage.value = (data.percentage !== undefined && data.percentage !== null && data.percentage !== '' && Number.isFinite(Number(data.percentage)))
+            ? Number(data.percentage).toFixed(2)
+            : '';
         f.description.value = data.description ?? '';
         f.billingDate.value = data.billing_date ?? '';
 
@@ -536,6 +538,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         container.appendChild(row);
+
+        // Saat memuat data tersimpan, jangan hitung ulang per baris: baris yang
+        // baru ditambahkan selalu jadi "terakhir" dan akan menyerap seluruh sisa.
+        if (silent === true) {
+            return;
+        }
 
         updateTerminNumbers();
         updateAutoLastRow();
@@ -591,7 +599,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ---------- Inisialisasi ---------- */
 
-    (initialRows.length ? initialRows : [{}]).forEach(addRow);
+    (initialRows.length ? initialRows : [{}]).forEach(function (data) {
+        addRow(data, true);
+    });
+
+    updateTerminNumbers();
+    updateAutoLastRow();
+    refreshSummary();
 });
 </script>
 @endpush
