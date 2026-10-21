@@ -384,9 +384,6 @@
     let globalOverhead = {{ (float) old('overhead', $rab->overhead ?? 0) }};
     let editrabDescriptionEditor = null;
 
-    // =========================
-    // HELPER
-    // =========================
     function normalizeBillingPeriod(value) {
         return BILLING_PERIODS[value] ? value : 'monthly';
     }
@@ -443,9 +440,6 @@
         if (priceHint) priceHint.textContent = unit ? `(per ${unit})` : '(sekali bayar)';
     }
 
-    // =========================
-    // INPUT RUPIAH (DISCOUNT / SHIPPING / TAX)
-    // =========================
     function initRupiahInputsEdit() {
 
         const discountInput = document.getElementById('rab_discount_display_edit');
@@ -500,9 +494,6 @@
         }
     }
 
-    // =========================
-    // PERHITUNGAN
-    // =========================
     function calculateItemPriceEdit(basePrice) {
         basePrice = Number(basePrice) || 0;
 
@@ -609,9 +600,6 @@
         document.getElementById('rab_grand_total').value = grand;
     }
 
-    // =========================
-    // TABEL ITEM
-    // =========================
     function buildJobRowHtml(item, jobId, no) {
         const period = normalizeBillingPeriod(item.billing_period);
         const basePrice = Number(item.base_price) || 0;
@@ -705,9 +693,6 @@
         rabEditCalculateSummary();
     }
 
-    // =========================
-    // MODAL TAMBAH / EDIT ITEM
-    // =========================
     function openEditRabItemModal(jobId = null) {
         const isEdit = !!jobId;
         const item = isEdit ? rabEditItems[jobId] : null;
@@ -795,9 +780,6 @@
         bootstrap.Modal.getInstance(modalElement)?.hide();
     }
 
-    // =========================
-    // SUBMIT
-    // =========================
     function prepareRabEditItemsForSubmit() {
 
         document.getElementById('rab_profit_edit').value = globalProfit;
@@ -847,9 +829,6 @@
         return index;
     }
 
-    // =========================
-    // KOMPATIBILITAS (jika masih dipanggil dari file lain)
-    // =========================
     function initRabEdit() {
         renderEditRabItems();
         recalcAllEditRows();
@@ -889,9 +868,6 @@
         recalcAllEditRows();
     }
 
-    // =========================
-    // INIT
-    // =========================
     document.addEventListener('DOMContentLoaded', function () {
 
         const editorEl = document.getElementById('edit-description-editor');

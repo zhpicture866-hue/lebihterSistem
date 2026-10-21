@@ -5,7 +5,7 @@
 
     $canManage  = $user->can('ubah data proyek');
     $isCustomer = $user->id === $project->customer?->user?->id;
-    $canDecide  = $canManage || $isCustomer;
+    $canDecide  = $isCustomer;
 
     // Invoice termin (sama seperti di komponen invoice & bukti pembayaran)
     $invoiceOf = fn ($t) => $project->invoicebuilds->where('termin', $t->termin_no)->first();

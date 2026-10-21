@@ -23,6 +23,11 @@ class TerminSubscriptionController extends Controller
      */
     public function store(Request $request, Project $project)
     {
+        // Form termin bertahap (sekali bayar) mengirim amount[] sebagai array
+        if (is_array($request->input('amount'))) {
+            return $this->storeInstallments($request, $project);
+        }
+
         abort_if($request->user()->cannot('ubah data proyek'), 403);
 
         $project->loadMissing(['rab', 'levels']);
@@ -46,7 +51,7 @@ class TerminSubscriptionController extends Controller
 
         $data = $request->validate([
             'amount'             => ['required', 'integer', 'min:1'],
-            'billing_period'     => ['required', 'in:monthly,annual,one_time'],
+            'billing_period'     => ['required', 'in:monthly,annual'],
             'billing_date'       => ['required', 'date'],
             'termin_description' => ['nullable', 'string', 'max:255'],
         ], [
@@ -131,6 +136,10 @@ class TerminSubscriptionController extends Controller
      */
     public function update(Request $request, Project $project)
     {
+        if (is_array($request->input('amount'))) {
+            return $this->updateInstallments($request, $project);
+        }
+
         abort_if($request->user()->cannot('ubah data proyek'), 403);
 
         $project->loadMissing('rab');
@@ -139,7 +148,7 @@ class TerminSubscriptionController extends Controller
             'termin_no'          => ['required', 'integer', 'min:1'],
             'amount'             => ['required', 'integer', 'min:1'],
             'termin_description' => ['nullable', 'string', 'max:255'],
-            'billing_period'     => ['nullable', 'in:monthly,annual,one_time'],
+            'billing_period'     => ['nullable', 'in:monthly,annual'],
             'billing_date'       => ['nullable', 'date'],
         ], [
             'amount.required'   => 'Nominal tagihan wajib diisi.',
@@ -213,6 +222,230 @@ class TerminSubscriptionController extends Controller
             return back()->withInput()->withErrors([
                 'termin' => 'Terjadi kesalahan saat memperbarui termin.',
             ]);
+        }
+
+        return redirect()
+            ->route('projects.create', ['project_id' => $project->id])
+            ->with('success', 'Termin berhasil diperbarui.');
+    }
+
+    /* =========================================================
+     |  Termin bertahap (SEKALI BAYAR): DP, pelunasan, dst.
+     |  Nominal = sumber kebenaran; termin terakhir menyerap sisa
+     |  supaya total selalu pas dengan total penawaran.
+     * ========================================================= */
+
+    private function installmentRules(Request $request): array
+    {
+        $count = count((array) $request->input('amount', []));
+
+        return $request->validate([
+            'amount'   => ['required', 'array', 'min:1', 'max:24'],
+            'amount.*' => ['required', 'integer', 'min:1'],
+
+            'termin_description'   => ['nullable', 'array', 'size:' . $count],
+            'termin_description.*' => ['nullable', 'string', 'max:255'],
+
+            'billing_date'   => ['required', 'array', 'size:' . $count],
+            'billing_date.*' => ['required', 'date'],
+        ]);
+    }
+
+    /** Nominal termin terakhir = sisa. Return array nominal final. */
+    private function applyLastRemainder(array $amounts, float $offerTotal): array
+    {
+        $lastIndex     = count($amounts) - 1;
+        $sumOthers     = array_sum(array_slice($amounts, 0, $lastIndex));
+        $lastRemainder = $offerTotal - $sumOthers;
+
+        if ($sumOthers > $offerTotal || $lastRemainder < 1) {
+            throw new \DomainException(
+                'Total nominal termin selain termin terakhir sudah melebihi total penawaran. '
+                . 'Kurangi nominal salah satu termin.'
+            );
+        }
+
+        $amounts[$lastIndex] = (int) round($lastRemainder);
+
+        return $amounts;
+    }
+
+    private function storeInstallments(Request $request, Project $project)
+    {
+        abort_if($request->user()->cannot('ubah data proyek'), 403);
+
+        $project->loadMissing(['rab', 'levels']);
+
+        $currentLevel = $project->levels->firstWhere('level_name', 'Setting Termin');
+
+        abort_if(! $currentLevel, 404);
+
+        if (! $project->rab) {
+            return back()->withErrors(['termin' => 'Penawaran Harga belum tersedia.']);
+        }
+
+        if ($project->buildTermins()->exists()) {
+            return back()->withErrors([
+                'termin' => 'Setting termin sudah tersedia. Gunakan fitur edit termin.',
+            ]);
+        }
+
+        $validated    = $this->installmentRules($request);
+        $billingDates = array_values($validated['billing_date']);
+        $descriptions = array_values($validated['termin_description'] ?? []);
+        $offerTotal   = (float) $project->rab->grand_total;
+
+        try {
+            $amounts = $this->applyLastRemainder(
+                array_map('intval', array_values($validated['amount'])),
+                $offerTotal
+            );
+        } catch (\DomainException $e) {
+            return back()->withErrors(['percentage' => $e->getMessage()])->withInput();
+        }
+
+        try {
+            DB::transaction(function () use ($project, $currentLevel, $amounts, $billingDates, $descriptions, $offerTotal) {
+                Project::whereKey($project->id)->lockForUpdate()->first();
+
+                if (BuildTermin::where('project_id', $project->id)->exists()) {
+                    throw new \DomainException('Setting termin sudah tersedia. Gunakan fitur edit termin.');
+                }
+
+                foreach ($amounts as $index => $amount) {
+                    BuildTermin::create([
+                        'project_id'     => $project->id,
+                        'termin_no'      => $index + 1,
+                        'percentage'     => $this->percentageOf((float) $amount, $offerTotal),
+                        'amount'         => $amount,
+                        'billing_date'   => $billingDates[$index],
+                        'description'    => $descriptions[$index] ?? null,
+                        'billing_period' => 'one_time',
+                    ]);
+                }
+
+                if (! $currentLevel->is_started) {
+                    $currentLevel->update(['is_started' => true]);
+                }
+            });
+        } catch (\DomainException $e) {
+            return back()->withErrors(['termin' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            Log::error('Gagal menyimpan setting termin', [
+                'project_id' => $project->id,
+                'error'      => $e->getMessage(),
+                'trace'      => $e->getTraceAsString(),
+            ]);
+
+            return back()
+                ->withErrors(['termin' => 'Terjadi kesalahan saat menyimpan setting termin.'])
+                ->withInput();
+        }
+
+        return redirect()
+            ->route('projects.create', ['project_id' => $project->id])
+            ->with('success', 'Setting termin berhasil disimpan.');
+    }
+
+    /**
+     * Edit termin bertahap. Termin yang invoice-nya sudah dibuat TIDAK boleh berubah
+     * (nominal dan tanggalnya harus sama); termin setelahnya boleh diubah, ditambah, atau dihapus.
+     */
+    private function updateInstallments(Request $request, Project $project)
+    {
+        abort_if($request->user()->cannot('ubah data proyek'), 403);
+
+        $project->loadMissing('rab');
+
+        $validated    = $this->installmentRules($request);
+        $billingDates = array_values($validated['billing_date']);
+        $descriptions = array_values($validated['termin_description'] ?? []);
+        $offerTotal   = (float) ($project->rab?->grand_total ?? 0);
+
+        if ($offerTotal <= 0) {
+            return back()->withInput()->withErrors(['termin' => 'Total penawaran harga belum tersedia.']);
+        }
+
+        try {
+            $amounts = $this->applyLastRemainder(
+                array_map('intval', array_values($validated['amount'])),
+                $offerTotal
+            );
+
+            DB::transaction(function () use ($project, $amounts, $billingDates, $descriptions, $offerTotal) {
+                Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+
+                $existing = $project->buildTermins()->orderBy('termin_no')->get()->keyBy('termin_no');
+
+                if ($existing->isEmpty()) {
+                    throw new \DomainException('Termin belum dibuat.');
+                }
+
+                if ($existing->contains(fn ($t) => $t->billing_period !== 'one_time')) {
+                    throw new \DomainException('Termin langganan tidak dapat diedit dengan form ini.');
+                }
+
+                // Nomor termin terbesar yang sudah punya invoice = batas terkunci
+                $locked = (int) $project->invoicebuilds()
+                    ->whereIn('termin', $existing->keys())
+                    ->max('termin');
+
+                if (count($amounts) < $locked) {
+                    throw new \DomainException(
+                        "Termin 1 sampai {$locked} sudah ditagih dan tidak dapat dihapus."
+                    );
+                }
+
+                foreach ($amounts as $index => $amount) {
+                    $no   = $index + 1;
+                    $row  = $existing->get($no);
+                    $date = \Carbon\Carbon::parse($billingDates[$index])->startOfDay();
+
+                    if ($no <= $locked) {
+                        $sameDate = $row->billing_date?->isSameDay($date);
+
+                        if ((int) $row->amount !== (int) $amount || ! $sameDate) {
+                            throw new \DomainException(
+                                "Termin ke-{$no} sudah ditagih (invoice sudah dibuat), nominal dan tanggalnya tidak dapat diubah."
+                            );
+                        }
+
+                        $row->update(['description' => $descriptions[$index] ?? null]);
+
+                        continue;
+                    }
+
+                    $attributes = [
+                        'amount'       => $amount,
+                        'percentage'   => $this->percentageOf((float) $amount, $offerTotal),
+                        'billing_date' => $date,
+                        'description'  => $descriptions[$index] ?? null,
+                    ];
+
+                    if ($row) {
+                        $row->update($attributes);
+                    } else {
+                        BuildTermin::create($attributes + [
+                            'project_id'     => $project->id,
+                            'termin_no'      => $no,
+                            'billing_period' => 'one_time',
+                        ]);
+                    }
+                }
+
+                // Termin berlebih (di atas batas terkunci) dihapus
+                $project->buildTermins()->where('termin_no', '>', count($amounts))->delete();
+            });
+        } catch (\DomainException $e) {
+            return back()->withInput()->withErrors(['termin' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            Log::error('Gagal memperbarui termin bertahap', [
+                'project_id' => $project->id,
+                'error'      => $e->getMessage(),
+                'trace'      => $e->getTraceAsString(),
+            ]);
+
+            return back()->withInput()->withErrors(['termin' => 'Terjadi kesalahan saat memperbarui termin.']);
         }
 
         return redirect()

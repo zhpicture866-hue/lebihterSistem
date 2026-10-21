@@ -1952,9 +1952,7 @@ function updateItemVolume(id, value) {
 
         if (!container) return;
 
-
         container.innerHTML = '';
-
 
         rabItems.forEach(
             (item, index) => {

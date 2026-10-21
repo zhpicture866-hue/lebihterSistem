@@ -128,10 +128,10 @@
     <table class="items">
         <thead>
             <tr>
-                <th style="width:50%">Nama Produk</th>
-                <th style="width:9%">Qty</th>
+                <th style="width:42%">Nama Produk</th>
+                <th style="width:16%">Qty</th>
                 <th style="width:20%">Harga</th>
-                <th style="width:21%">Jumlah</th>
+                <th style="width:22%">Jumlah</th>
             </tr>
         </thead>
         <tbody>
@@ -161,7 +161,7 @@
                             'one_time' => null,
                         ][$item->billing_period] ?? null;
                     @endphp
-                    <td class="text-center">
+                    <td class="text-center" style="white-space:nowrap">
                         {{ rtrim(rtrim(number_format($item->volume, 5, '.', ''), '0'), '.') }}
                         @if($periodLabel)
                             {{ $periodLabel }}
