@@ -1,4 +1,3 @@
-{{-- Simpan sebagai: resources/views/projects/edit/build-termin-form.blade.php --}}
 @php
     $isOneTimeTermin = $project->buildTermins->first()?->billing_period === 'one_time';
 @endphp

@@ -1,4 +1,3 @@
-{{-- Simpan sebagai: resources/views/projects/steps/build-termin.blade.php --}}
 @php
     $offerItems = $project->rab?->items ?? collect();
 
