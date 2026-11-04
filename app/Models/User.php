@@ -196,6 +196,12 @@ public function setActiveRoleAttribute($value)
 
     $this->attributes['active_role'] = $value;
 }
+
+public function getNameAttribute()
+{
+    return $this->fullname;
+}
+
 public function getShortNameAttribute()
 {
     return collect(explode(' ', $this->fullname))
