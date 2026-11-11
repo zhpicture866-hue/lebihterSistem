@@ -148,11 +148,11 @@
                                 <tr>
                                     <th width="5%">No</th>
                                     <th>Customer</th>
-                                    <th>ID Customer</th>
                                     <th>Channel</th>
                                     <th>Kategori</th>
                                     <th>Order</th>
                                     <th>Loyalty</th>
+                                    <th>Last Contact</th>
                                     <th width="15%" class="text-end">Aksi</th>
                                 </tr>
                             </thead>
@@ -187,11 +187,11 @@
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'customer', name: 'customer', orderable: false },
-                    { data: 'nic', name: 'nic' },
                     { data: 'channel', name: 'channel' },
                     { data: 'category', name: 'category' },
                     { data: 'orders', name: 'orders', searchable: false },
                     { data: 'loyalty', name: 'loyalty', orderable: false, searchable: false },
+                    { data: 'last_contact', name: 'last_contact', orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-end' },
                 ],
                 language: {

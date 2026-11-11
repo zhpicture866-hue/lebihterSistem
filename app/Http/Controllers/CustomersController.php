@@ -81,6 +81,9 @@ public function index(Request $request)
             ->editColumn('channel', fn($row) => $row->readable_channel)
             ->addColumn('category', fn($row) => $this->readableCategory($row->category))
             ->addColumn('orders', fn($row) => (int) $row->projects_count)
+            ->addColumn('last_contact', fn($row) => $row->created_at
+                ? $row->created_at->locale('id')->diffForHumans()   // "3 hari yang lalu"
+                : '-')
             ->addColumn('loyalty', function ($row) {
                 // NOTE: pakai angka loyalty_level untuk warna (bukan teks),
                 // karena sebelumnya match('1','2',...) tidak pernah cocok dengan teks "Lead", dst.
@@ -351,7 +354,7 @@ public static function generateNicAjax()
 
  public function show(Customer $customer)
     {
-        $this->authorizeCustomer($customer, 'lihat data member');
+        $this->authorizeCustomer($customer, 'lihat data customer');
         $customer->load('user');
         return view('sdm.customers.show', [
             'user' => $customer->user,
@@ -575,7 +578,7 @@ public function update(Request $request, Customer $customer)
 public function destroy(Customer $customer): JsonResponse
 {
     abort_if($customer->user_id === auth()->id(), 403, 'Tidak bisa menghapus akun sendiri.');
-    $this->authorizeCustomer($customer, 'hapus data member');
+    $this->authorizeCustomer($customer, 'hapus data customer');
 
     $photosToDelete = [];
 
@@ -591,7 +594,7 @@ public function destroy(Customer $customer): JsonResponse
         if ($user) {
             $roles = $user->roles->pluck('name')->toArray();
 
-            if (count($roles) === 1 && in_array('Member', $roles)) {
+            if (count($roles) === 1 && in_array('Customer', $roles)) {
                 // Member adalah satu-satunya peran: hapus akun beserta fotonya
                 if ($user->photo) {
                     $photosToDelete[] = $user->photo;
