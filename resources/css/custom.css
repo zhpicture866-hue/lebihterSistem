@@ -333,20 +333,7 @@ label {
 #detail-rows .form-control {
     width: 100% !important; /* Paksa full width dalam kolom */
 }
-.jurnal-table {
-    table-layout: fixed;
-    width: 100%;
-}
 
-.jurnal-table th:nth-child(2),
-.jurnal-table td:nth-child(2) {
-    width: 350px;
-}
-
-.jurnal-table th:nth-child(3),
-.jurnal-table td:nth-child(3) {
-    width: 250px;
-}
 .gen-table {
     table-layout: fixed;
 }
@@ -1215,13 +1202,26 @@ input[type=number]::-webkit-outer-spin-button {
         flex: 0 1 280px;
     }
 }
-    .jurnal-table-wrapper {
+.jurnal-table-wrapper {
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch; /* scroll halus di iOS */
 }
+.jurnal-table {
+    table-layout: fixed;
+    width: 100%;
+}
 
+.jurnal-table th:nth-child(2),
+.jurnal-table td:nth-child(2) {
+    width: 350px;
+}
+
+.jurnal-table th:nth-child(3),
+.jurnal-table td:nth-child(3) {
+    width: 250px;
+}
 .jurnal-table {
     width: 100%;
     min-width: 1060px;
@@ -1251,8 +1251,8 @@ input[type=number]::-webkit-outer-spin-button {
     text-align: right;
 }
 
-   .jurnal-table-wrapper { min-width: 0; }
-   .card-body, .col-12 { min-width: 0; }
+.jurnal-table-wrapper { min-width: 0; }
+.card-body, .col-12 { min-width: 0; }
 
 /* Target sentuh yang nyaman di HP */
 @media (max-width: 991.98px) {

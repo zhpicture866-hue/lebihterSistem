@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProjectRequest;
+use App\Helpers\ActiveRole;
 use App\Models\Employee;
 use App\Models\Customer;
 use App\Models\Affiliator;
@@ -22,6 +23,23 @@ use DB;
 
 class ProjectController extends Controller
 {
+    private function canSeeAllProjects(): bool
+{
+    return ActiveRole::hasPermission('lihat daftar proyek');
+}
+
+private function authorizeProject(Project $project): void
+{
+    abort_unless(ActiveRole::hasPermission('lihat data proyek') || $this->canSeeAllProjects(), 403);
+
+    if (!$this->canSeeAllProjects()) {
+        $uid = auth()->id();
+        $owned = $project->customer?->user_id === $uid
+              || $project->employee?->user_id === $uid;
+        abort_unless($owned, 403);
+    }
+}
+
     public function index(Request $request)
     {
         $auth = auth()->user();
@@ -35,13 +53,11 @@ class ProjectController extends Controller
         ]);
 
         // Batasi data kalau user cuma boleh lihat proyek sendiri
-        if (
-            $auth->can('lihat data proyek') &&
-            !$auth->can('lihat daftar proyek')
-        ) {
-            $query->where(function ($q) use ($auth) {
-                $q->whereHas('customer', fn ($qq) => $qq->where('user_id', $auth->id))
-                  ->orWhereHas('employee', fn ($qq) => $qq->where('user_id', $auth->id));
+        if (!$this->canSeeAllProjects()) {
+            $uid = auth()->id();
+            $query->where(function ($q) use ($uid) {
+                $q->whereHas('customer', fn ($qq) => $qq->where('user_id', $uid))
+                ->orWhereHas('employee', fn ($qq) => $qq->where('user_id', $uid));
             });
         }
 
@@ -83,7 +99,7 @@ class ProjectController extends Controller
                 })
                 ->addColumn('action', function ($project) {
                     $buttons = '';
-                    if (auth()->user()->can('hapus data proyek')) {
+                    if (ActiveRole::hasPermission('hapus data proyek')) {
                         $buttons .= '<button data-id="' . $project->id . '"
                                     class="btn btn-icon btn-sm btn-dark delete-projects">
                                     <i class="ti ti-trash"></i></button>';
@@ -158,9 +174,14 @@ class ProjectController extends Controller
         if ($request->has('project_id')) {
             $project = $this->loadBaseProject($request->project_id);
         }
-
+        if ($project) {
+            $this->authorizeProject($project);
+        } else {
+            // form proyek baru: hanya staf
+            abort_if(! $this->canSeeAllProjects(), 403);
+        }
         $activeStep = $this->getCurrentStep($project);
-        $canEdit    = auth()->user()->can('lihat daftar proyek');
+        $canEdit    = $this->canSeeAllProjects();
 
         $viewData = array_merge([
             'rab'            => null,
@@ -275,7 +296,7 @@ class ProjectController extends Controller
 
     public function store(ProjectRequest $request)
     {
-        abort_if(auth()->user()->cannot('lihat daftar proyek'), 403);
+        abort_if(! $this->canSeeAllProjects(), 403);
 
         $project = DB::transaction(function () use ($request) {
             $project = Project::create($request->validated());
@@ -350,6 +371,8 @@ class ProjectController extends Controller
 
     public function continue(Project $project, Request $request)
     {
+        $this->authorizeProject($project);
+
         $project->load([
             'customer.user',
             'employee',
@@ -366,7 +389,7 @@ class ProjectController extends Controller
 
 public function update(Request $request, Project $project)
 {
-    abort_if(auth()->user()->cannot('lihat daftar proyek'), 403);
+    abort_if(! $this->canSeeAllProjects(), 403);
 
     $data = $request->all();
 
@@ -401,11 +424,16 @@ public function update(Request $request, Project $project)
 
     public function show(Project $project)
     {
+        $this->authorizeProject($project);
+
         return redirect()->route('projects.create', ['project_id' => $project->id]);
     }
 
     public function destroy(Project $project)
     {
+        $this->authorizeProject($project);
+        abort_unless(ActiveRole::hasPermission('hapus data proyek'), 403);
+
         if ($project) {
             $project->delete();
             return response()->json(['status' => 'success', 'message' => 'Project deleted successfully']);
@@ -416,6 +444,8 @@ public function update(Request $request, Project $project)
 
         public function generateInvoicesFromTermins(Project $project)
     {
+        abort_if(! $this->canSeeAllProjects(), 403);
+
         $project->load('buildTermins');
 
         if ($project->buildTermins->isEmpty()) {

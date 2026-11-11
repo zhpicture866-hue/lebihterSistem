@@ -278,7 +278,7 @@
                     <div class="section-block mb-5">
                         <h3 class="fw-semibold mb-3 border-bottom pb-2">Data Pelanggan</h3>
                         <div class="row g-4">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label required">Nomor Identitas Customer (NIC)</label>
                                 <input type="text" id="nic" name="nic" class="form-control" value="{{ old('nic', $customer->nic) }}" readonly>
                                 @error('nic')
@@ -286,7 +286,7 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Kategori</label>
                                 <select name="category" class="form-select select2">
                                     <option value="">-- Pilih --</option>
@@ -296,17 +296,26 @@
                                     <option value="4" {{ old('category', $customer->category) == 4 ? 'selected' : '' }}>Lainnya</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Loyalty Level</label>
                                 <select name="loyalty_level" class="form-select select2">
                                     <option value="1" {{ old('loyalty_level', $customer->loyalty_level) == 1 ? 'selected' : '' }}>Lead</option>
-                                    <option value="2" {{ old('loyalty_level', $customer->loyalty_level) == 2 ? 'selected' : '' }}>New Customer</option>
-                                    <option value="3" {{ old('loyalty_level', $customer->loyalty_level) == 3 ? 'selected' : '' }}>Silver</option>
-                                    <option value="4" {{ old('loyalty_level', $customer->loyalty_level) == 4 ? 'selected' : '' }}>Gold</option>
-                                    <option value="5" {{ old('loyalty_level', $customer->loyalty_level) == 5 ? 'selected' : '' }}>Platinum</option>
+                                    <option value="2" {{ old('loyalty_level', $customer->loyalty_level) == 2 ? 'selected' : '' }}>Prospek</option>
+                                    <option value="3" {{ old('loyalty_level', $customer->loyalty_level) == 3 ? 'selected' : '' }}>New Customer</option>
+                                    <option value="4" {{ old('loyalty_level', $customer->loyalty_level) == 4 ? 'selected' : '' }}>Silver</option>
+                                    <option value="5" {{ old('loyalty_level', $customer->loyalty_level) == 5 ? 'selected' : '' }}>Gold</option>
+                                    <option value="6" {{ old('loyalty_level', $customer->loyalty_level) == 6 ? 'selected' : '' }}>Platinum</option>
                                 </select>
                             </div>
-                            
+                            <div class="col-md-3">
+                                <label class="form-label">Tahu dari mana?</label>
+                                <select name="channel" class="form-select select2">
+                                    <option value="">-- Pilih --</option>
+                                    @foreach (\App\Models\Customer::CHANNELS as $key => $label)
+                                        <option value="{{ $key }}" @selected(old('channel', $customer->channel ?? null) == $key)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <div class="col-md-10">
                                 <label class="form-label" for="role">Role:</label>
                                         <select class="form-control select2" name="role[]" multiple>
