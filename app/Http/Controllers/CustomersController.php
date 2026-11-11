@@ -81,8 +81,11 @@ public function index(Request $request)
             ->editColumn('channel', fn($row) => $row->readable_channel)
             ->addColumn('category', fn($row) => $this->readableCategory($row->category))
             ->addColumn('orders', fn($row) => (int) $row->projects_count)
-            ->addColumn('last_contact', fn($row) => $row->created_at
+            ->addColumn('created_at', fn($row) => $row->created_at
                 ? $row->created_at->locale('id')->diffForHumans()   // "3 hari yang lalu"
+                : '-')
+		      ->addColumn('last_contact', fn($row) => $row->last_contact
+                ? $row->last_contact->locale('id')->diffForHumans()   // "3 hari yang lalu"
                 : '-')
             ->addColumn('loyalty', function ($row) {
                 // NOTE: pakai angka loyalty_level untuk warna (bukan teks),

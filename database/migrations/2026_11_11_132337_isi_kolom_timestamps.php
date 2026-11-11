@@ -11,11 +11,11 @@ return new class extends Migration
         // Data yang sudah terisi TIDAK ditimpa. (PostgreSQL)
         DB::statement('
             UPDATE customers
-            SET created_at = users.created_at
-            FROM users
-            WHERE users.id = customers.user_id
-              AND customers.created_at IS NULL
-              AND users.created_at IS NOT NULL
+            SET created_at = u.created_at
+            FROM global.users AS u
+            WHERE u.id = customers.user_id
+            AND customers.created_at IS NULL
+            AND u.created_at IS NOT NULL
         ');
 
         // Sisanya diisi waktu sekarang

@@ -152,6 +152,7 @@
                                     <th>Kategori</th>
                                     <th>Order</th>
                                     <th>Loyalty</th>
+                                    <th>Tanggal Dibuat</th>
                                     <th>Last Contact</th>
                                     <th width="15%" class="text-end">Aksi</th>
                                 </tr>
@@ -191,6 +192,7 @@
                     { data: 'category', name: 'category' },
                     { data: 'orders', name: 'orders', searchable: false },
                     { data: 'loyalty', name: 'loyalty', orderable: false, searchable: false },
+                    { data: 'created_at', name: 'created_at', orderable: false, searchable: false },
                     { data: 'last_contact', name: 'last_contact', orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-end' },
                 ],
