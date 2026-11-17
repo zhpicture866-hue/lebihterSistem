@@ -79,7 +79,10 @@
                                         <div class="text-muted small">Telepon</div>
                                         <div class="fw-bold">+{{ $user->phone ?? '-' }}</div>
                                     </div>
-                                    
+                                    <div class="col-md-6">
+                                        <div class="text-muted small">Tau darimana?</div>
+                                        <div class="fw-bold">{{ $customer->readable_channel ?? '-' }}</div>
+                                    </div>
                                     {{-- <div class="col-md-4">
                                         <div class="text-muted small mt-2">Status</div>
                                         <span class="badge {{ $customer->is_active ? 'bg-success' : 'bg-danger' }}">

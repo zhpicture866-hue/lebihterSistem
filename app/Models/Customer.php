@@ -172,7 +172,7 @@ public function getReadableChannelAttribute()
 
     use HasFactory, HasUuids;
 
-    protected $table = 'customers';
+    protected $table = 'lebihtersistem.customers';
     protected $keyType = 'string';
     public $incrementing = false;
 

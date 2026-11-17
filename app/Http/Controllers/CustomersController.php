@@ -61,25 +61,31 @@ public function index(Request $request)
  
         return DataTables::of($customers)
             ->addIndexColumn()
-            ->addColumn('customer', function ($row) {
-                $name     = Str::title($row->user->fullname ?? '-');
-                $email    = $row->user->email ?? '-';
-                $initials = collect(explode(' ', trim($name)))
-                    ->filter()->take(2)
-                    ->map(fn($w) => mb_substr($w, 0, 1))
-                    ->implode('');
-                $url = route('customers.show', $row->id);
- 
-                return '<div class="d-flex align-items-center">
-                            <span class="cust-avatar av-' . (crc32($name) % 5) . '">' . e(strtoupper($initials)) . '</span>
-                            <div class="ms-3">
-                                <a href="' . $url . '" class="cust-name">' . e($name) . '</a>
-                                <div class="cust-email">' . e($email) . '</div>
-                            </div>
-                        </div>';
+                ->addColumn('customer', function ($row) {
+                    $name     = Str::title($row->user->fullname ?? '-');
+                    $email    = $row->user->email ?? '-';
+                    $initials = collect(explode(' ', trim($name)))
+                        ->filter()->take(2)
+                        ->map(fn($w) => mb_substr($w, 0, 1))
+                        ->implode('');
+                    $url   = route('customers.show', $row->id);
+                    $photo = $row->user?->photo;
+
+                    // Ada foto => tampilkan foto, kalau tidak => avatar inisial
+                    $avatar = $photo
+                        ? '<img src="' . e(asset('storage/' . ltrim($photo, '/'))) . '" alt="" class="cust-avatar cust-avatar-img" loading="lazy">'
+                        : '<span class="cust-avatar av-' . (crc32($name) % 5) . '">' . e(strtoupper($initials)) . '</span>';
+
+                    return '<div class="d-flex align-items-center">
+                                ' . $avatar . '
+                                <div class="ms-3">
+                                    <a href="' . $url . '" class="cust-name">' . e($name) . '</a>
+                                    <div class="cust-email">' . e($email) . '</div>
+                                </div>
+                            </div>';
             })
             ->editColumn('channel', fn($row) => $row->readable_channel)
-            ->addColumn('category', fn($row) => $this->readableCategory($row->category))
+            ->addColumn('category', fn($row) => $row->readabl_category)
             ->addColumn('orders', fn($row) => (int) $row->projects_count)
             ->addColumn('created_at', fn($row) => $row->created_at
                 ? $row->created_at->locale('id')->diffForHumans()   // "3 hari yang lalu"
@@ -233,7 +239,6 @@ private function loyaltyStats($baseQuery): array
         'role.*' => 'string|exists:roles,name',
         'category' => 'nullable|in:1,2,3,4',
         'channel' => ['nullable', Rule::in(array_keys(Customer::CHANNELS))],
-        'loyalty_level' => 'nullable|in:1,2,3,4,5,6'
     ]);
 
     if ($request->hasFile('photo')) {
@@ -320,9 +325,7 @@ private function loyaltyStats($baseQuery): array
             'postal_code_id' => $validated['postal_code_id'],
             'category' => $validated['category'] ?? null,
             'channel' => $validated['channel'] ?? null,
-            'loyalty_level' => !empty($validated['loyalty_level'])
-                ? (int) $validated['loyalty_level']
-                : 1,
+            'loyalty_level' => 1,
             'photo' => $validated['photo'] ?? null,
         ]);
     });
@@ -466,7 +469,6 @@ public function update(Request $request, Customer $customer)
             Rule::exists(PostalCode::class, 'id'),
         ],
         'category' => 'nullable|in:1,2,3,4',
-        'loyalty_level' => 'nullable|in:1,2,3,4,5,6',
         'channel' => ['nullable', Rule::in(array_keys(Customer::CHANNELS))],
         'role' => 'nullable|array',
         'role.*' => ['string', Rule::exists('roles', 'name')->where('role_group', 'Eksternal')],
@@ -553,9 +555,6 @@ public function update(Request $request, Customer $customer)
                 'category' => $canManage
                     ? ($validated['category'] ?? null)
                     : $customer->category,
-                'loyalty_level' => $canManage
-                    ? (!empty($validated['loyalty_level']) ? (int) $validated['loyalty_level'] : 1)
-                    : $customer->loyalty_level,
                 'photo' => $validated['photo'] ?? $customer->photo,
             ]);
         });

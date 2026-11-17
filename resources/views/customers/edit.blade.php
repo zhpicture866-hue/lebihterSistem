@@ -9,7 +9,7 @@
                     <i class="ti ti-arrow-left"></i>
                 </a>
                 
-                    <h2 class="page-title mb-0">Edit Data Customer</h2>
+                    <h2 class="page-title mb-0">Ubah Data Customer</h2>
                 
             </div>
         </div>
@@ -298,6 +298,11 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Loyalty Level</label>
+                                <input type="text" class="form-control bg-light" value="{{ $customer->readable_loyalty_level }}" readonly>
+                                <div class="form-text">Dihitung otomatis dari jumlah event yang sudah lunas.</div>
+                            </div>
+                            {{-- <div class="col-md-3">
+                                <label class="form-label">Loyalty Level</label>
                                 <select name="loyalty_level" class="form-select select2">
                                     <option value="1" {{ old('loyalty_level', $customer->loyalty_level) == 1 ? 'selected' : '' }}>Lead</option>
                                     <option value="2" {{ old('loyalty_level', $customer->loyalty_level) == 2 ? 'selected' : '' }}>Prospek</option>
@@ -306,7 +311,7 @@
                                     <option value="5" {{ old('loyalty_level', $customer->loyalty_level) == 5 ? 'selected' : '' }}>Gold</option>
                                     <option value="6" {{ old('loyalty_level', $customer->loyalty_level) == 6 ? 'selected' : '' }}>Platinum</option>
                                 </select>
-                            </div>
+                            </div> --}}
                             <div class="col-md-3">
                                 <label class="form-label">Tahu dari mana?</label>
                                 <select name="channel" class="form-select select2">
