@@ -35,32 +35,38 @@ class CustomersController extends Controller
         }
     }
 
-public function index(Request $request)
-{
-
-
-    $auth = auth()->user();
- 
-    // Query dasar (sudah dibatasi hak akses). Dipakai untuk tabel DAN kartu statistik.
-    $baseQuery = Customer::with(['user.roles']);
- 
-    if (!ActiveRole::hasPermission('lihat daftar customer')) {
-        $baseQuery->where('user_id', $auth->id);
-    }
-
-    if ($request->ajax()) {
-        // withCount hanya di query tabel (bukan di $baseQuery) supaya perhitungan kartu tidak terganggu
-        $query = (clone $baseQuery)->withCount('projects');
- 
-        // Filter tab (Lead, Prospek, New Customer, Silver, Gold, Platinum)
-        if ($request->filled('loyalty')) {
-            $query->where('loyalty_level', $request->loyalty);
+    public function index(Request $request)
+    {
+        $auth = auth()->user();
+        // Query dasar (sudah dibatasi hak akses). Dipakai untuk tabel DAN kartu statistik.
+        $canViewAll = ActiveRole::hasPermission('lihat daftar customer');
+        $baseQuery = Customer::with(['user.roles']);
+        if (!$canViewAll) {
+            $baseQuery->where('user_id', $auth->id);
         }
- 
-        $customers = $query->get();
- 
-        return DataTables::of($customers)
-            ->addIndexColumn()
+
+        if ($request->ajax()) {
+            // withCount hanya di query tabel (bukan di $baseQuery) supaya perhitungan kartu tidak terganggu
+            $query = (clone $baseQuery)
+                ->select('customers.*')
+                ->selectRaw(Customer::levelSql() . ' AS auto_level')
+                ->withCount('projects');
+    
+            // Filter tab (Lead, Prospek, New Customer, Silver, Gold, Platinum)
+            if ($request->filled('loyalty')) {
+                $lvl = (int) $request->loyalty;
+
+                if ($lvl === 2) {
+                    $query->whereRaw(Customer::hasProjectSql());   // Prospek kumulatif, sama dengan kartu
+                } else {
+                    $query->whereRaw('(' . Customer::levelSql() . ') = ?', [$lvl]);
+                }
+            }
+    
+            $customers = $query->get();
+    
+            $dt = DataTables::of($customers)
+                ->addIndexColumn()
                 ->addColumn('customer', function ($row) {
                     $name     = Str::title($row->user->fullname ?? '-');
                     $email    = $row->user->email ?? '-';
@@ -83,85 +89,68 @@ public function index(Request $request)
                                     <div class="cust-email">' . e($email) . '</div>
                                 </div>
                             </div>';
-            })
-            ->editColumn('channel', fn($row) => $row->readable_channel)
-            ->addColumn('category', fn($row) => $row->readabl_category)
-            ->addColumn('orders', fn($row) => (int) $row->projects_count)
-            ->addColumn('created_at', fn($row) => $row->created_at
-                ? $row->created_at->locale('id')->diffForHumans()   // "3 hari yang lalu"
-                : '-')
-		      ->addColumn('last_contact', fn($row) => $row->last_contact
-                ? $row->last_contact->locale('id')->diffForHumans()   // "3 hari yang lalu"
-                : '-')
-            ->addColumn('loyalty', function ($row) {
-                // NOTE: pakai angka loyalty_level untuk warna (bukan teks),
-                // karena sebelumnya match('1','2',...) tidak pernah cocok dengan teks "Lead", dst.
-                $level = (int) $row->loyalty_level;
-                return '<span class="lv-badge lv-' . $level . '">' . e($row->readable_loyalty_level) . '</span>';
-            })
-            ->addColumn('action', function ($customer) {
-                $buttons = '<div class="d-flex justify-content-end gap-1">';
-                if (ActiveRole::hasPermission('ubah data customer')) {
-                    $buttons .= '<a href="' . route('customers.edit', $customer->id) . '" class="btn btn-icon btn-sm btn-ghost-dark" title="Ubah"><i class="ti ti-edit"></i></a>';
+                })
+                ->editColumn('channel', fn($row) => $row->readable_channel)
+                ->addColumn('category', fn($row) => $row->readable_category)
+                ->addColumn('orders', fn($row) => (int) $row->projects_count)
+                // ->addColumn('created_at', fn($row) => $row->created_at
+                //     ? $row->created_at->locale('id')->diffForHumans()   // "3 hari yang lalu"
+                //     : '-')
+                ->addColumn('last_contact', fn($row) => $row->last_contact
+                    ? $row->last_contact->locale('id')->diffForHumans()   // "3 hari yang lalu"
+                    : '-')
+               ->addColumn('loyalty', function ($row) {
+                    $level = $row->effective_loyalty_level;
+                    return '<span class="lv-badge lv-' . $level . '">' . e($row->readable_loyalty_level) . '</span>';
+                })
+                ->addColumn('action', function ($customer) {
+                    $buttons = '<div class="d-flex justify-content-end gap-1">';
+                    if (ActiveRole::hasPermission('ubah data customer')) {
+                        $buttons .= '<a href="' . route('customers.edit', $customer->id) . '" class="btn btn-icon btn-sm btn-ghost-dark" title="Ubah"><i class="ti ti-edit"></i></a>';
+                    }
+                    if (ActiveRole::hasPermission('lihat data customer')) {
+                        $buttons .= '<a href="' . route('customers.show', $customer->id) . '" class="btn btn-icon btn-sm btn-ghost-dark" title="Lihat"><i class="ti ti-eye"></i></a>';
+                    }
+                    // if (auth()->user()->can('lihat data crm')) {
+                    //     $buttons .= '<a href="' . route('crm.customers.show', $customer->id) . '" class="btn btn-icon btn-sm btn-ghost-dark" title="CRM"><i class="ti ti-address-book"></i></a>';
+                    // }
+                    if (ActiveRole::hasPermission('hapus data customer')) {
+                        $buttons .= '<button data-id="' . $customer->id . '" class="btn btn-icon btn-sm btn-ghost-danger delete-customer" title="Hapus"><i class="ti ti-trash"></i></button>';
+                    }
+                    return $buttons . '</div>';
+                })
+                ->rawColumns(['customer', 'loyalty', 'action']);
+                if ($canViewAll) {
+                    $dt->with('stats', $this->loyaltyStats($baseQuery))
+                    ->with('total', (clone $baseQuery)->count());
                 }
-                if (ActiveRole::hasPermission('lihat data customer')) {
-                    $buttons .= '<a href="' . route('customers.show', $customer->id) . '" class="btn btn-icon btn-sm btn-ghost-dark" title="Lihat"><i class="ti ti-eye"></i></a>';
-                }
-                // if (auth()->user()->can('lihat data crm')) {
-                //     $buttons .= '<a href="' . route('crm.customers.show', $customer->id) . '" class="btn btn-icon btn-sm btn-ghost-dark" title="CRM"><i class="ti ti-address-book"></i></a>';
-                // }
-                if (ActiveRole::hasPermission('hapus data customer')) {
-                    $buttons .= '<button data-id="' . $customer->id . '" class="btn btn-icon btn-sm btn-ghost-danger delete-customer" title="Hapus"><i class="ti ti-trash"></i></button>';
-                }
-                return $buttons . '</div>';
-            })
-            ->rawColumns(['customer', 'loyalty', 'action'])
-            ->with('stats', $this->loyaltyStats($baseQuery)) // supaya kartu ikut ter-update setelah hapus
-            ->make(true);
+                return $dt->make(true);
+        }
+    
+        return view('customers.index', [
+            'canViewAll' => $canViewAll,
+            'stats'      => $canViewAll ? $this->loyaltyStats($baseQuery) : [],
+            'total'      => $canViewAll ? (clone $baseQuery)->count() : 0,
+        ]);
     }
- 
-    return view('customers.index', [
-        'stats' => $this->loyaltyStats($baseQuery),
-    ]);
-}
-private function loyaltyStats($baseQuery): array
-{
-    $counts = (clone $baseQuery)
-        ->toBase()
-        ->reorder()
-        ->selectRaw('loyalty_level, COUNT(*) as total')
-        ->groupBy('loyalty_level')
-        ->pluck('total', 'loyalty_level');
- 
-    $stats = [];
-    foreach (range(1, 6) as $level) {
-        $stats[$level] = (int) ($counts[$level] ?? 0);
-    }
- 
-    return $stats;
-}
-    private function readableCategory($value)
+    private function loyaltyStats($baseQuery): array
     {
-        return match ((int) $value) {
-            1 => 'Individu',
-            2 => 'Perusahaan',
-            3 => 'Instansi',
-            4 => 'Lainnya',
-            default => '-',
-        };
-    }
+        $counts = (clone $baseQuery)
+            ->toBase()
+            ->reorder()
+            ->selectRaw(Customer::levelSql() . ' AS lvl, COUNT(*) AS total')
+            ->groupBy('lvl')
+            ->pluck('total', 'lvl');
 
-    private function readableLoyaltyLevel($value)
-    {
-        return match ((int) $value) {
-            1 => 'Lead',
-            2 => 'Prospek',
-            3 => 'New Customer',
-            4 => 'Silver',
-            5 => 'Gold',
-            6 => 'Platinum',
-            default => '-',
-        };
+        $stats = [];
+        foreach (range(1, 6) as $level) {
+            $stats[$level] = (int) ($counts[$level] ?? 0);
+        }
+
+        // Prospek kumulatif: semua yang punya project (level 2 ke atas)
+        $stats[2] = $stats[2] + $stats[3] + $stats[4] + $stats[5] + $stats[6];
+
+        return $stats;
     }
 
     public function create(Customer $customer)
@@ -183,6 +172,11 @@ private function loyaltyStats($baseQuery): array
     }
 
     $request->merge(['phone' => $num !== '' ? $code . $num : null]);
+    $ship = preg_replace('/\D/', '', $request->shipping_phone ?? '');
+    if ($ship !== '') {
+        if (str_starts_with($ship, '0')) $ship = '62' . substr($ship, 1);
+        $request->merge(['shipping_phone' => $ship]);
+    }
     $validated = $request->validate([
         'user_id' => ['nullable','uuid', Rule::exists(User::class,'id')],
         'fullname' => 'required|string|max:255',
@@ -223,7 +217,7 @@ private function loyaltyStats($baseQuery): array
         'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
 
         // --- data Customer ---
-        'nic' => 'required|unique:customers,nic',
+        'nic' => ['required', Rule::unique(Customer::class, 'nic')],
         'shipping_name' => 'nullable|string|max:255',
         'shipping_phone' => 'nullable|string|max:20',
         'shipping_address' => 'nullable|string|max:255',
@@ -368,25 +362,35 @@ public static function generateNicAjax()
         ]);
     }
 
-    public function edit($id)
-    {
-        $customer = Customer::with(['user.roles', 'user.bank'])->findOrFail($id);
-        $this->authorizeCustomer($customer, 'ubah data customer');
+public function edit($id)
+{
+    $customer = Customer::with(['user.roles', 'user.bank'])->findOrFail($id);
+    $this->authorizeCustomer($customer, 'ubah data customer');
 
-        $user = $customer->user;
-        $religions = Religion::all();
-        $provinces = Province::all();
-        $roles = Role::all();
-        $selectedRoles = $user->roles->pluck('name')->toArray();
-        $cities = City::where('province_id', $user->province_id)->get();
-        $districts = District::where('city_id', $user->city_id)->get();
-        $subDistricts = SubDistrict::where('district_id', $user->district_id)->get();
-        $postalCodes = PostalCode::where('sub_district_id', $user->sub_district_id)->get();
-        
+    $user = $customer->user;
+    $religions = Religion::all();
+    $provinces = Province::all();
+    $roles = Role::all();
+    $selectedRoles = $user->roles->pluck('name')->toArray();
 
-        return view('customers.edit', compact('user', 'roles', 'selectedRoles', 'customer',
-        'religions', 'provinces', 'cities', 'districts', 'subDistricts', 'postalCodes'));
-    }
+    // List wilayah domisili user
+    $cities       = City::where('province_id', $user->province_id)->get();
+    $districts    = District::where('city_id', $user->city_id)->get();
+    $subDistricts = SubDistrict::where('district_id', $user->district_id)->get();
+    $postalCodes  = PostalCode::where('sub_district_id', $user->sub_district_id)->get();
+
+    // List wilayah alamat pengiriman customer
+    $shipCities       = City::where('province_id', $customer->province_id)->get();
+    $shipDistricts    = District::where('city_id', $customer->city_id)->get();
+    $shipSubDistricts = SubDistrict::where('district_id', $customer->district_id)->get();
+    $shipPostalCodes  = PostalCode::where('sub_district_id', $customer->sub_district_id)->get();
+
+    return view('customers.edit', compact(
+        'user', 'roles', 'selectedRoles', 'customer', 'religions', 'provinces',
+        'cities', 'districts', 'subDistricts', 'postalCodes',
+        'shipCities', 'shipDistricts', 'shipSubDistricts', 'shipPostalCodes'
+    ));
+}
 
 public function update(Request $request, Customer $customer)
 {
@@ -402,6 +406,11 @@ public function update(Request $request, Customer $customer)
     }
 
     $request->merge(['phone' => $num !== '' ? $code . $num : null]);
+    $ship = preg_replace('/\D/', '', $request->shipping_phone ?? '');
+    if ($ship !== '' && str_starts_with($ship, '0')) {
+        $ship = '62' . substr($ship, 1);   // 08xx → 628xx
+    }
+    $request->merge(['shipping_phone' => $ship !== '' ? $ship : null]);
     $validated = $request->validate([
         // --- data user ---
         'fullname' => 'required|string|max:255',
@@ -426,6 +435,7 @@ public function update(Request $request, Customer $customer)
             Rule::exists(Religion::class, 'id'),
         ],
         'npwp' => 'nullable|string|max:30',
+        'phone_code' => ['nullable', 'required_with:phone_number', Rule::in(array_keys(config('phone_codes')))],
         'phone'      => ['nullable', 'regex:/^[1-9][0-9]{7,14}$/'],
         'address' => 'nullable|string|max:255',
         'user_province_id' => [
@@ -525,6 +535,7 @@ public function update(Request $request, Customer $customer)
                 'postal_code_id' => $validated['user_postal_code_id'] ?? null,
                 'email' => $validated['email'],
                 'phone' => $validated['phone'] ?? null,
+                'phone_code' => !empty($validated['phone']) ? ($validated['phone_code'] ?? null) : null,
                 'gender' => $validated['gender'] ?? null,
                 'bank_id' => $validated['bank_id'] ?? null,
                 'account_number' => $validated['account_number'] ?? null,

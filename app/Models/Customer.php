@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\DB;
 
 class Customer extends Model
 {
@@ -101,6 +102,61 @@ public static function generateNic()
 
         ];
     }
+    public const LEVEL_SILVER   = 2;
+public const LEVEL_GOLD     = 4;
+public const LEVEL_PLATINUM = 7;
+
+public static function hasProjectSql(): string
+{
+    $projects = (new Project)->getTable();   // 'zhpicture.projects'
+
+    return "EXISTS (SELECT 1 FROM {$projects} p WHERE p.customer_id = customers.id)";
+}
+
+public static function levelSql(): string
+{
+    $projects = (new Project)->getTable();
+    $builds   = (new InvoiceBuild)->getTable();   // 'zhpicture.invoice_builds'
+
+    $qualified = "(SELECT COUNT(*) FROM {$projects} p
+        WHERE p.customer_id = customers.id
+          AND EXISTS (SELECT 1 FROM {$builds} b
+                      WHERE b.project_id = p.id
+                        AND b.approved_at IS NOT NULL))";
+
+    return "CASE
+        WHEN $qualified >= " . self::LEVEL_PLATINUM . " THEN 6
+        WHEN $qualified >= " . self::LEVEL_GOLD     . " THEN 5
+        WHEN $qualified >= " . self::LEVEL_SILVER   . " THEN 4
+        WHEN $qualified >= 1 THEN 3
+        WHEN " . self::hasProjectSql() . " THEN 2
+        ELSE 1
+    END";
+}
+
+public function getEffectiveLoyaltyLevelAttribute(): int
+{
+    if (isset($this->attributes['auto_level'])) {
+        return (int) $this->attributes['auto_level'];
+    }
+
+    $ids = $this->projects()->pluck('id');
+
+    $qualified = $ids->filter(fn ($id) =>
+        InvoiceBuild::where('project_id', $id)
+            ->whereNotNull('approved_at')
+            ->exists()
+    )->count();
+
+    return match (true) {
+        $qualified >= self::LEVEL_PLATINUM => 6,
+        $qualified >= self::LEVEL_GOLD     => 5,
+        $qualified >= self::LEVEL_SILVER   => 4,
+        $qualified >= 1                    => 3,
+        $ids->isNotEmpty()                 => 2,
+        default                            => 1,
+    };
+}
 
     public function getReadableLoyaltyLevelAttribute()
     {
@@ -111,7 +167,7 @@ public static function generateNic()
         4 => 'Silver',
         5 => 'Gold',
         6 => 'Platinum',
-    ][$this->loyalty_level] ?? 'Tidak diketahui';
+    ][$this->effective_loyalty_level] ?? 'Tidak diketahui';
     }
 
     public function getReadableCategoryAttribute()

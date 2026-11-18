@@ -274,7 +274,6 @@
                             </div>
                         </div>
                     
-
                     <div class="section-block mb-5">
                         <h3 class="fw-semibold mb-3 border-bottom pb-2">Data Pelanggan</h3>
                         <div class="row g-4">
@@ -313,7 +312,7 @@
                                 </select>
                             </div> --}}
                             <div class="col-md-3">
-                                <label class="form-label">Tahu dari mana?</label>
+                                <label class="form-label">Tau dari mana?</label>
                                 <select name="channel" class="form-select select2">
                                     <option value="">-- Pilih --</option>
                                     @foreach (\App\Models\Customer::CHANNELS as $key => $label)
@@ -377,63 +376,63 @@
                             <div class="row g-4 mt-2">
                                 <div class="col-md-6">
                                     <label class="form-label">Provinsi</label>
-                                        <select name="province_id" id="province" class="form-select select2">
-                                            <option value="">-- Pilih Provinsi --</option>
-                                            @foreach($provinces as $province)
-                                                <option value="{{ $province->id }}"
-                                                    {{ $user->province_id == $province->id ? 'selected' : '' }}>
-                                                    {{ $province->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                    <select name="province_id" id="province" class="form-select select2">
+                                        <option value="">-- Pilih Provinsi --</option>
+                                        @foreach($provinces as $province)
+                                            <option value="{{ $province->id }}"
+                                                {{ old('province_id', $customer->province_id) == $province->id ? 'selected' : '' }}>
+                                                {{ $province->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Kabupaten/Kota</label>
-                                                <select name="city_id" id="city" class="form-select select2">
-                                                    <option value="">-- Pilih Kota --</option>
-                                                    @foreach($cities as $city)
-                                                        <option value="{{ $city->id }}"
-                                                            {{ $user->city_id == $city->id ? 'selected' : '' }}>
-                                                            {{ $city->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                    <select name="city_id" id="city" class="form-select select2">
+                                        <option value="">-- Pilih Kota --</option>
+                                        @foreach($shipCities as $city)
+                                            <option value="{{ $city->id }}"
+                                                {{ old('city_id', $customer->city_id) == $city->id ? 'selected' : '' }}>
+                                                {{ $city->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label">Kecamatan</label>
-                                                <select name="district_id" id="district" class="form-select select2">
-                                                    <option value="">-- Pilih Kecamatan --</option>
-                                                    @foreach($districts as $district)
-                                                        <option value="{{ $district->id }}"
-                                                            {{ $user->district_id == $district->id ? 'selected' : '' }}>
-                                                            {{ $district->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                    <select name="district_id" id="district" class="form-select select2">
+                                        <option value="">-- Pilih Kecamatan --</option>
+                                        @foreach($shipDistricts as $district)
+                                            <option value="{{ $district->id }}"
+                                                {{ old('district_id', $customer->district_id) == $district->id ? 'selected' : '' }}>
+                                                {{ $district->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label">Kelurahan</label>
-                                                <select name="sub_district_id" id="sub_district" class="form-select select2">
-                                                    <option value="">-- Pilih kelurahan --</option>
-                                                    @foreach($subDistricts as $sub_district)
-                                                        <option value="{{ $sub_district->id }}"
-                                                            {{ $user->sub_district_id == $sub_district->id ? 'selected' : '' }}>
-                                                            {{ $sub_district->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                    <select name="sub_district_id" id="sub_district" class="form-select select2">
+                                        <option value="">-- Pilih kelurahan --</option>
+                                        @foreach($shipSubDistricts as $sub_district)
+                                            <option value="{{ $sub_district->id }}"
+                                                {{ old('sub_district_id', $customer->sub_district_id) == $sub_district->id ? 'selected' : '' }}>
+                                                {{ $sub_district->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Kode Pos</label>
-                                                <select name="postal_code_id" id="postal_code" class="form-select select2">
-                                                    <option value="">-- Pilih kelurahan --</option>
-                                                    @foreach($postalCodes as $postal_code)
-                                                        <option value="{{ $postal_code->id }}"
-                                                            {{ $user->postal_code_id == $postal_code->id ? 'selected' : '' }}>
-                                                            {{ $postal_code->postal_code }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                    <select name="postal_code_id" id="postal_code" class="form-select select2">
+                                        <option value="">-- Pilih Kode Pos --</option>
+                                        @foreach($shipPostalCodes as $postal_code)
+                                            <option value="{{ $postal_code->id }}"
+                                                {{ old('postal_code_id', $customer->postal_code_id) == $postal_code->id ? 'selected' : '' }}>
+                                                {{ $postal_code->postal_code }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -615,58 +614,85 @@
 <script>
 $(document).ready(function() {
 
+    const shippingFields = '#province, #city, #district, #sub_district, #postal_code, ' +
+        '[name="shipping_address"], [name="shipping_name"], [name="shipping_phone"]';
+
     function lockShippingFields(lock = true) {
-        const fields = $('#province, #city, #district, #sub_district, #postal_code, [name="shipping_address"], [name="shipping_name"], [name="shipping_phone"]');
         if (lock) {
-            fields.attr('readonly', true).addClass('bg-light text-muted');
+            $(shippingFields).attr('readonly', true).addClass('bg-light text-muted');
         } else {
-            fields.attr('readonly', false).removeClass('bg-light text-muted');
+            $(shippingFields).attr('readonly', false).removeClass('bg-light text-muted');
         }
     }
 
-    // Saat checkbox diubah
+    // Isi satu select pengiriman dengan satu option (ganti, bukan tambah)
+    function setSelect($el, val, text) {
+        text = (text || '').trim();
+        $el.empty();
+        if (val && text !== 'Loading...') {
+            $el.append(new Option(text, val, true, true));
+        } else {
+            $el.append(new Option('', '', true, true));
+        }
+        $el.trigger('change.select2'); // hanya update tampilan select2, tidak memicu AJAX
+    }
+
+    function copyPhone() {
+        let code  = ($('#phone_code').val() || '').replace(/\D/g, '');
+        let local = ($('#phone_number').val() || '').replace(/\D/g, '').replace(/^0+/, '');
+        if (code === '62' && local.startsWith('62')) local = local.slice(2);
+        $('[name="shipping_phone"]').val(local ? code + local : '');
+    }
+
+    function copyRegion() {
+        setSelect($('#province'),     $('#user_province').val(),     $('#user_province option:selected').text());
+        setSelect($('#city'),         $('#user_city').val(),         $('#user_city option:selected').text());
+        setSelect($('#district'),     $('#user_district').val(),     $('#user_district option:selected').text());
+        setSelect($('#sub_district'), $('#user_sub_district').val(), $('#user_sub_district option:selected').text());
+        setSelect($('#postal_code'),  $('#user_postal_code').val(),  $('#user_postal_code option:selected').text());
+    }
+
+    function copyAll() {
+        copyRegion();
+        $('[name="shipping_address"]').val($('[name="address"]').val());
+        $('[name="shipping_name"]').val($('[name="fullname"]').val());
+        copyPhone();
+    }
+
+    // Saat switch diubah
     $('#same_address').on('change', function() {
         if ($(this).is(':checked')) {
-
-            // Ambil data domisili user
-            let province = $('#user_province').val();
-            let city = $('#user_city').val();
-            let district = $('#user_district').val();
-            let subdistrict = $('#user_sub_district').val();
-            let postal = $('#user_postal_code').val();
-
-            let provinceText = $('#user_province option:selected').text();
-            let cityText = $('#user_city option:selected').text();
-            let districtText = $('#user_district option:selected').text();
-            let subdistrictText = $('#user_sub_district option:selected').text();
-            let postalText = $('#user_postal_code option:selected').text();
-
-            // Isi select2 pengiriman langsung
-            $('#province').append(new Option(provinceText, province, true, true)).trigger('change.select2');
-            setTimeout(() => { $('#city').append(new Option(cityText, city, true, true)).trigger('change.select2'); }, 400);
-            setTimeout(() => { $('#district').append(new Option(districtText, district, true, true)).trigger('change.select2'); }, 800);
-            setTimeout(() => { $('#sub_district').append(new Option(subdistrictText, subdistrict, true, true)).trigger('change.select2'); }, 1200);
-            setTimeout(() => { $('#postal_code').append(new Option(postalText, postal, true, true)).trigger('change.select2'); }, 1500);
-
-            // Copy field teks
-            $('[name="shipping_address"]').val($('[name="address"]').val());
-            $('[name="shipping_name"]').val($('[name="fullname"]').val());
-            $('[name="shipping_phone"]').val($('[name="phone"]').val());
-
+            copyAll();
             lockShippingFields(true);
-
         } else {
             lockShippingFields(false);
         }
     });
 
-    // Saat halaman pertama kali dimuat (mode edit)
+    // Sinkron saat teks/telepon domisili berubah
+    $('[name="address"], [name="fullname"], #phone_number, #phone_code').on('input change', function () {
+        if ($('#same_address').is(':checked')) copyAll();
+    });
+
+    // Sinkron saat wilayah domisili berubah
+    $('#user_province, #user_city, #user_district, #user_sub_district, #user_postal_code').on('change', function () {
+        if ($('#same_address').is(':checked')) copyRegion();
+    });
+
+    // Setelah AJAX wilayah domisili selesai (dropdown baru terisi), sinkron lagi
+    let syncTimer;
+    $(document).ajaxComplete(function () {
+        if (!$('#same_address').is(':checked')) return;
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(copyRegion, 150);
+    });
+
+    // Saat halaman dimuat (mode edit): hanya kunci field, jangan timpa data tersimpan
     if ($('#same_address').is(':checked')) {
         lockShippingFields(true);
     }
 });
 </script>
-
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

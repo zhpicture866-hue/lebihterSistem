@@ -615,65 +615,71 @@
     });
 </script>
 
-
 <script>
 $(document).ready(function() {
+
+    const shippingFields = '#province, #city, #district, #sub_district, #postal_code, ' +
+        '[name="shipping_address"], [name="shipping_name"], [name="shipping_phone"]';
+
+    // Isi satu select pengiriman dengan satu option (ganti, bukan tambah)
+    function setSelect($el, val, text) {
+        $el.empty();
+        if (val) {
+            $el.append(new Option(text, val, true, true));
+        } else {
+            $el.append(new Option('', '', true, true));
+        }
+        $el.trigger('change.select2'); // hanya update tampilan select2, tidak memicu AJAX
+    }
+
+    function copyPhone() {
+        let code  = ($('#phone_code').val() || '').replace(/\D/g, '');            // "62" atau kode negara lain
+        let local = ($('#phone_number').val() || '').replace(/\D/g, '').replace(/^0+/, ''); // buang 0 di depan
+        if (code === '62' && local.startsWith('62')) local = local.slice(2);      // jaga-jaga kalau ada 62 ganda
+
+        $('[name="shipping_phone"]').val(local ? code + local : '');
+    }
+
+    function copyRegion() {
+        setSelect($('#province'),     $('#user_province').val(),     $('#user_province option:selected').text());
+        setSelect($('#city'),         $('#user_city').val(),         $('#user_city option:selected').text());
+        setSelect($('#district'),     $('#user_district').val(),     $('#user_district option:selected').text());
+        setSelect($('#sub_district'), $('#user_sub_district').val(), $('#user_sub_district option:selected').text());
+        setSelect($('#postal_code'),  $('#user_postal_code').val(),  $('#user_postal_code option:selected').text());
+    }
+
+    function copyAll() {
+        copyRegion();
+        $('[name="shipping_address"]').val($('[name="address"]').val());
+        $('[name="shipping_name"]').val($('[name="fullname"]').val());
+        copyPhone();
+    }
+
     $('#same_address').on('change', function() {
         if ($(this).is(':checked')) {
-
-            // Ambil data dari wilayah user
-            let province = $('#user_province').val();
-            let city = $('#user_city').val();
-            let district = $('#user_district').val();
-            let subdistrict = $('#user_sub_district').val();
-            let postal = $('#user_postal_code').val();
-
-            // Ambil data teks (untuk select2 append manual)
-            let provinceText = $('#user_province option:selected').text();
-            let cityText = $('#user_city option:selected').text();
-            let districtText = $('#user_district option:selected').text();
-            let subdistrictText = $('#user_sub_district option:selected').text();
-            let postalText = $('#user_postal_code option:selected').text();
-
-            // 1️⃣ Province
-            $('#province').append(new Option(provinceText, province, true, true)).trigger('change.select2');
-
-            // 2️⃣ Tunggu AJAX kota selesai, lalu isi City
-            setTimeout(() => {
-                $('#city').append(new Option(cityText, city, true, true)).trigger('change.select2');
-            }, 400);
-
-            // 3️⃣ Isi District
-            setTimeout(() => {
-                $('#district').append(new Option(districtText, district, true, true)).trigger('change.select2');
-            }, 800);
-
-            // 4️⃣ Isi SubDistrict
-            setTimeout(() => {
-                $('#sub_district').append(new Option(subdistrictText, subdistrict, true, true)).trigger('change.select2');
-            }, 1200);
-
-            // 5️⃣ Isi Postal Code
-            setTimeout(() => {
-                $('#postal_code').append(new Option(postalText, postal, true, true)).trigger('change.select2');
-            }, 1500);
-
-            // Copy alamat, nama, dan telepon
-            $('[name="shipping_address"]').val($('[name="address"]').val());
-            $('[name="shipping_name"]').val($('[name="fullname"]').val());
-            $('[name="shipping_phone"]').val($('[name="phone"]').val());
-
-            // Disable field
-            $('#province, #city, #district, #sub_district, #postal_code, [name="shipping_address"], [name="shipping_name"], [name="shipping_phone"]')
-                .attr('readonly', true)
-                .addClass('bg-light text-muted');
-
+            copyAll();
+            $(shippingFields).attr('readonly', true).addClass('bg-light text-muted');
         } else {
-            // Aktifkan kembali jika user batal
-            $('#province, #city, #district, #sub_district, #postal_code, [name="shipping_address"], [name="shipping_name"], [name="shipping_phone"]')
-                .attr('readonly', false)
-                .removeClass('bg-light text-muted');
+            $(shippingFields).attr('readonly', false).removeClass('bg-light text-muted');
         }
+    });
+
+    // Sinkron saat teks/telepon berubah
+    $('[name="address"], [name="fullname"], #phone_number, #phone_code').on('input change', function () {
+        if ($('#same_address').is(':checked')) copyAll();
+    });
+
+    // Sinkron saat wilayah domisili berubah
+    $('#user_province, #user_city, #user_district, #user_sub_district, #user_postal_code').on('change', function () {
+        if ($('#same_address').is(':checked')) copyRegion();
+    });
+
+    // Setelah AJAX wilayah domisili selesai (dropdown baru terisi), sinkron lagi
+    let syncTimer;
+    $(document).ajaxComplete(function () {
+        if (!$('#same_address').is(':checked')) return;
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(copyRegion, 150);
     });
 });
 </script>

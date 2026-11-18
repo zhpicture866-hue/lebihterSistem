@@ -218,7 +218,7 @@ public function isInternal(): bool
 public function isExternal(): bool
 {
     return $this->roles()
-        ->where('role_group', 'External')
+        ->where('role_group', 'Eksternal')
         ->exists();
 }
 
@@ -229,14 +229,16 @@ public function isExternal(): bool
        );
    }
 
-   protected function phoneNumber(): Attribute
+protected function phoneNumber(): Attribute
 {
     return Attribute::make(
         get: function () {
             if (!$this->phone) return null;
 
-            return ($this->phone_code && str_starts_with($this->phone, $this->phone_code))
-                ? substr($this->phone, strlen($this->phone_code))
+            $code = $this->phone_code ?: '62'; // default sama seperti dropdown di form
+
+            return str_starts_with($this->phone, $code)
+                ? substr($this->phone, strlen($code))
                 : $this->phone;
         },
     );
