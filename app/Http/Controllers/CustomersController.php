@@ -154,35 +154,35 @@ class CustomersController extends Controller
         return $stats;
     }
 
-private function applyDateRange($query, Request $request)
-{
-    $request->validate([
-        'start' => 'nullable|date_format:Y-m-d',
-        'end'   => 'nullable|date_format:Y-m-d|after_or_equal:start',
-    ]);
+    private function applyDateRange($query, Request $request)
+    {
+        $request->validate([
+            'start' => 'nullable|date_format:Y-m-d',
+            'end'   => 'nullable|date_format:Y-m-d|after_or_equal:start',
+        ]);
 
-    $now = now();
+        $now = now();
 
-    [$start, $end] = match ($request->input('range')) {
-        'today'      => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
-        '7d'         => [$now->copy()->subDays(6)->startOfDay(), $now->copy()->endOfDay()],
-        'month'      => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()],
-        'last_month' => [$now->copy()->subMonthNoOverflow()->startOfMonth(),
-                         $now->copy()->subMonthNoOverflow()->endOfMonth()],
-        '3m'         => [$now->copy()->subMonthsNoOverflow(3)->startOfDay(), $now->copy()->endOfDay()],
-        'year'       => [$now->copy()->startOfYear(), $now->copy()->endOfYear()],
-        'custom'     => [
-            $request->filled('start') ? Carbon::parse($request->start)->startOfDay() : null,
-            $request->filled('end')   ? Carbon::parse($request->end)->endOfDay()     : null,
-        ],
-        default      => [null, null],   // kosong = semua data
-    };
+        [$start, $end] = match ($request->input('range')) {
+            'today'      => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
+            '7d'         => [$now->copy()->subDays(6)->startOfDay(), $now->copy()->endOfDay()],
+            'month'      => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()],
+            'last_month' => [$now->copy()->subMonthNoOverflow()->startOfMonth(),
+                            $now->copy()->subMonthNoOverflow()->endOfMonth()],
+            '3m'         => [$now->copy()->subMonthsNoOverflow(3)->startOfDay(), $now->copy()->endOfDay()],
+            'year'       => [$now->copy()->startOfYear(), $now->copy()->endOfYear()],
+            'custom'     => [
+                $request->filled('start') ? Carbon::parse($request->start)->startOfDay() : null,
+                $request->filled('end')   ? Carbon::parse($request->end)->endOfDay()     : null,
+            ],
+            default      => [null, null],   // kosong = semua data
+        };
 
-    if ($start) $query->where('customers.created_at', '>=', $start);
-    if ($end)   $query->where('customers.created_at', '<=', $end);
+        if ($start) $query->where('customers.created_at', '>=', $start);
+        if ($end)   $query->where('customers.created_at', '<=', $end);
 
-    return $query;
-}
+        return $query;
+    }
     public function create(Customer $customer)
     {
         $user = auth()->user();

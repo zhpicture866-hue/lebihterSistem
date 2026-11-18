@@ -122,7 +122,7 @@
                                 <span class="stat-icon"><i class="ti ti-users"></i></span>
                             </div>
                             <div class="stat-value mt-1" data-stat="total">{{ number_format($grand) }}</div>
-                            <div class="stat-sub">Seluruh level</div>
+                            <div class="stat-sub" data-total-sub>Seluruh level</div>
                         </div>
                     </div>
                 </div>
