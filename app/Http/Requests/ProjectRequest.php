@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Customer;
+use App\Models\Employee;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProjectRequest extends FormRequest
 {
@@ -21,8 +24,8 @@ class ProjectRequest extends FormRequest
             'district_id'       => 'nullable|integer',
             'sub_district_id'   => 'nullable|integer',
             'postal_code_id'    => 'nullable|integer',
-            'employee_id'       => 'required|uuid',
-            'customer_id'       => 'required|uuid',
+            'customer_id' => ['required','uuid', Rule::exists(Customer::class,'id')],
+            'employee_id' => ['required','uuid', Rule::exists(Employee::class,'id')],
             'affiliator_id'     => 'nullable|uuid',
             'start_date'        => 'required|date',
             'end_date'          => 'nullable|date|after_or_equal:start_date',
