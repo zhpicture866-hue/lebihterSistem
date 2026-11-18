@@ -206,8 +206,8 @@
                     data: function (d) {
                         d.loyalty = activeLevel;
                         d.range   = activeRange;
-                        d.start   = rangeStart;
-                        d.end     = rangeEnd;
+                        d.date_start   = rangeStart;
+                        d.date_end     = rangeEnd;
                     }
                 },
                 columns: [
