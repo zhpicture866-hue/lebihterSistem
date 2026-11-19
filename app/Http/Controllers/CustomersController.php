@@ -48,10 +48,11 @@ class CustomersController extends Controller
         $this->applyDateRange($baseQuery, $request);
         if ($request->ajax()) {
             // withCount hanya di query tabel (bukan di $baseQuery) supaya perhitungan kartu tidak terganggu
-            $query = (clone $baseQuery)
-                ->select('customers.*')
-                ->selectRaw(Customer::levelSql() . ' AS auto_level')
-                ->withCount('projects');
+        $query = (clone $baseQuery)
+            ->select('customers.*')
+            ->selectRaw(Customer::levelSql() . ' AS auto_level')
+            ->selectRaw(Customer::lastContactSql() . ' AS last_contact_at')   // baru
+            ->withCount('projects');
     
             // Filter tab (Lead, Prospek, New Customer, Silver, Gold, Platinum)
             if ($request->filled('loyalty')) {
@@ -91,9 +92,12 @@ class CustomersController extends Controller
                 // ->addColumn('created_at', fn($row) => $row->created_at
                 //     ? $row->created_at->locale('id')->diffForHumans()   // "3 hari yang lalu"
                 //     : '-')
-                ->addColumn('last_contact', fn($row) => $row->last_contact
-                    ? $row->last_contact->locale('id')->diffForHumans()   // "3 hari yang lalu"
-                    : '-')
+                ->addColumn('last_contact', function ($row) {
+                    $date = Carbon::parse($row->last_contact_at)->locale('id');
+
+                    return '<div>' . e($date->diffForHumans()) . '</div>'
+                        . '<div class="text-secondary small">' . e($date->translatedFormat('d M Y, H:i')) . '</div>';
+                })
                ->addColumn('loyalty', function ($row) {
                     $level = $row->effective_loyalty_level;
                     return '<span class="lv-badge lv-' . $level . '">' . e($row->readable_loyalty_level) . '</span>';
@@ -114,7 +118,7 @@ class CustomersController extends Controller
                     }
                     return $buttons . '</div>';
                 })
-                ->rawColumns(['customer', 'loyalty', 'action']);
+                ->rawColumns(['customer', 'loyalty', 'action', 'last_contact']);   // 'last_contact' ditambahkan
                 if ($canViewAll) {
                     $dt->with('stats', $this->loyaltyStats($baseQuery))
                     ->with('total', (clone $totalQuery)->count())
@@ -155,7 +159,7 @@ class CustomersController extends Controller
     {
         $request->validate([
             'date_start' => 'nullable|date_format:Y-m-d',
-            'date_end'   => 'nullable|date_format:Y-m-d|after_or_equal:start',
+            'date_end'   => 'nullable|date_format:Y-m-d|after_or_equal:date_start',
         ]);
 
         $now = now();
