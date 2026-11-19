@@ -44,7 +44,7 @@ class CustomersController extends Controller
         if (!$canViewAll) {
             $baseQuery->where('user_id', $auth->id);
         }
-        
+        $totalQuery = clone $baseQuery; 
         $this->applyDateRange($baseQuery, $request);
         if ($request->ajax()) {
             // withCount hanya di query tabel (bukan di $baseQuery) supaya perhitungan kartu tidak terganggu
@@ -55,13 +55,7 @@ class CustomersController extends Controller
     
             // Filter tab (Lead, Prospek, New Customer, Silver, Gold, Platinum)
             if ($request->filled('loyalty')) {
-                $lvl = (int) $request->loyalty;
-
-                if ($lvl === 2) {
-                    $query->whereRaw(Customer::hasProjectSql());   // Prospek kumulatif, sama dengan kartu
-                } else {
-                    $query->whereRaw('(' . Customer::levelSql() . ') = ?', [$lvl]);
-                }
+                $query->whereRaw('(' . Customer::levelSql() . ') = ?', [(int) $request->loyalty]);
             }
     
             $customers = $query->get();
@@ -123,15 +117,17 @@ class CustomersController extends Controller
                 ->rawColumns(['customer', 'loyalty', 'action']);
                 if ($canViewAll) {
                     $dt->with('stats', $this->loyaltyStats($baseQuery))
-                    ->with('total', (clone $baseQuery)->count());
+                    ->with('total', (clone $totalQuery)->count())
+                    ->with('filtered_total', (clone $baseQuery)->count());
                 }
                 return $dt->make(true);
         }
     
         return view('customers.index', [
-            'canViewAll' => $canViewAll,
-            'stats'      => $canViewAll ? $this->loyaltyStats($baseQuery) : [],
-            'total'      => $canViewAll ? (clone $baseQuery)->count() : 0,
+            'canViewAll'    => $canViewAll,
+            'stats'         => $canViewAll ? $this->loyaltyStats($baseQuery) : [],
+            'total'         => $canViewAll ? (clone $totalQuery)->count() : 0,
+            'filteredTotal' => $canViewAll ? (clone $baseQuery)->count() : 0,
         ]);
     }
     private function loyaltyStats($baseQuery): array
@@ -143,13 +139,14 @@ class CustomersController extends Controller
             ->groupBy('lvl')
             ->pluck('total', 'lvl');
 
-        $stats = [];
+        $exclusive = [];
         foreach (range(1, 6) as $level) {
-            $stats[$level] = (int) ($counts[$level] ?? 0);
+            $exclusive[$level] = (int) ($counts[$level] ?? 0);
         }
 
-        // Prospek kumulatif: semua yang punya project (level 2 ke atas)
-        $stats[2] = $stats[2] + $stats[3] + $stats[4] + $stats[5] + $stats[6];
+        $stats = $exclusive;
+        $stats[2] = $exclusive[2] + $exclusive[3] + $exclusive[4] + $exclusive[5] + $exclusive[6]; 
+        $stats[1] = $exclusive[1] + $stats[2];                                                     
 
         return $stats;
     }

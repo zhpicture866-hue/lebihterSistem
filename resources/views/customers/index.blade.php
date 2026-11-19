@@ -10,7 +10,7 @@
             5 => ['label' => 'Gold',         'icon' => 'ti-trophy'],
             6 => ['label' => 'Platinum',     'icon' => 'ti-diamond'],
         ];
-        $grand = $total;
+        $grand = $filteredTotal;
     @endphp
 
     <style>
@@ -121,8 +121,8 @@
                                 <div class="stat-label">Total Customer</div>
                                 <span class="stat-icon"><i class="ti ti-users"></i></span>
                             </div>
-                            <div class="stat-value mt-1" data-stat="total">{{ number_format($grand) }}</div>
-                            <div class="stat-sub" data-total-sub>Seluruh level</div>
+                            <div class="stat-value mt-1" data-stat="total">{{ number_format($total) }}</div>
+                            <div class="stat-sub">Seluruh level</div>
                         </div>
                     </div>
                 </div>
@@ -251,7 +251,6 @@
                 activeRange = $(this).data('range');
                 rangeStart = rangeEnd = '';
                 $('#rangeStart, #rangeEnd').val('');
-                $('[data-total-sub]').text('Seluruh level' + (activeRange ? ' · ' + $(this).text().trim() : ''));
                 table.ajax.reload();
             });
 
@@ -263,17 +262,17 @@
                 if (rangeStart && rangeEnd && rangeEnd < rangeStart) return;   // hindari error validasi 422
                 activeRange = 'custom';
                 $('#rangeTabs .tab-btn').removeClass('active');
-                $('[data-total-sub]').text('Seluruh level · Rentang kustom');
                 table.ajax.reload();
             });
             // Update kartu setelah data di-reload (misal habis hapus)
             table.on('xhr.dt', function (e, settings, json) {
                 if (!json || !json.stats) return;
-                const total = json.total;
-                $('[data-stat="total"]').text(total.toLocaleString('id-ID'));
+                $('[data-stat="total"]').text(json.total.toLocaleString('id-ID'));
+
+                const base = json.filtered_total;
                 Object.entries(json.stats).forEach(([lvl, n]) => {
                     $('[data-stat="' + lvl + '"]').text(n.toLocaleString('id-ID'));
-                    $('[data-stat-pct="' + lvl + '"]').text((total ? Math.round(n / total * 100) : 0) + '% dari total');
+                    $('[data-stat-pct="' + lvl + '"]').text((base ? Math.round(n / base * 100) : 0) + '% dari total');
                 });
             });
 
