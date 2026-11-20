@@ -77,7 +77,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:Super-Admin'])->group(function () {
     Route::resource('/menus', MenuController::class);
 });
-Route::middleware(['auth', 'role:Super-Admin'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::resource('articles', AdminArticleController::class)->except('show');
     Route::delete('categories/bulk', [\App\Http\Controllers\CategoryController::class, 'bulk'])->name('categories.bulk');
     Route::resource('categories', \App\Http\Controllers\CategoryController::class)->except(['create', 'show']);

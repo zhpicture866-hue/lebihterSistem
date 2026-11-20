@@ -40,7 +40,7 @@
                         </a>
 
                         <h2 class="page-title mb-0">
-                            {{ $isEdit ? 'Edit' : 'Tulis' }} Artikel
+                            {{ $isEdit ? 'Ubah' : 'Tulis' }} Artikel
                         </h2>
                     </div>
                 </div>
