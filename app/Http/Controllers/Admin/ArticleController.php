@@ -19,7 +19,8 @@ class ArticleController extends Controller
     {
         $this->middleware('permission:lihat data artikel')->only(['index']);
         $this->middleware('permission:tambah data artikel')->only(['create', 'store']);
-        $this->middleware('permission:ubah data artikel')->only(['edit', 'update', 'analyze']);
+        $this->middleware('permission:ubah data artikel')->only(['edit', 'update']);
+        $this->middleware('permission:tambah data artikel|ubah data artikel')->only(['analyze', 'uploadImage']);
         $this->middleware('permission:hapus data artikel')->only(['destroy']);
     }
 
@@ -126,6 +127,7 @@ class ArticleController extends Controller
             'categories'   => 'nullable|array',
             'categories.*' => ['integer', Rule::exists(Category::class, 'id')],
             'tags'         => 'nullable|string|max:500',
+            'published_at' => 'nullable|date',
             'cta_title'  => 'nullable|string|max:120',
             'cta_text'   => 'nullable|string|max:300',
             'cta_button' => 'required_if:cta_enabled,1|nullable|string|max:60',
@@ -135,7 +137,9 @@ class ArticleController extends Controller
         $data['content'] = \App\Support\VideoEmbed::sanitize($data['content']);          // sanitasi HTML (mews/purifier)
         $data['noindex'] = $request->boolean('noindex');
         $data['cta_enabled'] = $request->boolean('cta_enabled');
-        
+        if (! $request->user()->can('publikasi data artikel')) {
+            $data['status'] = $article?->status ?? 'draft';
+        }
         if ($data['status'] === 'published') {
             $data['published_at'] = $request->input('published_at') ?: ($article?->published_at ?? now());
         } else {
@@ -220,7 +224,28 @@ class ArticleController extends Controller
 
         return back()->with('success', $articles->count() . ' artikel diproses.');
     }
+    public function uploadImage(Request $request)
+{
+    $request->validate([
+        'upload' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],   // maks 5 MB
+    ]);
 
+    $file = $request->file('upload');
+    $path = $file->store('articles/content', 'public');
+
+    // Kecilkan dan ubah ke WebP (GIF dibiarkan agar animasinya tidak hilang).
+    // Kalau class ImageVariants belum ada, gambar asli yang dipakai.
+    if (strtolower($file->extension()) !== 'gif' && class_exists(\App\Support\ImageVariants::class)) {
+        $web = \App\Support\ImageVariants::web($path, null, 1600, 82);
+
+        if ($web) {
+            Storage::disk('public')->delete($path);   // buang file asli yang besar
+            $path = $web;
+        }
+    }
+
+    return response()->json(['url' => '/storage/' . $path]);
+}
     private function afterSave(Request $request, Article $article): void
     {
         $article->categories()->sync($request->input('categories', []));

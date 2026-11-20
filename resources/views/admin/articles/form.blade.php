@@ -376,15 +376,66 @@ const ANALYZE_URL  = @json(route('articles.analyze'));
 const ARTICLE_ID   = @json($article->id);
 const HAS_FEATURED = @json((bool) $article->featured_image);
 const CSRF         = @json(csrf_token());
-const EXISTING_OG = @json(($article->og_auto ?: $article->og_image) ? asset('storage/'.($article->og_auto ?: $article->og_image)) : null);
+const EXISTING_OG_MANUAL = @json($article->og_image ? asset('storage/'.$article->og_image) : null);
+const EXISTING_OG_AUTO   = @json($article->og_auto ? asset('storage/'.$article->og_auto) : null);
 const EXISTING_FEATURED = @json($article->featured_image ? asset('storage/'.$article->featured_image) : null);
 let ogObjUrl = null, featObjUrl = null;   // pratinjau file yang baru dipilih (belum diupload)
 let editor, timer;
 
 const YT_RE = /^https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[\w-]{11}\S*$/i;
+const UPLOAD_URL = @json(route('articles.upload-image'));
 
+class ArticleUploadAdapter {
+    constructor(loader) {
+        this.loader = loader;
+        this.controller = new AbortController();
+    }
+
+    upload() {
+        return this.loader.file.then(file => {
+            const data = new FormData();
+            data.append('upload', file);
+
+            return fetch(UPLOAD_URL, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                body: data,
+                credentials: 'same-origin',
+                signal: this.controller.signal,
+            })
+            .catch(() => Promise.reject('Koneksi terputus saat mengunggah gambar.'))
+            .then(res => res.json().catch(() => ({})).then(json => {
+                if (!res.ok || !json.url) {
+                    const msg = json.errors
+                        ? Object.values(json.errors).flat()[0]
+                        : (json.message || 'Gagal mengunggah gambar.');
+                    return Promise.reject(msg);
+                }
+                return { default: json.url };
+            }));
+        });
+    }
+
+    abort() { this.controller.abort(); }
+}
+
+function ArticleUploadPlugin(editor) {
+    editor.plugins.get('FileRepository').createUploadAdapter = loader => new ArticleUploadAdapter(loader);
+}
 ClassicEditor.create($('content'), {
-    toolbar: ['heading','|','bold','italic','link','bulletedList','numberedList','blockQuote','insertTable','mediaEmbed','undo','redo'],
+    extraPlugins: [ArticleUploadPlugin],
+    heading: {
+        options: [
+            { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+            { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+            { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
+            { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
+        ],
+    },
+    toolbar: ['heading','|','bold','italic','link','bulletedList','numberedList','blockQuote','insertTable','uploadImage','mediaEmbed','undo','redo'],
+    image: {
+        toolbar: ['imageStyle:inline','imageStyle:block','imageStyle:side','|','toggleImageCaption','imageTextAlternative'],
+    },
 }).then(ed => {
     editor = ed;
     // Setelah video dimasukkan, buat kotak keterangan (paragraf miring kosong) di bawahnya
@@ -488,7 +539,7 @@ function updatePreview() {
     const md    = $('meta_description').value.trim() || $('excerpt').value.trim();
 
     // Urutan sama dengan di halaman publik: gambar share > gambar utama
-    const img = ogObjUrl || EXISTING_OG || featObjUrl || EXISTING_FEATURED || null;
+    const img = ogObjUrl || EXISTING_OG_MANUAL || featObjUrl || EXISTING_OG_AUTO || EXISTING_FEATURED || null;
 
     $('mt-count').textContent = `(${$('meta_title').value.length}/70)`;
     $('md-count').textContent = `(${$('meta_description').value.length}/170)`;

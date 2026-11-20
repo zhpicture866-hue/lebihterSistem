@@ -39,6 +39,10 @@
     .article-content table{ width:100%; border-collapse:collapse; }
     .article-content th,.article-content td{ border:1px solid #e7e2d8; padding:.5rem .75rem; text-align:left; }
     .article-content th{ background:#f8f6f2; }
+    .article-content figure.image { margin: 1.5rem 0; text-align: center; }
+    .article-content figure.image img { max-width: 100%; height: auto; }
+    .article-content figure.image figcaption { margin-top: .5rem; font-size: .9rem; color: #6c757d; }
+    .article-content figure.image-style-side { float: right; max-width: 50%; margin: .5rem 0 1rem 1.5rem; }
 
     .cta-box{ margin:36px 0 8px; padding:26px 28px; border-radius:16px; background:#f8f6f2; border:1px solid #eadfc8;
         display:flex; flex-direction:column; gap:16px; }
@@ -73,6 +77,9 @@
         .show-share-mobile .share-btn{ width:38px; height:38px; font-size:18px; }
         .cta-btn{ width:100%; align-self:stretch; }
     }
+    @media (max-width: 767px) {
+    .article-content figure.image-style-side { float: none; max-width: 100%; margin: 1.5rem 0; }
+}
 </style>
 @endpush
 

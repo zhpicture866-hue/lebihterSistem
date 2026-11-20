@@ -40,11 +40,22 @@ class VideoEmbed
             }
             $ids[] = $id;
 
-            return '<p>[[VIDEO:' . (count($ids) - 1) . ']]</p>';
+            $caption = $m[2] ?? '';
+            $plain   = trim(html_entity_decode(strip_tags($caption)), " \t\n\r\0\x0B\xC2\xA0");
+
+            return '<p>[[VIDEO:' . (count($ids) - 1) . ']]</p>'
+                . ($plain === '' ? '' : '<p><em>' . $caption . '</em></p>');
         }, $html);
 
         // 3. Sanitasi HTML (mews/purifier)
+        // Lindungi gambar hasil upload dari purifier
+        [$html, $images] = ContentImages::protect($html);
+
+        // 3. Sanitasi HTML (mews/purifier)
         $html = clean($html);
+
+        // Kembalikan gambar
+        $html = ContentImages::restore($html, $images);
 
         // 4. Kembalikan blok video dengan URL kanonik dari ID yang sudah divalidasi
         return preg_replace_callback('~<p>\s*\[\[VIDEO:(\d+)\]\]\s*</p>~', function ($m) use ($ids) {

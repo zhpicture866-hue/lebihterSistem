@@ -25,7 +25,11 @@ return [
     'settings'      => [
         'default' => [
             'HTML.Doctype'             => 'HTML 4.01 Transitional',
-            'HTML.Allowed'             => 'div,b,strong,i,em,u,a[href|title],ul,ol,li,p[style],br,span[style],img[width|height|alt|src]',
+            'HTML.Allowed' => 'h2,h3,h4,p[style],br,strong,b,em,i,u,span[style],'
+                . 'a[href|title|target],ul,ol,li,blockquote,'
+                . 'table,thead,tbody,tr,th[colspan|rowspan],td[colspan|rowspan],'
+                . 'figure[class],figcaption,'
+                . 'img[width|height|alt|src],div',
             'CSS.AllowedProperties'    => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align',
             'AutoFormat.AutoParagraph' => true,
             'AutoFormat.RemoveEmpty'   => true,

@@ -85,6 +85,7 @@ Route::middleware(['auth', 'role:Super-Admin'])->group(function () {
     Route::resource('tags', TagController::class)->except(['create', 'show']);
     Route::post('articles/bulk', [AdminArticleController::class, 'bulk'])->name('articles.bulk');
     Route::post('articles/analyze', [AdminArticleController::class, 'analyze'])->name('articles.analyze');
+    Route::post('articles/upload-image', [AdminArticleController::class, 'uploadImage'])->name('articles.upload-image');
 });
 Route::get('/customer/profile', [DashboardController::class, 'edit'])->name('customer.profile');
 Route::put('/customer/profile', [DashboardController::class, 'update'])->name('customer.update');
