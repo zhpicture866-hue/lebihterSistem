@@ -51,18 +51,9 @@ public function invoiceBuild(Project $project, int $termin, ?string $filename = 
             ->orderBy('termin_no')
             ->get();
 
-        // $progressStart = 0;
-
-        // foreach ($termins as $item) {
-
-        //     if ((int) $item->termin_no === $termin) {
-        //         break;
-        //     }
-
-        //     $progressStart += (float) $item->percentage;
-        // }
-
-        // $progressEnd = $progressStart + $paymentPercentage;
+        $invoiceDate = ($buildTermin->period_start && $buildTermin->billing_date)
+            ? $buildTermin->billing_date
+            : now();
 
         $invoice = InvoiceBuild::where('project_id', $project->id)
             ->where('termin', $termin)
@@ -77,7 +68,7 @@ public function invoiceBuild(Project $project, int $termin, ?string $filename = 
                 'project_id'         => $project->id,
                 'invoice_type'       => InvoiceBuild::TYPE_WEDDING,
                 'invoice_number' => $this->generateInvoiceNumber(),
-                'invoice_date'       => now(),
+                'invoice_date' => $invoiceDate,
                 'termin'             => $termin,
                 // 'progress_start'     => $progressStart,
                 // 'progress_end'       => $progressEnd,
@@ -104,6 +95,14 @@ public function invoiceBuild(Project $project, int $termin, ?string $filename = 
                     // 'progress_end'       => $progressEnd,
                 ]);
             }
+            if (
+                    $buildTermin->period_start
+                    && $buildTermin->billing_date
+                    && ! in_array($invoice->status, [InvoiceBuild::STATUS_APPROVED, InvoiceBuild::STATUS_PAID], true)
+                    && ! $invoice->invoice_date?->isSameDay($buildTermin->billing_date)
+                ) {
+                    $invoice->update(['invoice_date' => $buildTermin->billing_date]);
+                }
         }
 
         if (!$invoice->downloaded_at) {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BuildTermin;
+use App\Models\InvoiceBuild;
 use App\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -160,10 +161,12 @@ class TerminSubscriptionController extends Controller
         $offerTotal = (float) ($project->rab?->grand_total ?? 0);
 
         try {
-            DB::transaction(function () use ($project, $data, $offerTotal) {
+            DB::transaction(function () use ($project, $data, $offerTotal, $request) {
                 Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
 
-                $termin = $project->buildTermins()->orderByDesc('termin_no')->first();
+                $latestNo = (int) $project->buildTermins()->max('termin_no');
+
+                $termin = $project->buildTermins()->where('termin_no', $latestNo)->first();
 
                 if (! $termin) {
                     throw new \DomainException('Termin belum dibuat.');
@@ -177,23 +180,42 @@ class TerminSubscriptionController extends Controller
                 if ((int) $data['termin_no'] !== (int) $termin->termin_no) {
                     throw new \DomainException('Data termin sudah berubah. Muat ulang halaman lalu coba lagi.');
                 }
+                $invoice = $project->invoicebuilds()
+                    ->where('termin', $termin->termin_no)
+                    ->first();
 
-                if ($project->invoicebuilds()->where('termin', $termin->termin_no)->exists()) {
-                    throw new \DomainException(
-                        "Termin ke-{$termin->termin_no} sudah ditagih (invoice sudah dibuat) dan tidak dapat diubah."
-                    );
+                if ($invoice) {
+                    if (! $request->user()->hasRole('Super-Admin')) {
+                        throw new \DomainException(
+                            "Termin ke-{$termin->termin_no} sudah ditagih (invoice sudah dibuat) dan tidak dapat diubah."
+                        );
+                    }
+
+                    if ($invoice->status === InvoiceBuild::STATUS_PAID) {
+                        throw new \DomainException(
+                            "Invoice termin ke-{$termin->termin_no} sudah dibayar dan tidak dapat diubah."
+                        );
+                    }
                 }
 
+                // Invoice sudah disetujui -> nominal & tanggal dikunci, hanya keterangan
+                $financialLocked = $invoice && $invoice->status === InvoiceBuild::STATUS_APPROVED;
+
                 $attributes = [
-                    'amount'      => (int) $data['amount'],
-                    'percentage'  => $this->percentageOf((float) $data['amount'], $offerTotal),
                     'description' => $data['termin_description'] ?? null,
                 ];
 
-                // Periode & tanggal hanya boleh berubah selama baru ada satu termin
+                if (! $financialLocked) {
+                    $attributes += [
+                        'amount'     => (int) $data['amount'],
+                        'percentage' => $this->percentageOf((float) $data['amount'], $offerTotal),
+                    ];
+                }
+
                 $isOnlyTermin = $project->buildTermins()->count() === 1;
 
-                if ($isOnlyTermin && ! empty($data['billing_period']) && ! empty($data['billing_date'])) {
+                // Periode & tanggal (yang menggeser masa layanan) hanya selama belum ada invoice
+                if ($isOnlyTermin && ! $invoice && ! empty($data['billing_period']) && ! empty($data['billing_date'])) {
                     $start = Carbon::parse($data['billing_date'])->startOfDay();
 
                     [$periodStart, $periodEnd] = $data['billing_period'] === 'one_time'
@@ -208,7 +230,22 @@ class TerminSubscriptionController extends Controller
                     ];
                 }
 
+                // Super-Admin: ubah tanggal penagihan saja, masa layanan tetap
+                if ($invoice && ! $financialLocked && ! empty($data['billing_date'])) {
+                    $attributes['billing_date'] = Carbon::parse($data['billing_date'])->startOfDay();
+                }
+
                 $termin->update($attributes);
+
+                // Sinkronkan invoice
+                if ($invoice && ! $financialLocked) {
+                    $invoice->update([
+                        'amount'             => (int) $data['amount'],
+                        'nominal'            => (int) $data['amount'],
+                        'payment_percentage' => $attributes['percentage'],
+                        'invoice_date'       => $termin->billing_date,
+                    ]);
+                }
             });
         } catch (\DomainException $e) {
             return back()->withInput()->withErrors(['termin' => $e->getMessage()]);
@@ -494,7 +531,7 @@ class TerminSubscriptionController extends Controller
                     'termin_no'      => $nextNo,
                     'amount'         => $termin->amount,
                     'percentage'     => $this->percentageOf((float) $termin->amount, $offerTotal),
-                    'description'    => $termin->description,
+                    'description' => $this->descriptionFor($termin, $start, $end),
                     'billing_period' => $termin->billing_period,
                     'billing_date'   => $start,
                     'period_start'   => $start,
@@ -637,4 +674,32 @@ class TerminSubscriptionController extends Controller
 
         abort_unless($isCustomer || $user->can('ubah data proyek'), 403);
     }
+
+private function descriptionFor(BuildTermin $previous, \Carbon\Carbon $start, ?\Carbon\Carbon $end): ?string
+{
+    $description = $previous->description;
+
+    if ($description === null || trim($description) === '') {
+        return $description;
+    }
+
+    $text = trim($description);
+
+    // Bulanan: "Periode Bulan Oktober 2026"
+    if (preg_match('/^Periode Bulan\s+\p{L}+\s+\d{4}$/u', $text)) {
+        return 'Periode Bulan ' . $start->translatedFormat('F Y');
+    }
+
+    // Tahunan: "Periode Tahun 2026" atau "Periode Tahun 2026/2027"
+    if (preg_match('/^Periode Tahun\s+\d{4}(?:\s*[\/-]\s*\d{4})?$/u', $text)) {
+        $label = ($end && $end->year !== $start->year)
+            ? $start->year . '/' . $end->year
+            : (string) $start->year;
+
+        return 'Periode Tahun ' . $label;
+    }
+
+    // Keterangan manual disalin apa adanya
+    return $description;
+}
 }

@@ -2,19 +2,27 @@
     $termins = $project->buildTermins->sortBy('termin_no')->values();
     $latest  = $termins->last();
 
-    // Termin langganan = punya masa layanan (period_start). Termin lama (sistem persentase) tidak.
     $isSubscription = $latest && $latest->period_start;
 
-    // Termin dianggap sudah ditagih kalau invoice-nya sudah dibuat
-    // (statusnya "Belum Ditagih" di tabel selama invoice belum ada).
-    $hasInvoice = $latest
-        && $project->invoicebuilds->where('termin', $latest->termin_no)->isNotEmpty();
+    $latestInvoice = $latest
+        ? $project->invoicebuilds->where('termin', $latest->termin_no)->first()
+        : null;
+
+    $hasInvoice   = (bool) $latestInvoice;
+    $isSuperAdmin = auth()->user()?->hasRole('Super-Admin');
+
+    $invoicePaid = $latestInvoice?->status === \App\Models\InvoiceBuild::STATUS_PAID;
+    $invoiceApproved = $latestInvoice?->status === \App\Models\InvoiceBuild::STATUS_APPROVED;
+
+    // Super-Admin boleh membuka form selama invoice belum dibayar
+    $superAdminEdit = $hasInvoice && $isSuperAdmin && ! $invoicePaid;
+
+    // Sudah disetujui -> hanya keterangan
+    $lockFinancial = $superAdminEdit && $invoiceApproved;
 
     $isOnlyTermin = $termins->count() === 1;
-
-    $offerTotal = (float) ($project->rab?->grand_total ?? 0);
-
-    $oldAmount = $latest ? (int) old('amount', (int) $latest->amount) : 0;
+    $offerTotal   = (float) ($project->rab?->grand_total ?? 0);
+    $oldAmount    = $latest ? (int) old('amount', (int) $latest->amount) : 0;
 @endphp
 
 @if(! $latest)
@@ -30,7 +38,7 @@
         diedit di sini.
     </div>
 
-@elseif($hasInvoice)
+@elseif($hasInvoice && ! $superAdminEdit)
 
     <div class="alert alert-info mb-0">
         <i class="ti ti-info-circle me-1"></i>
@@ -71,7 +79,16 @@
                 Total penawaran: <strong>Rp {{ number_format($offerTotal, 0, ',', '.') }}</strong>.
             </div>
         </div>
-
+        @if($superAdminEdit)
+            <div class="alert alert-warning mt-2 mb-0">
+                @if($lockFinancial)
+                    Invoice termin ini sudah disetujui, jadi hanya <strong>Keterangan</strong> yang bisa diubah.
+                @else
+                    Invoice termin ini sudah dibuat. Perubahan nominal akan ikut memperbarui invoicenya.
+                @endif
+                Termin sebelumnya tidak terpengaruh.
+            </div>
+        @endif
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="row g-3">
@@ -89,6 +106,7 @@
                             placeholder="Rp 0"
                             inputmode="numeric"
                             autocomplete="off"
+                            {{ $lockFinancial ? 'readonly' : '' }}
                             value="{{ $oldAmount > 0 ? 'Rp ' . number_format($oldAmount, 0, ',', '.') : '' }}"
                         >
 
@@ -101,7 +119,7 @@
                         >
                     </div>
 
-                    <div class="col-md-8">
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold">
                             Keterangan
                         </label>
@@ -116,7 +134,7 @@
                         >
                     </div>
 
-                    @if($isOnlyTermin)
+                    @if($isOnlyTermin && ! $hasInvoice)
 
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">
@@ -155,7 +173,18 @@
                         </div>
 
                     @else
-
+                        @if($superAdminEdit)
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Tanggal Penagihan</label>
+                                <input
+                                    type="date"
+                                    name="billing_date"
+                                    class="form-control"
+                                    {{ $lockFinancial ? 'disabled' : 'required' }}
+                                    value="{{ old('billing_date', $latest->billing_date?->format('Y-m-d')) }}"
+                                >
+                            </div>
+                        @endif
                         <div class="col-12">
                             <div class="text-muted small">
                                 Masa layanan:
@@ -165,7 +194,7 @@
                                     &ndash;
                                     {{ $latest->period_end->translatedFormat('d M Y') }}
                                 </strong>
-                                (mengikuti termin ke-1, tidak dapat diubah).
+                                (tidak dapat diubah).
                             </div>
                         </div>
 
